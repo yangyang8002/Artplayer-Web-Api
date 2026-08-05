@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtPlayer - 弹幕视频播放器</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2362d5ff'/%3E%3Cstop offset='100%25' stop-color='%237c5cfc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='28,26 28,54 47,40' fill='url(%23g)'/%3E%3Cline x1='47' y1='40' x2='54' y2='26' stroke='url(%23g)' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='54' y1='26' x2='54' y2='54' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Medium.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Semibold.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Bold.min.css">
+    <link rel="stylesheet" href="/api/theme/player.css">
+    <style>
+        :root, [data-theme="bilibili"]{--bg:#07070d;--surface:#14141f;--border:rgba(255,255,255,0.07);--bili-blue:#00a1d6;--bili-blue-hover:#00b3e6;--bili-pink:#fb7299;--text:#e6e6ee;--text-dim:#9099a3;--danger:#ff4d6a;--radius:12px;--gradient:linear-gradient(135deg,var(--bili-blue),var(--bili-pink));}
+        [data-theme="sakura"]{--bg:#1a1218;--surface:#261c24;--bili-blue:#ff85a2;--bili-blue-hover:#ff9db5;--bili-pink:#c792ea;--text:#f5e6ed;--text-dim:#b89aaa;--danger:#ff6188;--gradient:linear-gradient(135deg,#ff85a2,#c792ea);}
+        [data-theme="ocean"]{--bg:#0a1628;--surface:#101e36;--bili-blue:#00d4ff;--bili-blue-hover:#33dfff;--bili-pink:#5ce6c6;--text:#d4edf4;--text-dim:#6b9bb0;--danger:#ff5370;--gradient:linear-gradient(135deg,#00d4ff,#5ce6c6);}
+        [data-theme="sunset"]{--bg:#1a1018;--surface:#2a1826;--bili-blue:#ff8c42;--bili-blue-hover:#ffa564;--bili-pink:#e06c9f;--text:#f0e0d6;--text-dim:#b09580;--danger:#f44;--gradient:linear-gradient(135deg,#ff8c42,#e06c9f);}
+        [data-theme="forest"]{--bg:#0d120b;--surface:#182114;--bili-blue:#64dd17;--bili-blue-hover:#76ff03;--bili-pink:#69f0ae;--text:#d8e8d0;--text-dim:#7a9a6a;--danger:#ff5252;--gradient:linear-gradient(135deg,#64dd17,#69f0ae);}
+        [data-theme="mono"]{--bg:#060606;--surface:#141414;--bili-blue:#888;--bili-blue-hover:#aaa;--bili-pink:#ddd;--text:#e8e8e8;--text-dim:#777;--danger:#ccc;--gradient:linear-gradient(135deg,#666,#ccc);}
+        [data-theme="cyber"]{--bg:#060618;--surface:rgba(10,10,40,.88);--bili-blue:#00e5ff;--bili-blue-hover:#40f0ff;--bili-pink:#b000ff;--text:#d0f0ff;--text-dim:#60c0d0;--danger:#ff3060;--gradient:linear-gradient(135deg,#00e5ff,#b000ff);}
+        [data-theme="shoujo"]{--bg:#1a101a;--surface:rgba(32,18,30,.88);--bili-blue:#ff80a8;--bili-blue-hover:#ffa8c0;--bili-pink:#e860c0;--text:#f8e8f0;--text-dim:#d0a0b8;--danger:#ff5088;--gradient:linear-gradient(135deg,#ff80a8,#e860c0);}
+        [data-theme="jrpg"]{--bg:#100e08;--surface:rgba(20,16,10,.88);--bili-blue:#e0b040;--bili-blue-hover:#f0c860;--bili-pink:#c09030;--text:#e8e0d0;--text-dim:#b0a080;--danger:#e04040;--gradient:linear-gradient(135deg,#e0b040,#c09030);}
+        [data-theme="neon"]{--bg:#080808;--surface:rgba(14,10,18,.88);--bili-blue:#ff3050;--bili-blue-hover:#ff6080;--bili-pink:#e02070;--text:#f0e8e8;--text-dim:#c08080;--danger:#ff2040;--gradient:linear-gradient(135deg,#ff3050,#e02070);}
+
+        :root{--ctrl-h:clamp(36px,min(11vw,9vh),42px);--icon-btn:clamp(22px,min(6.8vw,6vh),30px);--icon-svg:clamp(14px,min(4.4vw,3.8vh),20px);--danmu-w:clamp(84px,30vw,180px);--danmu-h:clamp(22px,min(7.2vw,6vh),28px);--title-fs:clamp(11px,min(3.3vw,2.8vh),13px);--shot:clamp(32px,min(10vw,9vh),40px);            --dm-font:20;}
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{width:100%;height:100%;height:100dvh;background:var(--bg);font-family:'MiSans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;overflow:hidden}
+        #app{display:flex;flex-direction:column;width:100%;height:100%}
+        #player-wrapper{flex:1;position:relative;background:#000;min-height:0}
+        #artplayer{width:100%;height:100%}
+
+        /* ArtPlayer overrides */
+        .art-video-player{font-family:'MiSans',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif!important}
+        .art-control{color:rgba(255,255,255,.88)!important}
+        .art-control:hover{color:var(--bili-blue)!important}
+        .art-bottom{padding:0 clamp(8px,3vw,12px);padding-bottom:env(safe-area-inset-bottom,0px)}
+        .art-progress{padding:0 clamp(8px,3vw,12px)!important}
+        .art-progress-inner{background:linear-gradient(90deg,var(--bili-blue),#00c3f0)!important}
+        .art-progress-loaded{background:rgba(255,255,255,.35)!important}
+        .art-progress-indicator{background:#fff!important;box-shadow:0 0 6px rgba(0,0,0,.6)!important}
+        .art-state{background:rgba(0,0,0,.4)!important;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:50%!important}
+        .art-state svg{fill:#fff!important}
+        .art-loading svg{filter:drop-shadow(0 0 8px rgba(0,161,214,.6))}
+        .art-contextmenu{background:rgba(20,20,24,.96)!important;backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;color:#fff!important}
+        .art-contextmenu-item:hover{background:rgba(255,255,255,.06)!important}
+        .art-info{background:rgba(20,20,24,.94)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;color:#fff!important}
+        .art-notice{background:rgba(0,0,0,.75)!important;border-radius:6px!important;backdrop-filter:blur(6px)}
+        .art-setting-panel,.art-selector-list{background:rgba(20,20,24,.94)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;color:#fff!important}
+        .art-settings{right:10px!important;bottom:calc(var(--art-control-height) + 6px)!important;top:auto!important;max-height:calc(100% - 100px)!important;max-width:160px!important}
+        div.art-video-player.art-backdrop .art-settings{background-color:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+        .art-setting-item{min-height:32px;height:32px!important}
+        .art-setting-item-left>*{transition:opacity .25s}
+        /* Slider & tooltip overlay: slider rightmost, tooltip to its left.
+           Default hidden; on hover, text fades + slider/tooltip appear.
+           Slider is 22px tall so the whole row acts as a click target. */
+        .art-setting-item{position:relative}
+        .art-setting-range{-webkit-appearance:none;appearance:none;position:absolute;right:0;top:50%;transform:translateY(-50%);width:0!important;height:22px!important;opacity:0;pointer-events:none;background:transparent!important;border:0;outline:0;accent-color:var(--bili-blue);transition:width .3s,opacity .3s}
+        .art-setting-range::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:transparent}
+        .art-setting-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;border:2px solid var(--bili-blue);cursor:pointer;box-shadow:0 0 6px rgba(0,0,0,.5);margin-top:-5px;transition:transform .15s}
+        .art-setting-range::-webkit-slider-thumb:active{transform:scale(1.2)}
+        .art-setting-range::-moz-range-track{height:4px;border-radius:2px;background:transparent}
+        .art-setting-range::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:2px solid var(--bili-blue);cursor:pointer;box-shadow:0 0 6px rgba(0,0,0,.5)}
+        .art-setting-range::-moz-range-progress{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--bili-blue),#00c3f0)}
+        .art-setting-item-right-tooltip{position:absolute;right:0;top:50%;transform:translateY(-50%);opacity:0;white-space:nowrap;transition:right .3s,opacity .25s}
+        .art-setting-item:hover .art-setting-range{width:120px!important;opacity:1;pointer-events:auto}
+        .art-setting-item:hover .art-setting-item-right-tooltip{right:125px;opacity:1}
+        .art-setting-item:hover .art-setting-item-left>*{opacity:0}
+        .art-selector-list{bottom:calc(var(--art-control-height) + 6px)!important}
+        .art-fullscreen{--art-control-icon-scale:1!important;--art-indicator-size:16px!important}
+        .art-fullscreen-web{--art-control-icon-scale:1!important;--art-indicator-size:16px!important}
+        .art-setting-item:hover,.art-selector-list-item:hover{background:rgba(255,255,255,.06)!important}
+        .art-volume-inner{background:rgba(10,10,24,.9)!important;backdrop-filter:none!important}
+        .art-volume-loaded{background:linear-gradient(180deg,var(--bili-blue),#00c3f0)!important}
+
+        /* Danmaku canvas */
+        #danmaku-canvas{position:absolute;inset:0;z-index:30;width:100%;height:100%;pointer-events:none}
+
+        /* Title */
+        .bili-title{position:absolute;top:clamp(10px,3.6vw,14px);left:clamp(12px,4.6vw,18px);z-index:3;color:rgba(255,255,255,.92);font-size:var(--title-fs);font-weight:500;letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+        .bili-title::before{content:'';display:inline-block;width:4px;height:13px;border-radius:2px;background:linear-gradient(180deg,var(--bili-blue),var(--bili-pink));margin-right:8px;vertical-align:-1px}
+
+        /* Danmaku input */
+        .bili-danmu{position:relative;display:flex;align-items:center;gap:clamp(4px,1.5vw,6px);height:100%;padding:0 clamp(4px,1.5vw,8px);pointer-events:auto;flex-shrink:1;min-width:0}
+        .bili-danmu .bd-input{width:var(--danmu-w);min-width:60px;flex-shrink:1;height:var(--danmu-h);padding:0 12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:14px;font-size:12.5px;color:#fff;outline:none;transition:all .25s;box-sizing:border-box}
+        .bili-danmu .bd-input:focus{background:rgba(255,255,255,.2);border-color:var(--bili-blue)}
+        .bili-danmu .bd-input::placeholder{color:rgba(255,255,255,.55)}
+        .bili-danmu .bd-color{position:relative;width:clamp(20px,6vw,24px);height:clamp(20px,6vw,24px);flex:0 0 clamp(20px,6vw,24px);border:none;border-radius:50%;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .bili-danmu .bd-color .dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 4px rgba(0,0,0,.4)}
+        .bili-danmu .bd-color-panel{position:absolute;bottom:calc(var(--art-control-height)+34px);right:0;display:none;flex-direction:column;gap:8px;padding:12px;background:rgba(20,20,24,.94);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:10px;z-index:20}
+        .bili-danmu .bd-color-panel.open{display:flex}
+        .bili-danmu .bd-colors{display:flex;gap:8px}
+        .bili-danmu .bd-colors button{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;transition:transform .15s;padding:0}
+        .bili-danmu .bd-colors button:hover{transform:scale(1.2)}
+        .bili-danmu .bd-colors button.active{border-color:#fff;box-shadow:0 0 0 2px var(--bili-blue)}
+        .bili-danmu .bd-types{display:flex;gap:6px}
+        .bili-danmu .bd-types button{flex:1;padding:4px 10px;border:1px solid rgba(255,255,255,.3);border-radius:6px;background:none;color:rgba(255,255,255,.8);font-size:12px;cursor:pointer;transition:all .2s}
+        .bili-danmu .bd-types button.active{background:var(--bili-blue);border-color:var(--bili-blue);color:#fff}
+        .bili-danmu .bd-send{width:clamp(22px,7vw,28px);height:clamp(22px,7vw,28px);flex:0 0 clamp(22px,7vw,28px);border:none;border-radius:50%;background:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .bili-danmu .bd-send:hover{color:var(--bili-pink);background:rgba(251,114,153,.12)}
+
+        /* Screenshot */
+        .bili-screenshot{position:absolute;right:clamp(10px,3vw,14px);top:50%;transform:translateY(-50%);width:var(--shot);height:var(--shot);border-radius:50%;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:8;transition:all .2s;opacity:0;pointer-events:none}
+        .art-video-player.art-control-show .bili-screenshot,.art-video-player.art-hover .bili-screenshot{opacity:1;pointer-events:auto}
+        .bili-screenshot:hover{background:rgba(0,0,0,.55);color:var(--bili-blue);transform:translateY(-50%) scale(1.08)}
+
+        /* Overflow */
+        .bili-overflow-panel{position:absolute;right:clamp(8px,3vw,12px);bottom:calc(var(--art-control-height)+env(safe-area-inset-bottom,0px)+6px);background:rgba(20,20,24,.94);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:10px;display:none;flex-direction:column;padding:4px;z-index:30;min-width:130px}
+        .bili-overflow-panel.open{display:flex}
+        .bili-overflow-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,.9);font-size:12.5px;transition:background .2s;border:none;background:none;white-space:nowrap;font-family:'MiSans','Microsoft YaHei',sans-serif;width:100%;box-sizing:border-box;text-align:left}
+        .bili-overflow-item:hover{background:rgba(255,255,255,.06)}
+        .bili-overflow-item .item-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.8)}
+        .bili-overflow-item .item-icon svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:16px;height:16px}
+        .bili-overflow-item .item-label{flex:1}
+
+        /* Stats */
+         .ap-stats-panel{position:absolute;right:8px;bottom:calc(var(--art-control-height)+20px);background:rgba(20,20,24,.94);border:1px solid rgba(255,255,255,.08);border-radius:10px;min-width:220px;z-index:40;display:none;padding:4px 0}
+        .ap-stats-panel.open{display:block}
+        .ap-stats-sec{font-size:11px;color:var(--bili-blue);padding:8px 12px 4px;letter-spacing:.5px}
+        .ap-stats-row{display:flex;align-items:center;justify-content:space-between;padding:3px 12px;font-size:12px;color:rgba(255,255,255,.85)}
+        .ap-stats-row b{font-weight:500;color:#fff}
+        .ap-badge{font-size:10.5px;line-height:16px;padding:0 6px;border-radius:4px;white-space:nowrap}
+        .ap-badge.ok{background:rgba(45,211,111,.16);color:#2dd36f}
+        .ap-badge.soft{background:rgba(255,190,51,.16);color:#ffbe33}
+        .ap-badge.no{background:rgba(255,77,106,.16);color:#ff4d6a}
+
+        /* Overlay */
+        #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10}
+        #overlay.active{pointer-events:all}
+        .overlay-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:clamp(24px,6vw,40px) clamp(18px,5vw,36px);text-align:center;max-width:460px;width:90%;backdrop-filter:blur(20px);box-shadow:0 8px 60px rgba(0,0,0,.6)}
+        .overlay-card .icon{width:clamp(48px,15vw,64px);height:clamp(48px,15vw,64px);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto clamp(12px,5vw,20px);font-size:clamp(20px,7vw,26px)}
+        .overlay-card .icon.error{background:rgba(255,77,106,.15);color:var(--danger)}
+        .overlay-card .icon.loading{background:linear-gradient(135deg,var(--bili-blue),var(--bili-pink));color:#fff;animation:pulse 1.5s ease-in-out infinite}
+        .overlay-card h2{color:#fff;font-size:clamp(17px,5vw,20px);font-weight:600;margin-bottom:8px}
+        .overlay-card p{color:var(--text-dim);font-size:clamp(12.5px,3.6vw,14px);line-height:1.6}
+        .overlay-card .code{font-family:'Fira Code','Cascadia Code',monospace;color:var(--bili-blue);font-size:13px;word-break:break-all}
+        .overlay-card input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.04);color:#fff;font-size:14px;outline:none;transition:border-color .2s;margin-top:16px}
+        .overlay-card input:focus{border-color:var(--bili-blue)}
+        .overlay-card input::placeholder{color:#555}
+        .overlay-card button{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--bili-blue),var(--bili-pink));color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;transition:transform .15s,box-shadow .15s}
+        .overlay-card button:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,161,214,.3)}
+
+        #toast{position:fixed;top:clamp(12px,4vw,20px);left:50%;transform:translateX(-50%) translateY(-120px);padding:clamp(10px,3vw,12px) clamp(20px,7vw,28px);border-radius:24px;background:var(--surface);border:1px solid var(--border);color:#fff;font-size:clamp(11px,3.4vw,13px);backdrop-filter:blur(12px);z-index:999;transition:transform .35s cubic-bezier(.4,0,.2,1);pointer-events:none}
+        #toast.show{transform:translateX(-50%) translateY(0)}
+        .hidden{display:none!important}
+
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.75;transform:scale(.96)}}
+
+        @media(max-width:640px){.bili-title{top:clamp(8px,2.6vw,10px);left:clamp(10px,3.2vw,12px)}.bili-overflow-panel{right:8px}}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="player-wrapper">
+            <div id="artplayer"></div>
+            <canvas id="danmaku-canvas"></canvas>
+            <div class="bili-title" id="videoTitle"></div>
+            <div id="overlay" class="active">
+                <div class="overlay-card" id="welcomeCard">
+                    <div class="icon loading">&#9654;</div>
+                    <h2>ArtPlayer 弹幕播放器</h2>
+                    <p>在地址栏添加 <span class="code">?url=视频链接</span> 开始播放</p>
+                    <input type="text" id="urlInput" placeholder="粘贴视频地址 (支持 mp4 / m3u8 / flv)">
+                    <button onclick="loadFromInput()">开始播放</button>
+                </div>
+                <div class="overlay-card hidden" id="errorCard">
+                    <div class="icon error">&#10006;</div>
+                    <h2>播放出错</h2>
+                    <p id="errorText"></p>
+                    <input type="text" id="urlInputRetry" placeholder="重新输入视频地址">
+                    <button onclick="loadFromInput(true)">重试</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
+
+    <script>
+(function(){
+    var art=null, vid='', dmEngine=null;
+    var danmakuVisible=true, danmakuOpacity=parseFloat(localStorage.getItem('ap_dm_opacity'))||1, danmakuSpeed=parseFloat(localStorage.getItem('ap_dm_speed'))||7, danmakuMask=parseInt(localStorage.getItem('ap_dm_mask')||'0')||0;
+    var subtitleVisible=true, subtitleSize=parseInt(localStorage.getItem('ap_sub_fs'))||20, subtitleBottom=parseInt(localStorage.getItem('ap_sub_bottom'))||15;
+    var subtitleList=[], currentSub=-1;
+    var currentTheme=localStorage.getItem('ap_theme')||'bilibili';
+    var _overflowSystem=null;
+
+    function qs(n){return new URLSearchParams(location.search).get(n)}
+    function showToast(m,e){
+        var t=document.getElementById('toast');t.textContent=m;t.className=e?'toast show err':'toast show';
+        if(e)t.style.background='rgba(255,77,106,.2)';clearTimeout(t._timer);
+        t._timer=setTimeout(function(){t.classList.remove('show');t.style.background=''},2500);
+    }
+    function showError(m){
+        document.getElementById('errorText').textContent=m;document.getElementById('welcomeCard').classList.add('hidden');
+        document.getElementById('errorCard').classList.remove('hidden');document.getElementById('overlay').classList.remove('hidden');
+        document.getElementById('overlay').classList.add('active');
+    }
+    function hideOverlay(){document.getElementById('overlay').classList.add('hidden')}
+    function loadFromInput(retry){
+        var input=retry?document.getElementById('urlInputRetry'):document.getElementById('urlInput');
+        var url=input.value.trim();if(!url){showToast('请输入视频地址',true);return}initPlayer(url);
+    }
+    function getVideoId(url){
+        var v=url;try{var u=new URL(url);v=u.pathname+u.search}catch(e){}
+        var hash=0;for(var i=0;i<v.length;i++){hash=((hash<<5)-hash)+v.charCodeAt(i);hash|=0}
+        return Math.abs(hash).toString(36);
+    }
+    function getVideoType(url){
+        var l=url.toLowerCase();if(l.includes('.m3u8')||l.includes('m3u8'))return'hls';
+        if(l.includes('.flv')||l.includes('flv'))return'flv';return'normal';
+    }
+    function setTheme(name){
+        currentTheme=name;document.documentElement.dataset.theme=name;localStorage.setItem('ap_theme',name);
+        var blue=getComputedStyle(document.documentElement).getPropertyValue('--bili-blue').trim();
+        if(art)art.theme=blue;
+    }
+    function applyDanmakuMask(v){
+        danmakuMask=v;localStorage.setItem('ap_dm_mask',String(v));
+        if(dmEngine)dmEngine.setMargin(v);
+    }
+
+    /* ===== Icons ===== */
+    function lucide(paths,opts){
+        var o=opts||{};return'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="'+(o.size||18)+'" height="'+(o.size||18)+'"'+(o.filled?' class="filled"':'')+'>'+paths+'</svg>';
+    }
+    var ICONS={
+        camera:function(){return lucide('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>')},
+        comment:function(){return lucide('<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')},
+        send:function(){return lucide('<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',{filled:true})},
+        more:function(){return lucide('<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>')}
+    };
+
+    /* ===== Danmaku Engine (canvas) ===== */
+    function DanmakuEngine(canvas, artInstance){
+        var self=this;
+        this.canvas=canvas;
+        this.ctx=canvas.getContext('2d');
+        this.art=artInstance;
+        this.data=[];           // all danmaku data [{text,color,mode,time}]
+        this.cursor=0;
+        this.active=[];         // currently rendering danmaku
+        this.pending=[];        // queued danmaku waiting for emission
+        this.maxFixed=8;        // max concurrent top/bottom danmaku
+        this.fixedRows=5;       // row slots for top/bottom danmaku
+        this.trackGap=60;       // min px gap between same-track danmaku
+        this.density=parseFloat(localStorage.getItem('ap_dm_density'))||100;
+        this.maxPerSecond=250;  // max danmaku emitted per second (server configurable)
+        this._emitTimes=[];     // sliding window of emission timestamps
+        this.speedJitter=10;    // per-danmaku random speed deviation +-percent (server configurable)
+        this.fixedStack=parseFloat(localStorage.getItem('ap_dm_stack'))||100; // top/bottom stacking depth, 100% = to the center of the video
+        this.tracks=[];         // track end positions for anti-overlap (mode 0)
+        this.topSlots=[];       // top danmaku row slot release times
+        this.bottomSlots=[];    // bottom danmaku row slot release times
+        for(var rs=0;rs<this.fixedRows;rs++){this.topSlots.push(0);this.bottomSlots.push(0);}
+        this.visible=true;
+        this.opacity=1;
+        this.speed=7;           // seconds to cross screen
+        this.margin=0;          // bottom margin percent
+        this.baseFontSize=Math.max(16,Math.min(22,parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dm-font'))||20));
+        this.fontSize=this.baseFontSize;
+        this.fontFamily="'MiSans','Microsoft YaHei','PingFang SC',sans-serif";
+        this.animId=null;
+        this.lastTime=0;
+        this.running=false;
+        this.resize();
+        this._bindEvents();
+    }
+    DanmakuEngine.prototype.resize=function(){
+        var rect=this.canvas.getBoundingClientRect();
+        if(!rect.width||!rect.height)return;
+        var dpr=window.devicePixelRatio||1;
+        // Canvas display size is governed by CSS (width/height 100% inside the
+        // player), so it follows fullscreen automatically. Only sync the pixel
+        // buffer with the actual rendered size here.
+        var bw=Math.round(rect.width*dpr), bh=Math.round(rect.height*dpr);
+        if(this.canvas.width!==bw||this.canvas.height!==bh){
+            this.canvas.width=bw;
+            this.canvas.height=bh;
+        }
+        this.ctx.setTransform(dpr,0,0,dpr,0,0);
+        this.w=rect.width;
+        this.h=rect.height;
+        // Scale the danmaku font with the player width, down to 50% of the base
+        // (base is fully sized at 1000px or wider)
+        var fScale=Math.max(0.5,Math.min(1,this.w/1000));
+        this.fontSize=Math.round(this.baseFontSize*fScale);
+        // Actual video picture area within the canvas.
+        // The <video> element itself stretches over the whole player, so use
+        // the intrinsic video dimensions (videoWidth/videoHeight) + object-fit
+        // scale to find the real picture bounds (handles letterboxing).
+        var vid=this.art.video;
+        var ivw=vid.videoWidth, ivh=vid.videoHeight;
+        if(ivw&&ivh){
+            var scale=Math.min(this.w/ivw,this.h/ivh);
+            var dw=Math.round(ivw*scale), dh=Math.round(ivh*scale);
+            this.vx=Math.round((this.w-dw)/2);
+            this.vy=Math.round((this.h-dh)/2);
+            this.vw=dw;
+            this.vh=dh;
+        }else{
+            this.vx=0;this.vy=0;this.vw=this.w;this.vh=this.h;
+        }
+        this.trackH=this.fontSize+8;
+        // Top/bottom stacking depth: fixedStack% of half the video height
+        // (100% = rows extend down to the vertical center of the picture)
+        var stackDepth=Math.max(this.trackH,Math.round(this.vh*(this.fixedStack/100)*0.5));
+        this.topRows=Math.max(1,Math.floor(stackDepth/this.trackH));
+        this.bottomRows=this.topRows;
+        this.topSlots=[];this.bottomSlots=[];
+        for(var rs=0;rs<this.topRows;rs++){this.topSlots.push(0);this.bottomSlots.push(0);}
+        // Scroll danmaku share the full video area with top danmaku (they may
+        // overlap). Only the bottom margin (mask) reserves space at the bottom.
+        var scrollAreaH=this.vh-this.margin*this.vh/100;
+        this.trackCount=Math.max(1,Math.floor(scrollAreaH/this.trackH));
+        this.scrollY0=this.vy;
+        this.tracks=[];for(var i=0;i<this.trackCount;i++)this.tracks.push(0);
+    };
+    DanmakuEngine.prototype._bindEvents=function(){
+        var self=this;
+        this.art.on('video:play',function(){self.start()});
+        this.art.on('video:playing',function(){self.start()});
+        this.art.on('video:pause',function(){self.stop()});
+        this.art.on('video:seeked',function(){self._handleSeek()});
+        this.art.on('video:waiting',function(){self.stop()});
+        this.art.on('video:loadedmetadata',function(){self.resize()});
+        this.art.on('video:ended',function(){self.stop();self._handleSeek()});
+        this.art.on('destroy',function(){self.destroy()});
+        var ro=new ResizeObserver(function(){self.resize()});
+        ro.observe(this.canvas);
+        window.addEventListener('resize',function(){self.resize();setTimeout(function(){self.resize()},200)});
+    };
+    DanmakuEngine.prototype.load=function(data){
+        this.data=(data||[]).slice();
+        this._sortQueue();
+        this.cursor=0;
+        this._handleSeek();
+    };
+    DanmakuEngine.prototype.emit=function(dm){
+        dm._sendTime=performance.now();
+        dm._live=true;
+        this._enqueue(dm);
+    };
+    /* 发射限流：每秒最多 maxPerSecond 条（用户发送的 _live 弹幕不受限） */
+    DanmakuEngine.prototype._canEmit=function(){
+        var now=performance.now();
+        while(this._emitTimes.length&&this._emitTimes[0]<now-1000)this._emitTimes.shift();
+        if(this._emitTimes.length>=this.maxPerSecond)return false;
+        this._emitTimes.push(now);
+        return true;
+    };
+    /* 入队：按密度采样（100% = 显示所有），发射限流，满则排队不丢弃 */
+    DanmakuEngine.prototype._enqueue=function(dm){
+        if(!dm._live&&this.density<100&&Math.random()*100>=this.density)return;
+        if(!dm._live&&!this._canEmit()){
+            this.pending.push(dm);
+            return;
+        }
+        var item=this._createItem(dm);
+        if(item){item._live=dm._live;this.active.push(item);this._occupy(item);if(!this.running&&this.active.length>0)this.start();}
+        else{
+            this.pending.push(dm);
+            if(this.pending.length>10000)this.pending.shift();
+        }
+    };
+    /* 占用轨道：立即占位防止同帧重叠 */
+    DanmakuEngine.prototype._occupy=function(item){
+        if(item.mode!==0||item._track==null)return;
+        var r=item.x+item.width;
+        if(r>this.tracks[item._track])this.tracks[item._track]=r;
+    };
+    /* 释放轨道：重算该轨道最右弹幕位置 */
+    DanmakuEngine.prototype._releaseTrack=function(track){
+        var max=0;
+        for(var i=0;i<this.active.length;i++){
+            var a=this.active[i];
+            if(a._done||a._track!==track||a.mode!==0)continue;
+            var r=a.x+a.width;
+            if(r>max)max=r;
+        }
+        this.tracks[track]=max;
+    };
+    DanmakuEngine.prototype._createItem=function(dm){
+        var self=this;
+        var txt=dm.text;if(!txt)return null;
+        this.ctx.font='bold '+this.fontSize+'px '+this.fontFamily;
+        var tw=this.ctx.measureText(txt).width;
+        var item={
+            text:txt, color:dm.color||'#ffffff', mode:dm.mode||0,
+            time:dm.time, x:0, y:0, width:tw,
+            startTime:performance.now(), duration:0, opacity:1, _done:false
+        };
+        if(item.mode===0){
+            // scrolling: danmaku may overlap, always enter from the video right
+            // edge, rows are only used for vertical placement
+            item.duration=this.speed*1000;
+            var bestTrack=-1;
+            for(var i=0;i<this.tracks.length;i++){
+                if(this.tracks[i]<=0){bestTrack=i;break}
+            }
+            if(bestTrack<0){
+                var minEnd=Infinity;
+                for(var i2=0;i2<this.tracks.length;i2++){
+                    if(this.tracks[i2]<minEnd){minEnd=this.tracks[i2];bestTrack=i2}
+                }
+            }
+            if(bestTrack<0)return null;
+            item.x=this.vx+this.vw;
+            // Random per-danmaku speed factor within +-speedJitter percent
+            item._speedFactor=1+(Math.random()*2-1)*(this.speedJitter/100);
+            var yTop=bestTrack*this.trackH;
+            item.y=this.scrollY0+yTop+this.trackH-4;
+            item._track=bestTrack;
+        }else if(item.mode===1){
+            // top - use row slots to avoid stacking
+            var now=performance.now();
+            var slot=-1;
+            for(var si=0;si<this.topSlots.length;si++){
+                if(this.topSlots[si]<=now){slot=si;break}
+            }
+            if(slot<0)return null;
+            item.x=this.vx+(this.vw-tw)/2;
+            item.y=this.vy+this.trackH+slot*this.trackH;
+            item.duration=4000;
+            item._fixed=true;
+            item._slotType='top';
+            item._slot=slot;
+            this.topSlots[slot]=now+item.duration;
+        }else{
+            // bottom - use row slots from the bottom up
+            var now2=performance.now();
+            var slot2=-1;
+            for(var si2=0;si2<this.bottomSlots.length;si2++){
+                if(this.bottomSlots[si2]<=now2){slot2=si2;break}
+            }
+            if(slot2<0)return null;
+            item.x=this.vx+(this.vw-tw)/2;
+            item.y=this.vy+this.vh-this.trackH-slot2*this.trackH;
+            item.duration=4000;
+            item._fixed=true;
+            item._slotType='bottom';
+            item._slot=slot2;
+            this.bottomSlots[slot2]=now2+item.duration;
+        }
+        return item;
+    };
+    DanmakuEngine.prototype._sortQueue=function(){
+        this.data.sort(function(a,b){return a.time-b.time});
+    };
+    DanmakuEngine.prototype._handleSeek=function(){
+        var ct=this.art.currentTime||0;
+        // Clear active danmaku
+        this.active.forEach(function(item){item._done=true});
+        this.active=[];
+        this.pending=[];
+        this.tracks=[];for(var i=0;i<this.trackCount;i++)this.tracks.push(0);
+        this.topSlots=[];this.bottomSlots=[];
+        for(var rs=0;rs<this.topRows;rs++){this.topSlots.push(0);this.bottomSlots.push(0);}
+        if(!this.data)return;
+        // Reset cursor to first danmaku at/after current time
+        // Danmaku strictly follow the video timeline: only items whose time
+        // is reached will be shown by the update loop
+        var c=0;
+        while(c<this.data.length&&this.data[c].time<ct)c++;
+        this.cursor=c;
+    };
+    DanmakuEngine.prototype.start=function(){
+        if(this.running)return;this.running=true;this.lastTime=performance.now();this._loop();
+    };
+    DanmakuEngine.prototype.stop=function(){
+        this.running=false;if(this.animId)cancelAnimationFrame(this.animId);this.animId=null;
+    };
+    DanmakuEngine.prototype._loop=function(){
+        if(!this.running)return;
+        var self=this;
+        this.animId=requestAnimationFrame(function(ts){self._tick(ts)});
+    };
+    DanmakuEngine.prototype._tick=function(ts){
+        var dt=(ts-this.lastTime)/1000;
+        this.lastTime=ts;
+        this._update(dt,ts);
+        this._render();
+        this._loop();
+    };
+    DanmakuEngine.prototype._update=function(dt,ts){
+        var ct=this.art.currentTime||0;
+        var paused=this.art.video?this.art.video.paused:false;
+        // Remove done items and free tracks
+        for(var i=this.active.length-1;i>=0;i--){
+            var item=this.active[i];
+            if(item._done){this.active.splice(i,1);continue}
+            if(paused&&!item._live)continue;
+            if(item.mode===0){
+                var speed=this.w/(this.speed*1000)*dt*1000;
+                if(item._speedFactor)speed*=item._speedFactor;
+                item.x-=speed;
+                if(item._track!=null && item.x+item.width<this.vx){
+                    var tr=item._track;
+                    item._done=true;
+                    this._releaseTrack(tr);
+                }
+            }else{
+                var elapsed=(ts-item.startTime)/1000;
+                if(elapsed>item.duration/1000){
+                    if(item._slotType)this[item._slotType+'Slots'][item._slot]=0;
+                    item._done=true;
+                }
+                else if(elapsed<0.3)item.opacity=elapsed/0.3;
+                else if(elapsed>(item.duration/1000-1))item.opacity=Math.max(0,(item.duration/1000-elapsed));
+                else item.opacity=1;
+            }
+        }
+        // Rebuild track positions each frame from current danmaku positions
+        // (frozen while paused). This keeps tracks in sync with scrolling,
+        // so new danmaku can enter once the previous one clears the edge.
+        if(!paused){
+            for(var tj=0;tj<this.tracks.length;tj++)this.tracks[tj]=0;
+            for(var tk=0;tk<this.active.length;tk++){
+                var ta=this.active[tk];
+                if(ta._done||ta.mode!==0||ta._track==null)continue;
+                var tr=ta.x+ta.width;
+                if(tr>this.tracks[ta._track])this.tracks[ta._track]=tr;
+            }
+        }
+        // Drain pending queue (rate-limited to maxPerSecond)
+        if(this.pending.length>0){
+            var emitted=0;
+            for(var pi=this.pending.length-1;pi>=0;pi--){
+                var pdm=this.pending[pi];
+                if(!pdm._live&&!this._canEmit())break;
+                var pitem=this._createItem(pdm);
+                if(pitem){pitem._live=pdm._live;this.pending.splice(pi,1);this.active.push(pitem);this._occupy(pitem);emitted++;}
+                if(emitted>=8)break;
+            }
+        }
+        // Pop data items at current time (cursor-based, replayable)
+        while(this.data&&this.cursor<this.data.length&&this.data[this.cursor].time<=ct){
+            var qdm=this.data[this.cursor++];
+            this._enqueue(qdm);
+        }
+    };
+    DanmakuEngine.prototype._render=function(){
+        var ctx=this.ctx;
+        ctx.clearRect(0,0,this.w,this.h);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(this.vx,this.vy,this.vw,this.vh);
+        ctx.clip();
+        if(!this.visible){ctx.restore();return;}
+        ctx.font='bold '+this.fontSize+'px '+this.fontFamily;
+        ctx.textBaseline='bottom';
+        // Pass 1: scroll danmaku (bottom layer)
+        var i,item,alpha;
+        for(i=0;i<this.active.length;i++){
+            item=this.active[i];
+            if(item._done||item.mode!==0)continue;
+            alpha=this.opacity;
+            if(item.opacity!=null)alpha*=item.opacity;
+            ctx.globalAlpha=alpha;
+            ctx.shadowColor='rgba(0,0,0,0.8)';
+            ctx.shadowBlur=2;
+            ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
+            ctx.fillStyle=item.color;
+            ctx.fillText(item.text,item.x,item.y);
+            ctx.shadowColor='transparent';
+            ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+        }
+        // Pass 2: existing fixed (top/bottom) danmaku above scroll
+        for(i=0;i<this.active.length;i++){
+            item=this.active[i];
+            if(item._done||item.mode===0||item._live)continue;
+            alpha=this.opacity;
+            if(item.opacity!=null)alpha*=item.opacity;
+            ctx.globalAlpha=alpha;
+            ctx.shadowColor='rgba(0,0,0,0.8)';
+            ctx.shadowBlur=2;
+            ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
+            ctx.fillStyle=item.color;
+            ctx.fillText(item.text,item.x,item.y);
+            ctx.shadowColor='transparent';
+            ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+        }
+        // Pass 3: newly sent (live) top/bottom danmaku on top
+        for(i=0;i<this.active.length;i++){
+            item=this.active[i];
+            if(item._done||item.mode===0||!item._live)continue;
+            alpha=this.opacity;
+            if(item.opacity!=null)alpha*=item.opacity;
+            ctx.globalAlpha=alpha;
+            ctx.shadowColor='rgba(0,0,0,0.8)';
+            ctx.shadowBlur=2;
+            ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;
+            ctx.fillStyle=item.color;
+            ctx.fillText(item.text,item.x,item.y);
+            ctx.shadowColor='transparent';
+            ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+        }
+        ctx.globalAlpha=1;
+        ctx.restore();
+    };
+    DanmakuEngine.prototype.show=function(){this.visible=true};
+    DanmakuEngine.prototype.hide=function(){this.visible=false};
+    DanmakuEngine.prototype.setOpacity=function(v){this.opacity=Math.max(0,Math.min(1,v))};
+    DanmakuEngine.prototype.setSpeed=function(v){this.speed=Math.max(3,Math.min(15,v))};
+    DanmakuEngine.prototype.setMargin=function(v){this.margin=v;this.resize()};
+    DanmakuEngine.prototype.setMaxPerSecond=function(v){this.maxPerSecond=Math.max(1,Math.min(1000,v))};
+    DanmakuEngine.prototype.setSpeedJitter=function(v){this.speedJitter=Math.max(0,Math.min(50,v))};
+    DanmakuEngine.prototype.setFixedStack=function(v){
+        this.fixedStack=Math.max(10,Math.min(100,v));
+        localStorage.setItem('ap_dm_stack',String(this.fixedStack));
+        this.resize();
+    };
+    DanmakuEngine.prototype.setDensity=function(v){
+        this.density=Math.max(5,Math.min(100,v));
+        localStorage.setItem('ap_dm_density',String(this.density));
+    };
+    DanmakuEngine.prototype.clear=function(){this.active=[];this.pending=[];this.data=[];this.cursor=0;this.tracks=[];for(var i=0;i<this.trackCount;i++)this.tracks.push(0)};
+    DanmakuEngine.prototype.destroy=function(){this.stop();this.active=[];this.pending=[];this.data=[];this.cursor=0};
+
+    /* ===== Init Player ===== */
+    async function initPlayer(url){
+        var decoded=decodeURIComponent(url).trim();
+        if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(decoded)&&!decoded.startsWith('/'))decoded='/'+decoded;
+
+        var serverTheme=null,serverRender=null;
+        try{
+            var r=await fetch('/api/config/public');var d=await r.json();
+            if(d.code===0){
+                if(d.data.cdn&&d.data.cdn.enabled&&d.data.cdn.baseUrl){
+                    var base=d.data.cdn.baseUrl.replace(/\/+$/,'');
+                    if(!/^https?:\/\//i.test(decoded))decoded=base+(decoded.startsWith('/')?'':'/')+decoded;
+                }
+                serverTheme=d.data.theme;
+                serverRender=d.data.render||null;
+            }
+        }catch(e){}
+
+        var subtitleUrl=qs('subtitle')||'';
+        if(!subtitleUrl){
+            try{
+                var sr=await fetch('/api/subtitle/detect?url='+encodeURIComponent(decoded));
+                var sd=await sr.json();
+                if(sd.code===0&&sd.data.subtitles&&sd.data.subtitles.length){
+                    subtitleList=sd.data.subtitles;
+                    subtitleUrl=subtitleList[0].url;
+                    currentSub=0;
+                }
+            }catch(e){}
+        }
+
+        var videoType=getVideoType(decoded);
+        var title=qs('title')||decoded.split('/').pop()||decoded;
+
+        /* 视频ID：优先 URL 参数，否则服务端分配/查映射（8位唯一ID），失败时本地散列兜底 */
+        vid=qs('vid')||'';
+        if(!vid){
+            try{
+                var vr=await fetch('/api/video/resolve?url='+encodeURIComponent(decoded));
+                var vd=await vr.json();
+                if(vd.code===0&&vd.data.vid)vid=vd.data.vid;
+            }catch(e){}
+        }
+        if(!vid)vid=getVideoId(decoded);
+
+        try{fetch('/api/video/map',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid:vid,url:decoded})}).catch(function(){})}catch(e){}
+        document.getElementById('videoTitle').textContent=title;document.getElementById('videoTitle').style.display='block';
+
+        var subOption={};
+        if(subtitleUrl){
+            var subType=subtitleUrl.endsWith('.vtt')||subtitleUrl.endsWith('.webvtt')?'vtt':'srt';
+            subOption={url:subtitleUrl,type:subType,encoding:'utf-8',style:{color:'#fff',fontSize:'20px'}};
+        }
+
+        var customType={
+            m3u8:function(video,src,artInst){
+                if(Hls&&Hls.isSupported()){var hls=new Hls();hls.loadSource(src);hls.attachMedia(video);artInst.hls=hls;artInst.on('destroy',function(){hls.destroy()})}
+                else if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=src;
+            },
+            flv:function(video,src,artInst){
+                if(flvjs&&flvjs.isSupported()){var flv=flvjs.createPlayer({type:'flv',url:src});flv.attachMediaElement(video);flv.load();artInst.flv=flv;artInst.on('destroy',function(){flv.destroy()})}
+            }
+        };
+
+        if(art){art.destroy();art=null}
+        if(dmEngine){dmEngine.destroy();dmEngine=null}
+
+        /* Load danmaku from server */
+        var danmakuData=[];
+        try{var dr=await fetch('/api/danmu/v3/?id='+encodeURIComponent(vid));var dd=await dr.json();if(dd.code===0)danmakuData=dd.data}catch(e){}
+
+        var themeColor=getComputedStyle(document.documentElement).getPropertyValue('--bili-blue').trim();
+
+        var options={
+            container:'#artplayer',url:decoded,
+            autoplay:true,autoSize:true,autoMini:true,
+            volume:parseFloat(localStorage.getItem('ap_volume'))||0.7,
+            theme:themeColor,
+            hotkey:true,screenshot:false,fullscreen:true,fullscreenWeb:true,
+            miniProgressBar:true,mutex:true,backdrop:true,
+            playsInline:true,setting:true,pip:true,lock:true,
+            loop:false,flip:false,aspectRatio:false,playbackRate:true,
+            customType:customType,
+            settings:[
+                {
+                    html:'弹幕开关',icon:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+                     switch:true,width:170,onSwitch:function(item){danmakuVisible=!item.switch;if(dmEngine)danmakuVisible?dmEngine.show():dmEngine.hide();return!item.switch}
+                },
+                {
+                    html:'弹幕设置',width:170,
+                    selector:[
+                        {html:'透明度',width:170,range:[danmakuOpacity,0.2,1,0.01],onRange:function(item){danmakuOpacity=item.range[0];localStorage.setItem('ap_dm_opacity',String(item.range[0]));if(dmEngine)dmEngine.setOpacity(item.range[0]);return Math.round(item.range[0]*100)+'%'}},
+                        {html:'速度',width:170,range:[danmakuSpeed,3,15,0.1],onRange:function(item){danmakuSpeed=item.range[0];localStorage.setItem('ap_dm_speed',String(item.range[0]));if(dmEngine)dmEngine.setSpeed(item.range[0]);return(item.range[0]).toFixed(1)+'s'}},
+                        {html:'数量',width:170,range:[parseFloat(localStorage.getItem('ap_dm_density'))||100,5,100,1],onRange:function(item){if(dmEngine)dmEngine.setDensity(item.range[0]);return Math.round(item.range[0])+'%'}},
+                        {html:'顶/底堆叠',width:170,range:[parseFloat(localStorage.getItem('ap_dm_stack'))||100,10,100,1],onRange:function(item){if(dmEngine)dmEngine.setFixedStack(item.range[0]);return Math.round(item.range[0])+'%'}},
+                        {html:'底边距',width:170,range:[danmakuMask,0,100,1],onRange:function(item){applyDanmakuMask(item.range[0]);return Math.round(item.range[0])+'%'}}
+                    ]
+                },
+                {
+                    html:'字幕设置',width:170,
+                    selector:[
+                        {html:'字幕开关',width:170,switch:true,onSwitch:function(item){subtitleVisible=!item.switch;var el=document.querySelector('.art-subtitle');if(el)el.style.display=subtitleVisible?'':'none';return!item.switch}},
+                        {html:'字幕大小',width:170,range:[subtitleSize,14,32,1],onRange:function(item){subtitleSize=item.range[0];localStorage.setItem('ap_sub_fs',String(item.range[0]));if(art)art.subtitle.style({fontSize:item.range[0]+'px'});return item.range[0]+'px'}},
+                        {html:'字幕底距',width:170,range:[subtitleBottom,5,80,1],onRange:function(item){subtitleBottom=item.range[0];localStorage.setItem('ap_sub_bottom',String(item.range[0]));var p=document.querySelector('.art-video-player');if(p)p.style.setProperty('--art-subtitle-bottom',item.range[0]+'px');return item.range[0]+'px'}},
+                        {html:'字幕选择',width:170,selector:subtitleList.map(function(s,i){return{html:s.title,value:i,default:i===currentSub}}),onSelect:function(item){if(art&&subtitleList[item.value]){art.subtitle.switch(subtitleList[item.value].url,{name:subtitleList[item.value].title});currentSub=item.value}return item.html}}
+                    ]
+                },
+                {html:'统计信息',onClick:function(){var p=document.querySelector('.ap-stats-panel');if(p){p.classList.toggle('open');buildStats()}return'统计信息'}}
+            ],
+            controls:[{
+                position:'right',
+                html:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+                tooltip:'截图',style:{order:10},
+                click:function(artIns){var vv=artIns.video;if(vv&&vv.readyState>=2){try{var cv=document.createElement('canvas');cv.width=vv.videoWidth;cv.height=vv.videoHeight;cv.getContext('2d').drawImage(vv,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast('截图已保存')}catch(e){showToast('截图失败（可能因跨域限制）',true)}}else{showToast('视频未就绪',true)}}
+            }]
+        };
+
+        if(subtitleUrl)options.subtitle=subOption;
+        if(videoType==='hls')options.type='m3u8';
+        else if(videoType==='flv')options.type='flv';
+
+        try{
+            art=new Artplayer(options);
+            hideOverlay();setTimeout(function(){hideOverlay()},500);
+
+            /* Init danmaku engine */
+            var dmCanvas=document.getElementById('danmaku-canvas');
+            var playerEl=document.querySelector('.art-video-player');
+            if(playerEl&&dmCanvas.parentNode!==playerEl)playerEl.insertBefore(dmCanvas,playerEl.firstChild);
+            dmEngine=new DanmakuEngine(dmCanvas,art);
+            if(serverRender&&serverRender.maxPerSecond)dmEngine.setMaxPerSecond(serverRender.maxPerSecond);
+            if(serverRender&&serverRender.speedJitter!=null)dmEngine.setSpeedJitter(serverRender.speedJitter);
+            dmEngine.setMargin(danmakuMask);
+            dmEngine.setSpeed(danmakuSpeed);
+            dmEngine.setOpacity(danmakuOpacity);
+            if(!danmakuVisible)dmEngine.hide();
+
+            /* Apply saved subtitle settings */
+            try{art.subtitle.style({fontSize:subtitleSize+'px'});}catch(e){}
+            var p=document.querySelector('.art-video-player');if(p)p.style.setProperty('--art-subtitle-bottom',subtitleBottom+'px');
+            if(!subtitleVisible){var el=document.querySelector('.art-subtitle');if(el)el.style.display='none';}
+
+            /* Convert server danmaku format and load */
+            if(danmakuData.length){
+                var converted=danmakuData.map(function(d){return{text:d[4],time:d[0],mode:d[1],color:'#'+d[2].toString(16).padStart(6,'0')}});
+                dmEngine.load(converted);
+                if(art.video&&!art.video.paused)dmEngine.start();
+            }
+
+            /* Restore position */
+            var saved=parseFloat(localStorage.getItem('ap_pos_'+vid))||0;
+            if(saved>3){art.on('video:loadedmetadata',function(){if(art.duration>saved+10)setTimeout(function(){art.seek=saved},400)})}
+            setInterval(function(){if(art&&art.video&&!art.video.paused)localStorage.setItem('ap_pos_'+vid,art.currentTime)},5000);
+
+            /* Theme: server config always wins, localStorage is only a fallback */
+            if(serverTheme)setTheme(serverTheme);else setTheme(currentTheme);
+            art.on('video:volumechange',function(){localStorage.setItem('ap_volume',art.volume)});
+
+            /* Error */
+            var videoOk=false;
+            art.on('video:loadeddata',function(){videoOk=true});art.on('video:playing',function(){videoOk=true});
+            art.on('video:error',function(){
+                if(videoOk||(art.video&&art.video.readyState>0)){showToast('视频加载出现暂时性问题',true);return}
+                var code=art.video&&art.video.error?art.video.error.code:'';var msg=code===4?'视频格式不支持':code===3?'视频解码失败':code===2?'网络错误':'视频加载失败';
+                showError(msg+'，请检查地址是否正确');
+            });
+
+            /* Custom UI */
+            setTimeout(function(){
+                setupCommentBox();injectScreenshotFloat();injectStatsPanel();setupOverflow();
+            },600);
+        }catch(e){showError('播放器初始化失败: '+e.message)}
+    }
+
+    /* ===== Danmaku Input ===== */
+    function setupCommentBox(){
+        var app=document.querySelector('.art-video-player');
+        var bottom=app?app.querySelector('.art-bottom'):null;
+        var controlsLeft=bottom?bottom.querySelector('.art-controls-left'):null;
+        if(!bottom||!controlsLeft||document.querySelector('.bili-danmu'))return;
+        if(!dmEngine){setTimeout(setupCommentBox,300);return}
+
+        var colors=['#ffffff','#e54256','#ffe133','#64dd17','#39ccff','#fb7299','#a855f7'];
+        var types=[{v:0,n:'滚动'},{v:1,n:'顶部'},{v:2,n:'底部'}];
+        var curColor='#ffffff',curType=0;
+
+        var wrap=document.createElement('div');wrap.className='bili-danmu';
+        var colorBtn=document.createElement('button');colorBtn.className='bd-color';colorBtn.title='弹幕设置';colorBtn.innerHTML='<span class="dot" style="background:'+curColor+'"></span>';
+        var panel=document.createElement('div');panel.className='bd-color-panel';
+        panel.innerHTML='<div class="bd-colors">'+colors.map(function(c){return'<button data-c="'+c+'" style="background:'+c+'"></button>'}).join('')+'</div><div class="bd-types">'+types.map(function(t){return'<button data-t="'+t.v+'">'+t.n+'</button>'}).join('')+'</div>';
+        var input=document.createElement('input');input.className='bd-input';input.type='text';input.maxLength=30;input.placeholder='发个友善的弹幕见证当下';
+        var sendBtn=document.createElement('button');sendBtn.className='bd-send';sendBtn.title='发送弹幕';sendBtn.innerHTML=ICONS.send();
+        wrap.append(colorBtn,panel,input,sendBtn);
+        /* Danmaku box lives inside the left control group as a flex child:
+           it can never overlap the buttons, and it hides together with the
+           whole control bar (opacity / mini-progress mode). */
+        controlsLeft.appendChild(wrap);
+
+        colorBtn.addEventListener('click',function(e){e.stopPropagation();panel.classList.toggle('open')});
+        panel.querySelectorAll('.bd-colors button').forEach(function(b){b.addEventListener('click',function(){curColor=b.dataset.c;colorBtn.querySelector('.dot').style.background=curColor;panel.querySelectorAll('.bd-colors button').forEach(function(x){x.classList.remove('active')});b.classList.add('active')})});
+        panel.querySelectorAll('.bd-types button').forEach(function(b){b.addEventListener('click',function(){curType=parseInt(b.dataset.t);panel.querySelectorAll('.bd-types button').forEach(function(x){x.classList.remove('active')});b.classList.add('active')})});
+        document.addEventListener('click',function(e){if(!wrap.contains(e.target))panel.classList.remove('open')});
+
+        function doSend(){
+            var text=input.value.trim();
+            if(!text){showToast('要输入弹幕内容哦',true);return}
+            if(!dmEngine){showToast('弹幕引擎未就绪',true);return}
+            var danmuData={id:vid,player:vid,author:'user_'+Math.random().toString(36).substr(2,6),time:art.currentTime,text:text,color:parseInt(curColor.replace('#',''),16),type:curType};
+            fetch('/api/danmu/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(danmuData)})
+                .then(function(r){return r.json()})
+                .then(function(d){
+                    if(d.code===0){dmEngine.emit({text:text,color:curColor,mode:curType,time:d.data.time});input.value='';showToast('弹幕已发送')}
+                    else showToast(d.msg||'发送失败',true);
+                }).catch(function(){showToast('发送失败',true)});
+        }
+        sendBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();doSend()});
+        input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();e.stopPropagation();doSend()}});
+        if(_overflowSystem)setTimeout(checkOverflow,50);
+    }
+
+    /* ===== Screenshot ===== */
+    function injectScreenshotFloat(){
+        var app=document.querySelector('.art-video-player');if(!app||document.querySelector('.bili-screenshot'))return;
+        var btn=document.createElement('button');btn.className='bili-screenshot';btn.title='截图';btn.innerHTML=ICONS.camera();
+        btn.addEventListener('click',function(e){e.stopPropagation();if(art&&art.video&&art.video.readyState>=2){try{var cv=document.createElement('canvas');cv.width=art.video.videoWidth;cv.height=art.video.videoHeight;cv.getContext('2d').drawImage(art.video,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast('截图已保存')}catch(e){showToast('截图失败',true)}}else{showToast('视频未就绪',true)}});
+        app.appendChild(btn);
+    }
+
+    /* ===== Stats ===== */
+    function injectStatsPanel(){
+        var app=document.querySelector('.art-video-player');if(!app||document.querySelector('.ap-stats-panel'))return;
+        var p=document.createElement('div');p.className='ap-stats-panel';
+        p.innerHTML='<div class="ap-stats-sec">视频信息</div><div class="ap-stats-row"><span>编码</span><b id="st-codec">—</b></div><div class="ap-stats-row"><span>源类型</span><b id="st-src">—</b></div><div class="ap-stats-row"><span>分辨率</span><b id="st-res">—</b></div><div class="ap-stats-row"><span>帧率</span><b id="st-fps">—</b></div><div class="ap-stats-row"><span>丢帧</span><b id="st-drop">—</b></div><div class="ap-stats-row"><span>码率</span><b id="st-bw">—</b></div><div class="ap-stats-row"><span>时长</span><b id="st-dur">—</b></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">浏览器解码能力</div><div class="ap-stats-row"><span>H.264</span><span id="st-h264" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC (H.265)</span><span id="st-hevc" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 10bit</span><span id="st-hevc10" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1</span><span id="st-av1" class="ap-badge">—</span></div><div class="ap-stats-row"><span>VP9</span><span id="st-vp9" class="ap-badge">—</span></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">硬解流畅度</div><div class="ap-stats-row"><span>HEVC 1080p</span><span id="mc-hevc-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 4K</span><span id="mc-hevc-4k" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 1080p</span><span id="mc-av1-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 4K</span><span id="mc-av1-4k" class="ap-badge">—</span></div>';
+        app.appendChild(p);
+        document.addEventListener('click',function(e){if(p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.art-setting-item')&&!e.target.closest('.art-contextmenu'))p.classList.remove('open')});
+    }
+    function statsEl(id){return document.getElementById(id)}
+    function fmtTime(s){if(!isFinite(s))return'—';s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return(h>0?h+':':'')+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+    function setBadge(id,val){var b=statsEl(id);if(!b)return;var cls='no',txt='不支持';if(val==='probably'){cls='ok';txt='原生支持'}else if(val==='maybe'){cls='soft';txt='可能支持'}b.className='ap-badge '+cls;b.textContent=txt}
+    function buildStats(){
+        if(!art||!art.video)return;var v=art.video;
+        var srcNames={normal:'MP4 / 直链',hls:'HLS',flv:'FLV'};var srcType='normal';var url=(art.option&&art.option.url)||'';
+        if(url.includes('.m3u8'))srcType='hls';else if(url.includes('.flv'))srcType='flv';statsEl('st-src').textContent=srcNames[srcType]||srcType;
+        var codec='';if(srcType==='hls'&&art.hls){var lv=art.hls.levels&&art.hls.levels[art.hls.currentLevel||0];codec=(lv&&(lv.videoCodec||(lv.attrs&&lv.attrs.CODECS)))||''}else if(srcType==='flv'&&art.flv&&art.flv.mediaInfo)codec=art.flv.mediaInfo.videoCodec||'';statsEl('st-codec').textContent=codec||'浏览器原生解码';
+        statsEl('st-res').textContent=(v.videoWidth&&v.videoHeight)?v.videoWidth+' × '+v.videoHeight:'—';statsEl('st-dur').textContent=fmtTime(v.duration);
+        var sup=detectCodecs();setBadge('st-h264',sup.h264);setBadge('st-hevc',sup.hevc);setBadge('st-hevc10',sup.hevc10);setBadge('st-av1',sup.av1);setBadge('st-vp9',sup.vp9);
+        if(v.getVideoPlaybackQuality){try{var q=v.getVideoPlaybackQuality();if(q)statsEl('st-drop').textContent=q.droppedVideoFrames||0}catch(e){}}
+        if(art.hls&&art.hls.bandwidthEstimate){var bw=art.hls.bandwidthEstimate/1024;statsEl('st-bw').textContent=bw>=1024?(bw/1024).toFixed(1)+' Mbps':Math.round(bw)+' Kbps'}
+        probeMediaCaps();
+    }
+    function detectCodecs(){var v=document.createElement('video');var p=function(m){try{return v.canPlayType(m)}catch(e){return''}};return{h264:p('video/mp4; codecs="avc1.42E01E"')||p('video/mp4; codecs="avc1.64001F"'),hevc:p('video/mp4; codecs="hev1.1.6.L93.B0"')||p('video/mp4; codecs="hvc1.1.6.L93.B0"'),hevc10:p('video/mp4; codecs="hev1.2.4.L120.90"')||p('video/mp4; codecs="hvc1.2.4.L120.90"'),av1:p('video/mp4; codecs="av01.0.05M.08"')||p('video/webm; codecs="av01.0.05M.08"'),vp9:p('video/webm; codecs="vp9"')}}
+    async function probeMediaCaps(){if(!navigator.mediaCapabilities||!navigator.mediaCapabilities.decodingInfo)return;var items=[{id:'mc-hevc-1080',mime:'video/mp4; codecs="hev1.1.6.L93.B0"',w:1920,h:1080,br:8000000},{id:'mc-hevc-4k',mime:'video/mp4; codecs="hev1.2.4.L120.90"',w:3840,h:2160,br:25000000},{id:'mc-av1-1080',mime:'video/mp4; codecs="av01.0.05M.08"',w:1920,h:1080,br:6000000},{id:'mc-av1-4k',mime:'video/mp4; codecs="av01.0.05M.08"',w:3840,h:2160,br:18000000}];for(var i=0;i<items.length;i++){var it=items[i],el=statsEl(it.id);if(!el)continue;try{var r=await navigator.mediaCapabilities.decodingInfo({type:'file',video:{contentType:it.mime,width:it.w,height:it.h,bitrate:it.br,framerate:30}});if(!r.supported){el.className='ap-badge no';el.textContent='不支持'}else if(r.smooth&&r.powerEfficient){el.className='ap-badge ok';el.textContent='硬解流畅'}else if(r.smooth){el.className='ap-badge soft';el.textContent='流畅'}else{el.className='ap-badge soft';el.textContent='软解'}}catch(e){el.className='ap-badge no';el.textContent='—'}}}
+
+    /* ===== Overflow ===== */
+    function setupOverflow(){
+        var app=document.querySelector('.art-video-player');var bottom=app?app.querySelector('.art-bottom'):null;
+        var rightBar=bottom?bottom.querySelector('.art-controls-right'):null;if(!rightBar||document.querySelector('.bili-overflow-btn'))return;
+        var overflowBtn=document.createElement('div');overflowBtn.className='art-control bili-overflow-btn';overflowBtn.title='更多选项';overflowBtn.innerHTML=ICONS.more();overflowBtn.style.display='none';
+        var popup=document.createElement('div');popup.className='bili-overflow-panel';bottom.appendChild(popup);rightBar.appendChild(overflowBtn);
+        overflowBtn.addEventListener('click',function(e){e.stopPropagation();popup.classList.toggle('open')});
+        document.addEventListener('click',function(e){if(!popup.contains(e.target)&&e.target!==overflowBtn)popup.classList.remove('open')});
+        _overflowSystem={overflowBtn:overflowBtn,popup:popup,bottom:bottom,rightBar:rightBar};checkOverflow();
+        var ro=new ResizeObserver(function(){checkOverflow()});ro.observe(bottom);
+        var ro2=new ResizeObserver(function(){checkOverflow()});ro2.observe(app);
+        window.addEventListener('resize',function(){setTimeout(checkOverflow,150)});
+        document.fonts&&document.fonts.ready&&document.fonts.ready.then(function(){setTimeout(checkOverflow,300)});
+        if(art){
+            art.on('fullscreen',function(){setTimeout(checkOverflow,1000)});
+            art.on('fullscreenWeb',function(){setTimeout(checkOverflow,1000)});
+        }
+    }
+    function checkOverflow(){
+        var sys=_overflowSystem;if(!sys)return;var overflowBtn=sys.overflowBtn,popup=sys.popup,rightBar=sys.rightBar;
+        /* Reset buttons, then collect buttons that stick out of the container. */
+        rightBar.querySelectorAll('.art-control').forEach(function(c){c.style.display='';c.classList.remove('bili-overflow-hidden')});
+        var hidden=[],rightRect=rightBar.getBoundingClientRect();
+        rightBar.querySelectorAll('.art-control').forEach(function(ctrl){if(ctrl===overflowBtn)return;if(ctrl.getBoundingClientRect().right>rightRect.right+4){hidden.push(ctrl);ctrl.style.display='none';ctrl.classList.add('bili-overflow-hidden')}});
+        /* Danmaku bar: flex child of the left controls, never overlaps.
+           When there is not enough room for it, hide the danmaku bar itself
+           and keep every button intact. Space is computed from the player
+           geometry so the bar can reappear after the window grows again. */
+        var danmuEl=document.querySelector('.bili-danmu');
+        if(danmuEl){
+            var playerEl2=document.querySelector('.art-video-player');
+            var playerW=playerEl2?playerEl2.getBoundingClientRect().width:0;
+            var rightW=0;
+            var btnEls=[].slice.call(rightBar.children).filter(function(c){return c.offsetWidth>0&&c.offsetHeight>0&&!c.classList.contains('bili-overflow-btn')});
+            if(btnEls.length){
+                var minL=Math.min.apply(null,btnEls.map(function(c){return c.getBoundingClientRect().left}));
+                rightW=rightRect.right-minL;
+            }
+            var avail=playerW-rightW-160-16;
+            var squeeze=avail<220;
+            if(squeeze&&!danmuEl.classList.contains('bili-danmu-hidden')){
+                danmuEl.classList.add('bili-danmu-hidden');
+                danmuEl.style.display='none';
+            }else if(!squeeze&&danmuEl.classList.contains('bili-danmu-hidden')){
+                danmuEl.classList.remove('bili-danmu-hidden');
+                danmuEl.style.display='';
+            }
+        }
+        popup.innerHTML='';if(hidden.length>0){overflowBtn.style.display='';hidden.forEach(function(el){var label=el.getAttribute('title')||el.textContent.trim()||'选项';var iconEl=el.querySelector('svg');var item=document.createElement('button');item.className='bili-overflow-item';var iconWrap=document.createElement('span');iconWrap.className='item-icon';if(iconEl)iconWrap.appendChild(iconEl.cloneNode(true));var labelEl=document.createElement('span');labelEl.className='item-label';labelEl.textContent=label;item.appendChild(iconWrap);item.appendChild(labelEl);item.addEventListener('click',function(e){e.stopPropagation();el.click();popup.classList.remove('open');checkOverflow()});popup.appendChild(item)})}else{overflowBtn.style.display='none';popup.classList.remove('open')}
+    }
+    /* Danmaku box follows the control bar visibility:
+       hidden in mini-progress-bar / lock mode (controls are slid away),
+       otherwise the parent .art-bottom opacity handles it. */
+    /* ===== Init ===== */
+    document.getElementById('urlInput').addEventListener('keypress',function(e){if(e.key==='Enter')loadFromInput()});
+    document.getElementById('urlInputRetry').addEventListener('keypress',function(e){if(e.key==='Enter')loadFromInput(true)});
+    window.addEventListener('load',function(){setTheme(currentTheme);var url=qs('url');if(url){document.getElementById('urlInput').value=decodeURIComponent(url);initPlayer(url)}});
+})();
+    </script>
+</body>
+</html>

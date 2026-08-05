@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹幕管理 - ArtPlayer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2362d5ff'/%3E%3Cstop offset='100%25' stop-color='%237c5cfc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='28,26 28,54 47,40' fill='url(%23g)'/%3E%3Cline x1='47' y1='40' x2='54' y2='26' stroke='url(%23g)' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='54' y1='26' x2='54' y2='54' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Medium.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Semibold.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Bold.min.css">
+    <link rel="stylesheet" href="/api/theme/admin.css">
+    <style>
+        :root, [data-theme="bilibili"] {
+            --bg: #080810; --sidebar: #0c0c18;
+            --surface: #111122; --surface2: #16162a;
+            --border: rgba(255, 255, 255, 0.06);
+            --text: #e4e4f0; --text2: #8e8ea8; --text3: #5c5c78;
+            --primary: #a78bfa; --primary2: #7c5cfc;
+            --accent: #62d5ff; --danger: #ff4d6a;
+            --success: #34d399; --warn: #f59e0b;
+            --gradient:radial-gradient(ellipse at 30% 20%,#1a1040 0%,#080810 60%,#060612 100%);
+            --corner:rgba(160,140,255,.2);
+            --radius: 10px; --radius-sm: 6px; --radius-lg: 14px;
+        }
+        [data-theme="sakura"] {
+            --bg: #1a1218; --sidebar: #201820;
+            --surface: #2a1c26; --surface2: #342230;
+            --border: rgba(255,133,162,0.12);
+            --text: #f5e6ed; --text2: #c098aa; --text3: #8a6a7a;
+            --primary: #ff85a2; --primary2: #c792ea;
+            --accent: #f0a0c0; --danger: #ff6188;
+            --success: #ff85a2; --warn: #ffc06a;
+        }
+        [data-theme="ocean"] {
+            --bg: #0a1628; --sidebar: #0e1c30;
+            --surface: #101e36; --surface2: #162640;
+            --border: rgba(0,212,255,0.12);
+            --text: #d4edf4; --text2: #7ab0c0; --text3: #4a8090;
+            --primary: #00d4ff; --primary2: #5ce6c6;
+            --accent: #33eeff; --danger: #ff5370;
+            --success: #5ce6c6; --warn: #ffb84d;
+        }
+        [data-theme="sunset"] {
+            --bg: #1a1018; --sidebar: #241820;
+            --surface: #2a1826; --surface2: #342030;
+            --border: rgba(255,140,66,0.15);
+            --text: #f0e0d6; --text2: #b09580; --text3: #7a6550;
+            --primary: #ff8c42; --primary2: #e06c9f;
+            --accent: #ffa564; --danger: #ff5050;
+            --success: #ff8c42; --warn: #ffbe50;
+        }
+        [data-theme="forest"] {
+            --bg: #0d120b; --sidebar: #12180e;
+            --surface: #182114; --surface2: #1e2820;
+            --border: rgba(100,221,23,0.12);
+            --text: #d8e8d0; --text2: #8aaa7a; --text3: #5a7a4a;
+            --primary: #64dd17; --primary2: #69f0ae;
+            --accent: #76ff03; --danger: #ff5252;
+            --success: #69f0ae; --warn: #ccff00;
+        }
+        [data-theme="mono"] {
+            --bg: #060606; --sidebar: #0c0c0c;
+            --surface: #141414; --surface2: #1a1a1a;
+            --border: rgba(255,255,255,0.08);
+            --text: #e8e8e8; --text2: #888; --text3: #555;
+            --primary: #aaa; --primary2: #ddd;
+            --accent: #999; --danger: #ccc;
+            --success: #bbb; --warn: #aaa;
+        }
+        [data-theme="cyber"] {
+            --bg: #060618; --sidebar: #0a0a22;
+            --surface: rgba(10,10,40,.88); --surface2: rgba(18,18,50,.82);
+            --border: rgba(0,255,255,.1);--corner:rgba(0,255,255,.25);
+            --text: #d0f0ff; --text2: #60c0d0; --text3: #3a7080;
+            --primary: #00e5ff; --primary2: #b000ff;--accent: #ff00aa;
+            --danger: #ff3060;--success: #00ff88;--warn: #ffaa00;
+            --gradient:radial-gradient(ellipse at 30% 20%,#0a0020 0%,#060618 60%,#020210 100%);
+            --radius:6px;--radius-sm:4px;--radius-lg:10px;
+        }
+        [data-theme="shoujo"] {
+            --bg: #1a101a; --sidebar: #251820;
+            --surface: rgba(32,18,30,.88); --surface2: rgba(42,24,38,.82);
+            --border: rgba(255,140,180,.1);--corner:rgba(255,180,200,.3);
+            --text: #f8e8f0; --text2: #d0a0b8; --text3: #906080;
+            --primary: #ff80a8; --primary2: #e860c0;--accent: #ffb8d0;
+            --danger: #ff5088;--success: #ffa0c0;--warn: #ffe0a0;
+            --gradient:radial-gradient(ellipse at 30% 20%,#2a1428 0%,#1a101a 60%,#120a12 100%);
+            --radius:12px;--radius-sm:8px;--radius-lg:18px;
+        }
+        [data-theme="jrpg"] {
+            --bg: #100e08; --sidebar: #181410;
+            --surface: rgba(20,16,10,.88); --surface2: rgba(30,22,14,.82);
+            --border: rgba(200,170,80,.12);--corner:rgba(200,170,80,.28);
+            --text: #e8e0d0; --text2: #b0a080; --text3: #706040;
+            --primary: #e0b040; --primary2: #c09030;--accent: #f0d060;
+            --danger: #e04040;--success: #60d080;--warn: #e0a040;
+            --gradient:radial-gradient(ellipse at 30% 20%,#1a1008 0%,#100e08 60%,#080604 100%);
+            --radius:4px;--radius-sm:2px;--radius-lg:8px;
+        }
+        [data-theme="neon"] {
+            --bg: #080808; --sidebar: #0e0a10;
+            --surface: rgba(14,10,18,.88); --surface2: rgba(22,14,28,.82);
+            --border: rgba(255,60,60,.1);--corner:rgba(255,60,60,.25);
+            --text: #f0e8e8; --text2: #c08080; --text3: #805050;
+            --primary: #ff3050; --primary2: #e02070;--accent: #ff6080;
+            --danger: #ff2040;--success: #ff6040;--warn: #ff8040;
+            --gradient:radial-gradient(ellipse at 30% 20%,#1a0a10 0%,#080808 60%,#040204 100%);
+            --radius:3px;--radius-sm:2px;--radius-lg:5px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; font-size: 14px; }
+        body {
+            font-family: 'MiSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--gradient);
+            color: var(--text);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Login */
+        #loginPage {
+            position: fixed; inset: 0; z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--gradient);
+        }
+        .login-card {
+            background: rgba(14,14,40,.9);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px 32px;
+            width: 380px;
+            text-align: center;
+            backdrop-filter: blur(24px);
+            box-shadow: 0 8px 40px rgba(0,0,0,.4);
+            position: relative;
+        }
+        .login-card .logo {
+            width: 52px; height: 52px; line-height: 0;
+            margin: 0 auto 16px;
+        }
+        .login-card h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .login-card .sub { font-size: 12px; color: var(--text3); margin-bottom: 24px; }
+        .login-card input {
+            width: 100%; padding: 12px 16px; margin-bottom: 10px;
+            border: 1px solid var(--border); border-radius: var(--radius);
+            background: rgba(255,255,255,.04); color: #fff;
+            font-size: 14px; outline: none; text-align: center; letter-spacing: 1px;
+            backdrop-filter: blur(8px); transition: border-color .2s;
+        }
+        .login-card input:focus { border-color: var(--primary2); box-shadow: 0 0 16px rgba(120,100,240,.12); }
+        .login-card input::placeholder { color: var(--text3); letter-spacing: 0; }
+        .login-card button {
+            width: 100%; padding: 12px; border: none; border-radius: var(--radius);
+            background: linear-gradient(135deg, var(--accent), var(--primary2));
+            color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+            margin-top: 8px; transition: transform .15s, box-shadow .15s;
+        }
+        .login-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(120,100,240,.3); }
+        .login-card button:active { transform: scale(.98); }
+
+        /* Sidebar */
+        #sidebar {
+            width: 220px; min-width: 220px; height: 100%;
+            background: rgba(12,12,30,.9);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 20px 0;
+        }
+        .side-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+        }
+        .side-brand .mark { line-height: 0; }
+        .side-brand h1 { font-size: 17px; font-weight: 700; }
+        .side-nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 2px; }
+        .side-nav .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px; border-radius: var(--radius);
+            color: var(--text2); cursor: pointer; transition: all .15s;
+            font-size: 14px; font-weight: 500; border: none; background: none;
+            width: 100%; text-align: left;
+        }
+        .side-nav .nav-item:hover { background: rgba(255,255,255,.04); color: var(--text); }
+        .side-nav .nav-item.active {
+            background: linear-gradient(135deg, rgba(124,92,252,.15), rgba(98,213,255,.08));
+            color: var(--text);
+        }
+        .side-nav .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+        .side-footer {
+            padding: 12px 20px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .side-footer .user { font-size: 13px; color: var(--text2); }
+        .side-footer .logout { font-size: 12px; color: var(--text3); cursor: pointer; transition: color .15s; background: none; border: none; }
+        .side-footer .logout:hover { color: var(--danger); }
+
+        /* Main */
+        #mainPage { display: none; flex: 1; height: 100%; overflow-y: auto; padding: 28px 32px 40px; }
+        .page-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+        .page-title .icon { font-size: 20px; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: rgba(14,14,40,.82);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 18px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 24px rgba(0,0,0,.25);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before, .card::after {
+            content: ''; position: absolute; pointer-events: none;
+            width: 14px; height: 14px; opacity: .3;
+        }
+        .card::before { top: 6px; left: 6px; border-top: 2px solid var(--corner); border-left: 2px solid var(--corner); }
+        .card::after { bottom: 6px; right: 6px; border-bottom: 2px solid var(--corner); border-right: 2px solid var(--corner); }
+        .card h3 {
+            font-size: 15px; font-weight: 600; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card h3 .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        .row { display: flex; gap: 10px; }
+        .row input {
+            flex: 1; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: rgba(255,255,255,.03);
+            color: #fff; font-size: 13px; outline: none;
+            backdrop-filter: blur(8px); transition: border-color .2s;
+        }
+        .row input:focus { border-color: var(--primary2); box-shadow: 0 0 12px rgba(120,100,240,.1); }
+        .row input::placeholder { color: var(--text3); }
+
+        .btn {
+            padding: 8px 18px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--surface2);
+            color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500;
+            transition: all .15s; white-space: nowrap;
+            backdrop-filter: blur(8px);
+        }
+        .btn:hover { border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+        .btn:active { transform: scale(.98); }
+        .btn-primary { border: none; background: linear-gradient(135deg, var(--primary2), var(--accent)); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 16px rgba(120,100,240,.2); }
+        .btn-danger { color: var(--danger); border-color: rgba(255,77,106,.15); }
+        .btn-danger:hover { background: rgba(255,77,106,.08); }
+
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,77,106,.1); border: 1px solid rgba(255,77,106,.2);
+            color: var(--danger); padding: 5px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+        }
+        .tag .x { cursor: pointer; font-size: 15px; line-height: 1; opacity: .5; }
+        .tag .x:hover { opacity: 1; }
+
+        .empty-state { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+
+        .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+        .search-row input {
+            flex: 1; padding: 8px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: rgba(255,255,255,.03);
+            color: #fff; font-size: 13px; outline: none; max-width: 240px;
+            backdrop-filter: blur(8px); transition: border-color .2s;
+        }
+        .search-row input:focus { border-color: var(--primary2); }
+        .search-row input::placeholder { color: var(--text3); }
+
+        .pager { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; }
+        .pager .info { font-size: 12px; color: var(--text3); }
+        .pager button {
+            padding: 5px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px;
+        }
+        .pager button:hover:not(:disabled) { border-color: var(--primary2); }
+        .pager button:disabled { opacity: .3; cursor: default; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text2); font-size: 12px; }
+        tr:hover td { background: rgba(255,255,255,.015); }
+        .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge.scroll { background: rgba(98,213,255,.08); color: var(--accent); border: 1px solid rgba(98,213,255,.15); }
+        .badge.top { background: rgba(160,140,250,.08); color: var(--primary); border: 1px solid rgba(160,140,250,.15); }
+        .badge.bottom { background: rgba(64,217,160,.08); color: var(--success); border: 1px solid rgba(64,217,160,.15); }
+
+        .cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .cfg-card {
+            background: rgba(14,14,40,.78);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 4px 20px rgba(0,0,0,.2);
+            position: relative;
+        }
+        .cfg-card::before { content: ''; position: absolute; top: 5px; left: 5px; width: 14px; height: 14px; border-top: 2px solid var(--corner); border-left: 2px solid var(--corner); opacity: .3; }
+        .cfg-card::after { content: ''; position: absolute; bottom: 5px; right: 5px; width: 14px; height: 14px; border-bottom: 2px solid var(--corner); border-right: 2px solid var(--corner); opacity: .3; }
+        .cfg-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .cfg-card h4 .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .cfg-row { display: flex; align-items: center; padding: 7px 0; font-size: 13px; gap: 8px; }
+        .cfg-row label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .cfg-row input[type="checkbox"] { accent-color: var(--primary2); }
+        .cfg-row input[type="number"], .cfg-row input[type="text"], .cfg-row input[type="password"] {
+            background: rgba(255,255,255,.03); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text); padding: 5px 6px;
+            font-size: 12px; outline: none; width: 72px;
+        }
+        .cfg-row input[type="text"] { width: auto; flex: 1; }
+        .cfg-row input[type="password"] { width: 68px; }
+        .cfg-row select {
+            background: var(--surface2) !important;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            padding: 6px 10px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        .cfg-row select option {
+            background: var(--surface);
+            color: var(--text);
+        }
+        .cfg-row input:focus { border-color: var(--primary2); }
+        .cfg-row .btn-sm { padding: 5px 12px; font-size: 12px; }
+        .cfg-hint { font-size: 11px; color: var(--text3); }
+
+        .ab-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(98,213,255,.1));border:1px solid rgba(124,92,252,.3);color:var(--primary)}
+        .ab-badge.b2{background:linear-gradient(135deg,rgba(52,211,153,.15),rgba(98,213,255,.08));border-color:rgba(52,211,153,.3);color:var(--success)}
+        .ab-badge.b3{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(251,114,153,.08));border-color:rgba(245,158,11,.3);color:var(--warn)}
+        .ab-badge.b4{background:linear-gradient(135deg,rgba(98,213,255,.15),rgba(124,92,252,.08));border-color:rgba(98,213,255,.3);color:var(--accent)}
+        .ab-dep{display:inline-flex;align-items:center;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);text-decoration:none;transition:all .15s}
+        .ab-dep:hover{border-color:var(--accent);background:rgba(98,213,255,.08);color:var(--accent)}
+
+        #toast {
+            position: fixed; top: 20px; right: 24px; z-index: 9999;
+            padding: 12px 24px; border-radius: var(--radius);
+            font-size: 13px; font-weight: 500; pointer-events: none;
+            transform: translateX(120%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+            backdrop-filter: blur(12px);
+        }
+        #toast.show { transform: translateX(0); }
+        #toast.ok { background: rgba(52,211,153,.18); color: var(--success); border: 1px solid rgba(52,211,153,.3); }
+        #toast.err { background: rgba(255,77,106,.18); color: var(--danger); border: 1px solid rgba(255,77,106,.3); }
+
+        @media (max-width: 768px) {
+            #sidebar { width: 64px; min-width: 64px; }
+            .side-brand h1, .side-nav .nav-item span, .side-footer .user { display: none; }
+            .side-brand { justify-content: center; padding: 0 0 16px; }
+            .side-nav .nav-item { justify-content: center; padding: 12px; }
+            #mainPage { padding: 20px 16px; }
+            .cfg-grid { grid-template-columns: 1fr; }
+            .dm-input { width: 100% !important; flex: 1 1 100% !important; }
+        }
+
+        /* ===== Cyber (赛博动漫) theme components ===== */
+        [data-theme="cyber"] #sidebar {
+            background: rgba(6,6,24,.92);
+            border-right: 1px solid rgba(0,229,255,.25);
+            box-shadow: inset -2px 0 20px rgba(0,229,255,.05);
+        }
+        [data-theme="cyber"] .side-nav .nav-item.active {
+            background: linear-gradient(90deg, rgba(0,229,255,.15), rgba(176,0,255,.1));
+            border-left: 3px solid #00e5ff;
+            box-shadow: 0 0 12px rgba(0,229,255,.15);
+            border-radius: 4px;
+        }
+        [data-theme="cyber"] .card, [data-theme="cyber"] .cfg-card {
+            border-radius: 4px;
+            border: 1px solid rgba(0,229,255,.15);
+            clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+        }
+        [data-theme="cyber"] .btn-primary {
+            border-radius: 3px;
+            box-shadow: 0 0 14px rgba(0,229,255,.25);
+        }
+        [data-theme="cyber"] .row input, [data-theme="cyber"] .cfg-row input[type="text"],
+        [data-theme="cyber"] .cfg-row input[type="number"], [data-theme="cyber"] .cfg-row select {
+            border-radius: 3px;
+            border-color: rgba(0,229,255,.2);
+            background: rgba(0,20,40,.5);
+        }
+        [data-theme="cyber"] .side-brand h1 {
+            text-shadow: 0 0 10px rgba(0,229,255,.5);
+        }
+        [data-theme="cyber"] .tag {
+            border-radius: 3px;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        /* ===== Shoujo (少女漫画) theme components ===== */
+        [data-theme="shoujo"] #sidebar {
+            background: linear-gradient(180deg, rgba(40,20,38,.95), rgba(26,14,24,.95));
+            border-right: 1px solid rgba(255,150,190,.15);
+        }
+        [data-theme="shoujo"] .side-nav .nav-item {
+            border-radius: 24px;
+            padding: 10px 16px;
+        }
+        [data-theme="shoujo"] .side-nav .nav-item.active {
+            background: linear-gradient(135deg, rgba(255,128,168,.25), rgba(232,96,192,.15));
+            border: 1px solid rgba(255,150,190,.3);
+            box-shadow: 0 0 16px rgba(255,128,168,.2);
+        }
+        [data-theme="shoujo"] .card, [data-theme="shoujo"] .cfg-card {
+            border-radius: 20px;
+            border: 1px solid rgba(255,150,190,.2);
+            box-shadow: 0 4px 20px rgba(255,120,160,.08);
+        }
+        [data-theme="shoujo"] .card h3 .dot, [data-theme="shoujo"] .cfg-card h4 .dot {
+            box-shadow: 0 0 8px rgba(255,128,168,.6);
+        }
+        [data-theme="shoujo"] .btn {
+            border-radius: 18px;
+            padding: 7px 20px;
+        }
+        [data-theme="shoujo"] .btn-primary {
+            background: linear-gradient(135deg, #ff80a8, #e860c0);
+            box-shadow: 0 2px 14px rgba(255,128,168,.3);
+        }
+        [data-theme="shoujo"] .row input, [data-theme="shoujo"] .cfg-row input[type="text"],
+        [data-theme="shoujo"] .cfg-row input[type="number"], [data-theme="shoujo"] .cfg-row select {
+            border-radius: 16px;
+            border-color: rgba(255,150,190,.25);
+            background: rgba(60,30,50,.5);
+        }
+        [data-theme="shoujo"] .tag {
+            border-radius: 20px;
+            background: rgba(255,128,168,.1);
+            border-color: rgba(255,128,168,.25);
+        }
+
+        /* ===== JRPG (日式RPG) theme components ===== */
+        [data-theme="jrpg"] #sidebar {
+            background: linear-gradient(180deg, rgba(24,18,10,.95), rgba(16,12,6,.95));
+            border-right: 1px solid rgba(200,170,80,.2);
+        }
+        [data-theme="jrpg"] .side-nav .nav-item.active {
+            background: linear-gradient(90deg, rgba(200,170,80,.15), transparent);
+            border-left: 3px solid #d4a030;
+            border-radius: 0;
+        }
+        [data-theme="jrpg"] .card, [data-theme="jrpg"] .cfg-card {
+            border-radius: 4px;
+            border: 1px solid rgba(200,170,80,.2);
+            box-shadow: inset 0 0 0 1px rgba(200,170,80,.06), 0 4px 20px rgba(0,0,0,.3);
+        }
+        [data-theme="jrpg"] .card::before, [data-theme="jrpg"] .card::after,
+        [data-theme="jrpg"] .cfg-card::before, [data-theme="jrpg"] .cfg-card::after {
+            border-width: 2px;
+            border-color: rgba(200,170,80,.5);
+            width: 18px; height: 18px;
+        }
+        [data-theme="jrpg"] .card h3 .dot, [data-theme="jrpg"] .cfg-card h4 .dot {
+            box-shadow: 0 0 6px rgba(200,170,80,.5);
+        }
+        [data-theme="jrpg"] .btn-primary {
+            background: linear-gradient(180deg, #d4a030, #a87820);
+            border: 1px solid rgba(255,220,120,.4);
+            box-shadow: 0 2px 10px rgba(200,170,80,.2);
+            border-radius: 3px;
+        }
+        [data-theme="jrpg"] .row input, [data-theme="jrpg"] .cfg-row input[type="text"],
+        [data-theme="jrpg"] .cfg-row input[type="number"], [data-theme="jrpg"] .cfg-row select {
+            border-radius: 2px;
+            border-color: rgba(200,170,80,.25);
+            background: rgba(40,30,16,.6);
+        }
+        [data-theme="jrpg"] .tag {
+            border-radius: 3px;
+            border-color: rgba(200,170,80,.3);
+            background: rgba(200,170,80,.08);
+        }
+
+        /* ===== Neon Samurai (霓虹武士) theme components ===== */
+        [data-theme="neon"] #sidebar {
+            background: linear-gradient(180deg, rgba(14,8,12,.95), rgba(8,4,8,.97));
+            border-right: 1px solid rgba(255,60,60,.2);
+        }
+        [data-theme="neon"] .side-brand {
+            border-bottom: 1px solid rgba(255,60,60,.15);
+        }
+        [data-theme="neon"] .side-nav .nav-item {
+            border-radius: 2px;
+        }
+        [data-theme="neon"] .side-nav .nav-item.active {
+            background: linear-gradient(90deg, rgba(255,40,60,.2), rgba(255,40,60,.05));
+            border-left: 3px solid #ff3050;
+            box-shadow: inset 0 0 14px rgba(255,40,60,.1);
+        }
+        [data-theme="neon"] .card, [data-theme="neon"] .cfg-card {
+            border-radius: 2px;
+            border: 1px solid rgba(255,60,60,.15);
+        }
+        [data-theme="neon"] .btn-primary {
+            background: linear-gradient(180deg, #ff3050, #c02040);
+            border-radius: 2px;
+            box-shadow: 0 0 12px rgba(255,40,60,.3);
+        }
+        [data-theme="neon"] .btn {
+            border-radius: 2px;
+        }
+        [data-theme="neon"] .row input, [data-theme="neon"] .cfg-row input[type="text"],
+        [data-theme="neon"] .cfg-row input[type="number"], [data-theme="neon"] .cfg-row select {
+            border-radius: 2px;
+            border-color: rgba(255,60,60,.2);
+            background: rgba(30,10,16,.5);
+        }
+        [data-theme="neon"] .tag {
+            border-radius: 2px;
+            border-color: rgba(255,60,60,.25);
+            background: rgba(255,40,60,.08);
+        }
+
+        /* ===== bilibili: clean blue accent ===== */
+        [data-theme="bilibili"] .side-nav .nav-item.active {
+            border-left: 3px solid #00a1d6;
+        }
+        [data-theme="bilibili"] .card, [data-theme="bilibili"] .cfg-card {
+            border-radius: 10px;
+        }
+
+        /* ===== sakura: soft rounded ===== */
+        [data-theme="sakura"] .side-nav .nav-item { border-radius: 14px; }
+        [data-theme="sakura"] .side-nav .nav-item.active { background: rgba(255,133,162,.14); border: 1px solid rgba(255,133,162,.2); }
+        [data-theme="sakura"] .card, [data-theme="sakura"] .cfg-card { border-radius: 14px; }
+        [data-theme="sakura"] .btn { border-radius: 12px; }
+
+        /* ===== ocean: squared technical ===== */
+        [data-theme="ocean"] .side-nav .nav-item.active { border-left: 3px solid #00d4ff; }
+        [data-theme="ocean"] .card, [data-theme="ocean"] .cfg-card { border-radius: 6px; border-color: rgba(0,212,255,.12); }
+
+        /* ===== sunset: warm rounded ===== */
+        [data-theme="sunset"] .side-nav .nav-item { border-radius: 12px; }
+        [data-theme="sunset"] .card, [data-theme="sunset"] .cfg-card { border-radius: 12px; }
+        [data-theme="sunset"] .btn { border-radius: 10px; }
+
+        /* ===== forest: leafy greens ===== */
+        [data-theme="forest"] .side-nav .nav-item.active { border-left: 3px solid #64dd17; }
+        [data-theme="forest"] .card, [data-theme="forest"] .cfg-card { border-radius: 8px; border-color: rgba(100,221,23,.1); }
+
+        /* ===== mono: flat minimal ===== */
+        [data-theme="mono"] .card, [data-theme="mono"] .cfg-card { border-radius: 4px; border-color: rgba(255,255,255,.05); }
+        [data-theme="mono"] .btn { border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="loginPage">
+        <div class="login-card">
+            <div class="logo"><svg width="52" height="52" viewBox="0 0 80 80"><defs><linearGradient id="login-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><rect x="4" y="4" width="72" height="72" rx="18" fill="url(#login-grad)" opacity=".15"/><polygon points="28,26 28,54 47,40" fill="url(#login-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#login-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#login-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/><rect x="28" y="60" width="28" height="2.5" rx="1.25" fill="rgba(255,255,255,.3)"/></svg></div>
+            <h1>ArtPlayer 管理后台</h1>
+            <p class="sub">弹幕管理 · 服务器配置</p>
+            <input type="text" id="usernameInput" placeholder="账号" autofocus>
+            <input type="password" id="passwordInput" placeholder="密码">
+            <button onclick="login()">登 录</button>
+        </div>
+    </div>
+
+    <aside id="sidebar">
+        <div class="side-brand"><div class="mark"><svg width="34" height="34" viewBox="0 0 80 80"><defs><linearGradient id="side-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><polygon points="28,26 28,54 47,40" fill="url(#side-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#side-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#side-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/></svg></div><h1>ArtPlayer</h1></div>
+        <nav class="side-nav">
+            <button class="nav-item active" data-tab="words" onclick="switchTab('words')"><span class="icon">&#9881;</span><span>屏蔽词管理</span></button>
+            <button class="nav-item" data-tab="danmu" onclick="switchTab('danmu')"><span class="icon">&#9733;</span><span>弹幕列表</span></button>
+            <button class="nav-item" data-tab="videos" onclick="switchTab('videos')"><span class="icon">&#9654;</span><span>视频管理</span></button>
+            <button class="nav-item" data-tab="config" onclick="switchTab('config')"><span class="icon">&#9776;</span><span>服务器配置</span></button>
+            <button class="nav-item" data-tab="files" onclick="switchTab('files')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span>文件管理</span></button>
+            <button class="nav-item" data-tab="logs" onclick="switchTab('logs')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span>日志</span></button>
+            <button class="nav-item" data-tab="api" onclick="switchTab('api')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span>API管理</span></button>
+            <button class="nav-item" data-tab="about" onclick="switchTab('about')"><span class="icon">&#9432;</span><span>关于</span></button>
+        </nav>
+        <div class="side-footer">
+            <span class="user" id="sideUser">未登录</span>
+            <button class="logout" onclick="logout()">退出</button>
+        </div>
+    </aside>
+
+    <main id="mainPage">
+        <!-- Words -->
+        <div class="panel active" id="wordsPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--danger)"></span>添加屏蔽词</h3>
+                <div class="row">
+                    <input type="text" id="newWordInput" placeholder="输入要屏蔽的关键词...">
+                    <button class="btn btn-primary" onclick="addBannedWord()">添加</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--danger)"></span>屏蔽词列表 <span id="wordCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <div class="search-row"><input type="text" id="wordSearch" placeholder="搜索..." oninput="onWordSearch()"></div>
+                <div class="tags" id="wordList"><div class="empty-state">暂无屏蔽词</div></div>
+                <div class="pager" id="wordPager"></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent)"></span>自定义订阅</h3>
+                <div class="row">
+                    <input type="text" id="subUrlInput" placeholder="粘贴屏蔽词列表链接 (每行一个词)...">
+                    <button class="btn btn-primary" onclick="addSubscription()">添加</button>
+                    <button class="btn" onclick="refreshBannedWords()">刷新词库</button>
+                </div>
+                <div class="tags" id="subList" style="margin-top:10px"><div class="empty-state">暂无订阅</div></div>
+            </div>
+        </div>
+
+        <!-- Danmu -->
+        <div class="panel" id="danmuPanel">
+            <div style="display:flex;gap:18px;flex-wrap:wrap">
+                <div style="flex:1;min-width:0">
+                    <div class="card">
+                        <h3><span class="dot" style="background:var(--primary)"></span>弹幕记录</h3>
+                        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+                            <input type="text" id="dmFilterVid" placeholder="视频码" style="width:120px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:rgba(255,255,255,.03);color:#fff;font-size:12px;outline:none">
+                            <input type="text" id="dmFilterText" placeholder="搜索弹幕内容..." style="flex:1;min-width:140px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:rgba(255,255,255,.03);color:#fff;font-size:12px;outline:none">
+                            <button class="btn btn-primary btn-sm" onclick="applyDmFilter()">筛选</button>
+                            <button class="btn btn-sm" onclick="clearDmFilter()">清除</button>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table><thead><tr><th>时间</th><th>视频ID</th><th>内容</th><th>颜色</th><th>类型</th><th>操作</th></tr></thead><tbody id="danmuTbody"></tbody></table>
+                            <div class="empty-state" id="danmuEmpty" style="display:none">暂无弹幕</div>
+                            <div class="pager" id="dmPager"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="width:200px;flex-shrink:0">
+                    <div class="card">
+                        <h3 style="font-size:13px"><span class="dot" style="background:var(--accent);width:6px;height:6px"></span>视频码</h3>
+                        <div id="vidList" class="empty-state" style="font-size:12px">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Videos -->
+        <div class="panel" id="videosPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent)"></span>添加 / 更新视频映射</h3>
+                <div class="row">
+                    <input type="text" id="newVid" placeholder="视频码 (vid)">
+                    <input type="text" id="newVidUrl" placeholder="视频链接 (URL)">
+                    <button class="btn btn-primary" onclick="addVideo()">保存</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent)"></span>视频列表 <span id="videoCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <div id="videoTable" class="empty-state">加载中...</div>
+            </div>
+        </div>
+
+        <!-- Config -->
+        <div class="panel" id="configPanel">
+            <div class="cfg-grid">
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>PoW 工作量证明</h4>
+                    <div class="cfg-row"><label><input type="checkbox" id="cfgPowEnabled"> 启用</label></div>
+                    <div class="cfg-row"><span>难度</span><input type="range" id="cfgPowDifficulty" min="1" max="6" value="4"><span id="cfgPowDiffVal" style="width:20px;text-align:center;font-size:12px">4</span></div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>速率限制</h4>
+                    <div class="cfg-row"><label><input type="checkbox" id="cfgRlEnabled"> 启用</label></div>
+                    <div class="cfg-row"><span>窗口(秒)</span><input type="number" id="cfgRlWindow" min="10" max="3600" step="10"></div>
+                    <div class="cfg-row"><span>上限</span><input type="number" id="cfgRlMax" min="10" max="10000" step="10"></div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger)"></span>弹幕频率限制</h4>
+                    <div class="cfg-row"><label><input type="checkbox" id="cfgDlEnabled"> 启用</label></div>
+                    <div class="cfg-row"><span>每分钟</span><input type="number" id="cfgDlMax" min="1" max="120"></div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>弹幕渲染</h4>
+                    <div class="cfg-row"><span>每秒上限</span><input type="number" id="cfgRenderMaxPerSec" min="1" max="1000"></div>
+                    <div class="cfg-row"><span>速度抖动%</span><input type="number" id="cfgRenderJitter" min="0" max="50"></div>
+                    <div class="cfg-hint">每秒上限：播放器每秒最多渲染的弹幕条数（默认 250）；速度抖动：每条滚动弹幕随机 ±% 速度（默认 5）</div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>CDN</h4>
+                    <div class="cfg-row"><label><input type="checkbox" id="cfgCdnEnabled"> 启用</label></div>
+                    <div class="cfg-row"><input type="text" id="cfgCdnUrl" placeholder="https://cdn.example.com" style="width:100%"></div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>播放器主题（服务器）</h4>
+                    <div class="cfg-row">
+                        <select id="cfgTheme">
+                            <option value="bilibili">bilibili - 深蓝粉</option>
+                            <option value="sakura">sakura - 粉白樱</option>
+                            <option value="ocean">ocean - 深海蓝</option>
+                            <option value="sunset">sunset - 日落橙</option>
+                            <option value="forest">forest - 森林绿</option>
+                            <option value="mono">mono - 黑白极简</option>
+                            <option value="cyber">cyber - 赛博霓虹</option>
+                            <option value="shoujo">shoujo - 少女漫画</option>
+                            <option value="jrpg">jrpg - 日式RPG</option>
+                            <option value="neon">neon - 霓虹武士</option>
+                        </select>
+                    </div>
+                    <div class="cfg-hint">仅影响播放器页面，保存配置后生效</div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>后台主题</h4>
+                    <div class="cfg-row">
+                        <select id="cfgAdminTheme" onchange="setAdminTheme(this.value)">
+                            <option value="bilibili">bilibili - 深蓝粉</option>
+                            <option value="sakura">sakura - 粉白樱</option>
+                            <option value="ocean">ocean - 深海蓝</option>
+                            <option value="sunset">sunset - 日落橙</option>
+                            <option value="forest">forest - 森林绿</option>
+                            <option value="mono">mono - 黑白极简</option>
+                            <option value="cyber">cyber - 赛博霓虹</option>
+                            <option value="shoujo">shoujo - 少女漫画</option>
+                            <option value="jrpg">jrpg - 日式RPG</option>
+                            <option value="neon">neon - 霓虹武士</option>
+                        </select>
+                    </div>
+                    <div class="cfg-hint">管理后台自身配色，切换即时生效</div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>安全入口</h4>
+                    <div class="cfg-row"><span>超时(分)</span><input type="number" id="cfgSessionMin" min="5" max="1440"></div>
+                    <div class="cfg-row"><span>入口路径</span><input type="text" id="cfgAdminPath" placeholder="默认 /admin/"></div>
+                    <div class="cfg-hint">自定义管理入口，如填 "secret" 则入口变为 /secret/</div>
+                    <div style="border-top:1px solid var(--border);margin:10px 0;padding-top:10px">
+                        <div class="cfg-row"><input type="text" id="cfgNewUser" placeholder="新用户名"><input type="password" id="cfgUserPwd" placeholder="密码"><button class="btn btn-sm" onclick="changeUsername()">改名</button></div>
+                        <div class="cfg-row" style="margin-top:4px"><input type="password" id="cfgOldPwd" placeholder="原密码"><input type="password" id="cfgNewPwd" placeholder="新密码"><button class="btn btn-sm" onclick="changePassword()">改密</button></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()" style="width:200px;margin-top:14px;padding:12px">保存配置</button>
+            <div id="cfgMsg" style="margin-top:8px;font-size:13px"></div>
+        </div>
+
+        <!-- Files -->
+        <div class="panel" id="filesPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>文件管理</h3>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                    <span style="font-size:12px;color:var(--text3)">路径：</span>
+                    <span id="filePath" style="font-size:12px;color:var(--accent);font-family:monospace">/</span>
+                    <button class="btn btn-sm" onclick="fileGo('')">根目录</button>
+                    <button class="btn btn-sm" onclick="fileUp()">上一级</button>
+                    <button class="btn btn-sm" onclick="loadFiles()">刷新</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                    <label class="btn btn-sm" style="cursor:pointer">上传<input type="file" id="fileUploadInput" multiple style="display:none" onchange="uploadFiles()"></label>
+                    <button class="btn btn-sm" onclick="fileBatch('delete')">删除所选</button>
+                    <button class="btn btn-sm" onclick="fileBatch('copy')">复制所选</button>
+                    <select id="zipFormat" style="font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 6px;outline:none;cursor:pointer">
+                        <option value="zip">zip</option><option value="7z">7z</option><option value="tar">tar</option><option value="tar.gz">tar.gz</option><option value="tgz">tgz</option>
+                    </select>
+                    <button class="btn btn-sm" onclick="fileBatch('zip')">压缩所选</button>
+                    <button class="btn btn-sm" onclick="fileBatch('unzip')">解压所选</button>                    <span style="font-size:11px;color:var(--text3)"><label style="cursor:pointer"><input type="checkbox" id="fileSelectAll" onchange="toggleSelectAll()"> 全选</label></span>
+                </div>
+                <div style="overflow-x:auto">
+                    <table><thead><tr><th style="width:32px"></th><th>名称</th><th>大小</th><th>操作</th></tr></thead><tbody id="fileTbody"></tbody></table>
+                    <div class="empty-state" id="fileEmpty" style="display:none">空目录</div>
+                </div>
+            </div>
+            <div class="card" id="fileContentCard" style="display:none">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>文件内容 <span id="fileContentName" style="font-weight:400;font-size:12px;color:var(--text3)"></span></h3>
+                <pre id="fileContent" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;overflow:auto;max-height:400px;color:var(--text);white-space:pre-wrap;word-break:break-all"></pre>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="panel" id="logsPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>请求日志</h3>
+                <div style="display:flex;gap:8px;margin-bottom:12px">
+                    <button class="btn btn-sm" onclick="loadLogs()">刷新</button>
+                    <span style="font-size:11px;color:var(--text3);align-self:center">最近 500 条请求记录</span>
+                </div>
+                <div style="overflow-x:auto">
+                    <table><thead><tr><th>时间</th><th>方法</th><th>路径</th><th>状态</th><th>IP</th><th>耗时</th></tr></thead><tbody id="logTbody"></tbody></table>
+                    <div class="empty-state" id="logEmpty" style="display:none">暂无日志</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Management -->
+        <div class="panel" id="apiPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>API 配置</h3>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+                    <span style="font-size:12px;color:var(--text3)">统计保留</span>
+                    <input type="number" id="apiRetention" min="1" max="90" style="width:70px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:11px;color:var(--text3)">天（1-90）</span>
+                    <button class="btn btn-sm btn-primary" onclick="saveApiConfig()">保存配置</button>
+                </div>
+                <div style="overflow-x:auto">
+                    <table><thead><tr><th>API 路径</th><th>启用</th><th>每秒上限</th><th>带宽上限(KB/s)</th></tr></thead><tbody id="apiConfigTbody"></tbody></table>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>实时调用曲线
+                    <select id="apiChartSpan" onchange="loadApiStats()" style="margin-left:10px;font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;outline:none;cursor:pointer">
+                        <option value="300">5 分钟</option>
+                        <option value="900">15 分钟</option>
+                        <option value="1800">30 分钟</option>
+                        <option value="3600" selected>1 小时</option>
+                        <option value="21600">6 小时</option>
+                        <option value="86400">1 天</option>
+                        <option value="604800">7 天</option>
+                        <option value="2592000">30 天</option>
+                        <option value="7776000">90 天（3个月）</option>
+                    </select>
+                </h3>
+                <canvas id="apiChart" style="width:100%;height:200px;display:block"></canvas>
+                <div id="apiChartLegend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--text2)"></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>统计</h3>
+                <div style="display:flex;gap:24px;flex-wrap:wrap">
+                    <div><div style="font-size:11px;color:var(--text3)">站点总开放时间</div><div id="apiUptime" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">API 总调用次数</div><div id="apiTotalCalls" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">总带宽</div><div id="apiTotalBytes" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                </div>
+                <div style="margin-top:14px"><div style="font-size:11px;color:var(--text3);margin-bottom:6px">各 API 累计调用</div><div id="apiPerPath" style="font-size:12px;color:var(--text2);display:flex;flex-direction:column;gap:4px"></div></div>
+            </div>
+        </div>
+
+        <!-- About -->
+        <div class="panel" id="aboutPanel">
+            <div style="text-align:center;padding:20px 0">
+                <svg width="80" height="80" viewBox="0 0 80 80" style="margin-bottom:14px">
+                    <defs><linearGradient id="ab-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary2)"/></linearGradient></defs>
+                    <rect x="4" y="4" width="72" height="72" rx="18" fill="url(#ab-grad)" opacity=".12"/>
+                    <!-- Stylized "A" made of a play triangle on left and diagonal stripe on right -->
+                    <polygon points="28,26 28,54 47,40" fill="url(#ab-grad)"/>
+                    <line x1="47" y1="40" x2="54" y2="26" stroke="url(#ab-grad)" stroke-width="4" stroke-linecap="round"/>
+                    <line x1="54" y1="26" x2="54" y2="54" stroke="url(#ab-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+                    <!-- danmaku trail -->
+                    <rect x="30" y="60" width="30" height="2.5" rx="1.25" fill="rgba(255,255,255,.3)"/>
+                </svg>
+                <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">ArtPlayer Web Api</h2>
+                <p style="font-size:13px;color:var(--text2);max-width:520px;margin:0 auto 14px;line-height:1.7">
+                    ArtPlayer 弹幕视频播放器 + Web 管理后台 — 自托管、零构建的弹幕系统<br>
+                    自研 Canvas 弹幕引擎 · API 限流与实时统计 · PoW 防火墙 · 双主题系统 · 多字幕 · 文件管理
+                </p>
+                <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+                    <span class="ab-badge">v26.8.1</span>
+                    <span class="ab-badge b2" style="cursor:pointer" onclick="window.open('https://github.com/yangyang8002/Artplayer-Web-Api')">GitHub</span>
+                    <span class="ab-badge b3">MIT License</span>
+                    <span class="ab-badge b4">2026</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px">
+                    <img src="https://github.com/yangyang8002.png" width="36" height="36" style="border-radius:50%;border:2px solid var(--accent)" alt="avatar">
+                    <a href="https://github.com/yangyang8002" target="_blank" style="color:var(--accent);font-size:13px;font-weight:500">yangyang8002</a>
+                </div>
+            </div>
+            <div class="card" style="max-width:520px;margin:0 auto">
+                <h3 style="text-align:center"><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>功能一览</h3>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;padding:10px 4px;font-size:12px;color:var(--text2)">
+                    <div>· 自研 Canvas 弹幕引擎（轨道/堆叠/密度）</div>
+                    <div>· DPlayer 兼容弹幕 API</div>
+                    <div>· 服务端分配 8 位视频 ID（自动继承旧 ID）</div>
+                    <div>· 多字幕自动检测与切换（简/繁/日/英…）</div>
+                    <div>· API 独立开关 / RPS / 带宽控制</div>
+                    <div>· API 统计：1s 精度实时曲线，保留 1-90 天</div>
+                    <div>· PoW 工作量证明防火墙</div>
+                    <div>· 全局速率限制 / 弹幕频率限制</div>
+                    <div>· 播放器 + 后台双主题（各 10 套）</div>
+                    <div>· 屏蔽词 + GitHub 词库订阅</div>
+                    <div>· 文件管理：压缩/解压/批量操作/上传</div>
+                    <div>· 请求日志（最近 500 条）</div>
+                </div>
+            </div>
+            <div class="card" style="max-width:520px;margin:0 auto">
+                <h3 style="text-align:center"><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>依赖</h3>
+                <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:8px 0">
+                    <a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" class="ab-dep">ArtPlayer 5.x</a>
+                    <a href="https://expressjs.com" target="_blank" class="ab-dep">Express 5.2.1</a>
+                    <a href="https://github.com/express-rate-limit/express-rate-limit" target="_blank" class="ab-dep">express-rate-limit 8.6.2</a>
+                    <a href="https://helmetjs.github.io" target="_blank" class="ab-dep">Helmet 8.3.0</a>
+                    <a href="https://github.com/expressjs/multer" target="_blank" class="ab-dep">Multer 2.2.0</a>
+                    <a href="https://github.com/cthackers/adm-zip" target="_blank" class="ab-dep">adm-zip 0.6.0</a>
+                    <a href="https://github.com/andreafabrizi/7zip-bin" target="_blank" class="ab-dep">7zip-bin 5.2.0</a>
+                    <a href="https://github.com/video-dev/hls.js" target="_blank" class="ab-dep">hls.js</a>
+                    <a href="https://github.com/bilibili/flv.js" target="_blank" class="ab-dep">flv.js</a>
+                    <a href="https://github.com/konsheng/Sensitive-lexicon" target="_blank" class="ab-dep">Sensitive-lexicon</a>
+                </div>
+            </div>
+            <div style="text-align:center;padding:16px">
+                <p style="font-size:12px;color:var(--text3)">Made with ♥ by yangyang8002</p>
+                <p style="font-size:11px;color:var(--text3);margin-top:4px">MIT License &copy; 2024-2026 · v26.8.1</p>
+            </div>
+        </div>
+
+    </main>
+    <div id="toast"></div>
+
+    <script>
+        let adminToken = '', adminUser = '';
+        let wordPage = 1, wordTotal = 0;
+        let dmPage = 1, dmTotal = 0;
+        const WORD_LIMIT = 50;
+        function authHeaders() { return { 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' }; }
+        function setAdminTheme(name) { document.documentElement.dataset.theme = name; localStorage.setItem('ap_admin_theme', name); if (document.getElementById('cfgAdminTheme')) document.getElementById('cfgAdminTheme').value = name; }
+        function loadAdminTheme() {
+            var t = localStorage.getItem('ap_admin_theme') || 'bilibili';
+            setAdminTheme(t);
+        }
+        function populateThemeSelects() {
+            fetch('/api/theme/player/list').then(r => r.json()).then(d => {
+                if (d.code !== 0 || !d.data.length) return;
+                const sel = document.getElementById('cfgTheme');
+                const cur = sel.value;
+                sel.innerHTML = d.data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                sel.value = cur;
+            }).catch(() => {});
+            fetch('/api/theme/admin/list').then(r => r.json()).then(d => {
+                if (d.code !== 0 || !d.data.length) return;
+                const sel = document.getElementById('cfgAdminTheme');
+                const cur = sel.value;
+                sel.innerHTML = d.data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                sel.value = cur;
+            }).catch(() => {});
+        }
+        function toast(m, ok) {
+            const t = document.getElementById('toast');
+            t.textContent = m; t.className = ok ? 'toast ok show' : 'toast err show';
+            clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        function login() {
+            const u = document.getElementById('usernameInput').value.trim();
+            const p = document.getElementById('passwordInput').value;
+            if (!u) return toast('请输入账号', false);
+            if (!p) return toast('请输入密码', false);
+            fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) {
+                        adminToken = d.data.token; adminUser = d.data.username;
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('mainPage').style.display = 'block';
+                        document.getElementById('sideUser').textContent = adminUser;
+                        loadBannedWords(); loadDanmu(); loadVids(); loadVideos(); loadSubscriptions(); loadConfig(); populateThemeSelects(); loadFiles(); loadLogs();
+                    } else toast(d.code === 429 ? '登录过频' : (d.msg || '失败'), false);
+                }).catch(() => toast('连接失败', false));
+        }
+
+        function logout() {
+            adminToken = ''; adminUser = '';
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('sideUser').textContent = '未登录';
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === name));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(name + 'Panel').classList.add('active');
+            if (name === 'api') startApiChart();
+            else stopApiChart();
+        }
+
+        function loadBannedWords(page) {
+            const s = document.getElementById('wordSearch').value.trim();
+            page = page || 1;
+            fetch(`/api/admin/banned-words?page=${page}&limit=${WORD_LIMIT}&search=${encodeURIComponent(s)}`, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { wordPage = d.data.page; wordTotal = d.data.total; renderWordList(d.data.words); renderPager(); }
+                });
+        }
+        function renderWordList(w) {
+            const c = document.getElementById('wordList');
+            c.innerHTML = w.length ? w.map(v => `<span class="tag">${esc(v)}<span class="x" onclick="deleteBannedWord('${esc(v)}')">&times;</span></span>`).join('') : '<div class="empty-state">暂无屏蔽词</div>';
+            document.getElementById('wordCount').textContent = `共 ${wordTotal} 条`;
+        }
+        function renderPager() {
+            const tp = Math.ceil(wordTotal / WORD_LIMIT);
+            const p = document.getElementById('wordPager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${wordPage<=1?'disabled':''} onclick="loadBannedWords(${wordPage-1})">上一页</button><span class="info">${wordPage}/${tp}</span><button ${wordPage>=tp?'disabled':''} onclick="loadBannedWords(${wordPage+1})">下一页</button>`;
+        }
+        function onWordSearch() { wordPage = 1; loadBannedWords(1); }
+        function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function addBannedWord() {
+            const w = document.getElementById('newWordInput').value.trim();
+            if (!w) return toast('请输入关键词', false);
+            fetch('/api/admin/banned-words', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ word: w }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { toast('已添加', true); document.getElementById('newWordInput').value = ''; loadBannedWords(wordPage); }
+                    else toast(d.msg, false);
+                });
+        }
+        function deleteBannedWord(w) {
+            fetch('/api/admin/banned-words', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ word: w }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { toast('已删除', true); const TP = Math.ceil((wordTotal - 1) / WORD_LIMIT); if (wordPage > TP && TP > 0) wordPage = TP; loadBannedWords(wordPage); }
+                });
+        }
+
+        function loadSubscriptions() {
+            fetch('/api/admin/banned-words/subscriptions', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) renderSubscriptions(d.data);
+                });
+        }
+        function renderSubscriptions(list) {
+            const c = document.getElementById('subList');
+            c.innerHTML = list.length
+                ? list.map(u => `<span class="tag">${esc(u)}<span class="x" onclick="deleteSubscription('${esc(u)}')">&times;</span></span>`).join('')
+                : '<div class="empty-state">暂无订阅</div>';
+        }
+        function addSubscription() {
+            const url = document.getElementById('subUrlInput').value.trim();
+            if (!url) return toast('请输入链接', false);
+            fetch('/api/admin/banned-words/subscriptions', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ url }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { toast('已添加', true); document.getElementById('subUrlInput').value = ''; loadSubscriptions(); }
+                    else toast(d.msg, false);
+                });
+        }
+        function deleteSubscription(url) {
+            fetch('/api/admin/banned-words/subscriptions', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ url }) })
+                .then(r => r.json()).then(d => { if (d.code === 0) { toast('已删除', true); loadSubscriptions(); } });
+        }
+        function refreshBannedWords() {
+            fetch('/api/admin/banned-words/refresh', { method: 'POST', headers: authHeaders() })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBannedWords(1); });
+        }
+
+        function loadDanmu(page) {
+            const vid = document.getElementById('dmFilterVid').value.trim();
+            const search = document.getElementById('dmFilterText').value.trim();
+            page = page || 1;
+            let url = '/api/admin/danmu?page=' + page + '&limit=50';
+            if (vid) url += '&vid=' + encodeURIComponent(vid);
+            if (search) url += '&search=' + encodeURIComponent(search);
+            fetch(url, { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code === 0) { dmPage = d.data.page; dmTotal = d.data.total; renderDanmuTable(d.data.list); renderDmPager(); }
+            });
+        }
+        function applyDmFilter() { dmPage = 1; loadDanmu(1); }
+        function clearDmFilter() {
+            document.getElementById('dmFilterVid').value = '';
+            document.getElementById('dmFilterText').value = '';
+            dmPage = 1; loadDanmu(1);
+        }
+        function loadVids() {
+            fetch('/api/admin/danmu/vids', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code === 0) renderVidList(d.data);
+            });
+        }
+        function renderVidList(vids) {
+            const c = document.getElementById('vidList');
+            if (!vids.length) { c.innerHTML = '<div class="empty-state" style="font-size:12px">暂无数据</div>'; return; }
+            c.innerHTML = vids.map(v => `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="filterByVid('${esc(v.vid)}')"><span style="font-size:12px;color:var(--text);font-family:monospace" title="${esc(v.vid)}">${esc(v.vid).slice(0,12)}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0;margin-left:8px">${v.count}</span></div>`).join('');
+        }
+        function filterByVid(vid) {
+            document.getElementById('dmFilterVid').value = vid;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === 'danmu'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('danmuPanel').classList.add('active');
+            loadDanmu();
+        }
+        function renderDanmuTable(list) {
+            const tb = document.getElementById('danmuTbody'), em = document.getElementById('danmuEmpty');
+            if (!list.length) { tb.innerHTML = ''; em.style.display = 'block'; document.getElementById('dmPager').innerHTML = ''; return; }
+            em.style.display = 'none';
+            tb.innerHTML = list.map(d => `<tr><td>${new Date(d.date).toLocaleString('zh-CN')}</td><td style="font-size:12px;color:var(--text3)">${esc(d.vid||'-')}</td><td><span class="swatch" style="background:${d.color}"></span>${esc(d.text)}</td><td style="font-size:12px;color:var(--text3)">${d.color}</td><td>${d.type==='top'?'<span class="badge top">顶部</span>':d.type==='bottom'?'<span class="badge bottom">底部</span>':'<span class="badge scroll">滚动</span>'}</td><td><button class="btn btn-danger" onclick="deleteDanmu('${d.id}')">删除</button></td></tr>`).join('');
+        }
+        function renderDmPager() {
+            const tp = Math.ceil(dmTotal / 50);
+            const p = document.getElementById('dmPager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${dmPage<=1?'disabled':''} onclick="loadDanmu(${dmPage-1})">上一页</button><span class="info">${dmPage}/${tp}（共${dmTotal}条）</span><button ${dmPage>=tp?'disabled':''} onclick="loadDanmu(${dmPage+1})">下一页</button>`;
+        }
+        function deleteDanmu(id) {
+            if (!confirm('确认删除？')) return;
+            fetch('/api/admin/danmu', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { if (d.code === 0) { toast('已删除', true); loadDanmu(dmPage); } });
+        }
+
+        function loadConfig() {
+            fetch('/api/admin/config', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code === 0) {
+                    const c = d.data;
+                    document.getElementById('cfgPowEnabled').checked = !!c.pow.enabled;
+                    document.getElementById('cfgPowDifficulty').value = c.pow.difficulty || 4;
+                    document.getElementById('cfgPowDiffVal').textContent = c.pow.difficulty || 4;
+                    document.getElementById('cfgRlEnabled').checked = !!c.rateLimit.enabled;
+                    document.getElementById('cfgRlWindow').value = (c.rateLimit.windowMs || 60000) / 1000;
+                    document.getElementById('cfgRlMax').value = c.rateLimit.max || 60;
+                    document.getElementById('cfgDlEnabled').checked = !!(c.danmakuLimit && c.danmakuLimit.enabled);
+                    document.getElementById('cfgDlMax').value = (c.danmakuLimit && c.danmakuLimit.maxPerMinute) || 10;
+                    document.getElementById('cfgRenderMaxPerSec').value = (c.render && c.render.maxPerSecond) || 250;
+                    document.getElementById('cfgRenderJitter').value = (c.render && c.render.speedJitter != null) ? c.render.speedJitter : 10;
+                    document.getElementById('cfgSessionMin').value = (c.security && c.security.sessionMinutes) || 120;
+                    document.getElementById('cfgAdminPath').value = (c.security && c.security.adminPath) || '';
+                    document.getElementById('cfgCdnEnabled').checked = !!c.cdn.enabled;
+                    document.getElementById('cfgCdnUrl').value = c.cdn.baseUrl || '';
+                    document.getElementById('cfgTheme').value = c.theme || 'bilibili';
+                    document.getElementById('cfgAdminTheme').value = c.adminTheme || 'bilibili';
+                    setAdminTheme(c.adminTheme || 'bilibili');
+                }
+            });
+        }
+        document.getElementById('cfgPowDifficulty').addEventListener('input', function () { document.getElementById('cfgPowDiffVal').textContent = this.value; });
+        function saveConfig() {
+            const cfg = {
+                pow: { enabled: document.getElementById('cfgPowEnabled').checked, difficulty: parseInt(document.getElementById('cfgPowDifficulty').value) },
+                rateLimit: { enabled: document.getElementById('cfgRlEnabled').checked, windowMs: parseInt(document.getElementById('cfgRlWindow').value) * 1000, max: parseInt(document.getElementById('cfgRlMax').value) },
+                danmakuLimit: { enabled: document.getElementById('cfgDlEnabled').checked, maxPerMinute: parseInt(document.getElementById('cfgDlMax').value) },
+                render: { maxPerSecond: parseInt(document.getElementById('cfgRenderMaxPerSec').value) || 250, speedJitter: parseInt(document.getElementById('cfgRenderJitter').value) || 10 },
+                security: { sessionMinutes: parseInt(document.getElementById('cfgSessionMin').value), adminPath: document.getElementById('cfgAdminPath').value.trim().replace(/^\/+|\/+$/g, '') },
+                theme: document.getElementById('cfgTheme').value,
+                adminTheme: document.getElementById('cfgAdminTheme').value,
+                cdn: { enabled: document.getElementById('cfgCdnEnabled').checked, baseUrl: document.getElementById('cfgCdnUrl').value.trim() }
+            };
+            fetch('/api/admin/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify(cfg) })
+                .then(r => r.json()).then(d => {
+                    document.getElementById('cfgMsg').innerHTML = d.code === 0 ? '<span style="color:var(--success)">已保存，重启生效</span>' : '<span style="color:var(--danger)">保存失败</span>';
+                }).catch(() => { document.getElementById('cfgMsg').innerHTML = '<span style="color:var(--danger)">连接失败</span>'; });
+        }
+        function changePassword() {
+            const o = document.getElementById('cfgOldPwd').value, n = document.getElementById('cfgNewPwd').value;
+            if (!o) return toast('请输入原密码', false);
+            if (!n || n.length < 4) return toast('新密码至少4位', false);
+            fetch('/api/admin/change-password', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ oldPassword: o, newPassword: n }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { toast('已更新', true); document.getElementById('cfgOldPwd').value = ''; document.getElementById('cfgNewPwd').value = ''; }
+                    else toast(d.msg, false);
+                }).catch(() => toast('连接失败', false));
+        }
+        function changeUsername() {
+            const n = document.getElementById('cfgNewUser').value.trim(), p = document.getElementById('cfgUserPwd').value;
+            if (!n) return toast('请输入新用户名', false);
+            if (n.length < 2) return toast('用户名至少2位', false);
+            if (!p) return toast('请输入密码', false);
+            fetch('/api/admin/change-username', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ newUsername: n, password: p }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { if (d.data && d.data.token) { adminToken = d.data.token; adminUser = d.data.username; document.getElementById('sideUser').textContent = adminUser; } toast('已更换', true); document.getElementById('cfgNewUser').value = ''; document.getElementById('cfgUserPwd').value = ''; }
+                    else toast(d.msg, false);
+                }).catch(() => toast('连接失败', false));
+        }
+
+        function loadVideos() {
+            fetch('/api/admin/videos', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code === 0) renderVideos(d.data);
+            });
+        }
+        function renderVideos(list) {
+            document.getElementById('videoCount').textContent = `共 ${list.length} 条`;
+            const c = document.getElementById('videoTable');
+            if (!list.length) { c.innerHTML = '<div class="empty-state">暂无映射，播放视频时会自动记录</div>'; return; }
+            c.innerHTML = `<table><thead><tr><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
+        }
+        function addVideo() {
+            const vid = document.getElementById('newVid').value.trim();
+            const url = document.getElementById('newVidUrl').value.trim();
+            if (!vid || !url) return toast('请填写视频码和链接', false);
+            fetch('/api/admin/videos', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ vid, url }) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) { toast('已保存', true); document.getElementById('newVid').value=''; document.getElementById('newVidUrl').value=''; loadVideos(); }
+                    else toast(d.msg, false);
+                }).catch(() => toast('连接失败', false));
+        }
+        function deleteVideo(vid) {
+            if (!confirm('确认删除？')) return;
+            fetch('/api/admin/videos/delete', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ vid }) })
+                .then(r => r.json()).then(d => { if (d.code === 0) { toast('已删除', true); loadVideos(); } });
+        }
+
+        /* ===== Files ===== */
+        let currentFilePath = '';
+        function fileGo(p) {
+            currentFilePath = p || '';
+            loadFiles();
+        }
+        function fileUp() {
+            if (!currentFilePath) return;
+            const parts = currentFilePath.split('/').filter(Boolean);
+            parts.pop();
+            currentFilePath = parts.join('/');
+            loadFiles();
+        }
+        function loadFiles() {
+            fetch('/api/admin/files?path=' + encodeURIComponent(currentFilePath), { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) { toast(d.msg || '加载失败', false); return; }
+                    const data = d.data;
+                    document.getElementById('filePath').textContent = '/' + (data.path || '');
+                    document.getElementById('fileContentCard').style.display = 'none';
+                    const tb = document.getElementById('fileTbody'), em = document.getElementById('fileEmpty');
+                    if (data.type === 'file') {
+                        tb.innerHTML = '';
+                        em.style.display = 'none';
+                        const cc = document.getElementById('fileContentCard');
+                        cc.style.display = 'block';
+                        document.getElementById('fileContentName').textContent = data.name + ' (' + fmtSize(data.size) + ')';
+                        document.getElementById('fileContent').textContent = data.tooLarge ? '[文件超过 200KB，无法预览]' : (data.content || '[空文件]');
+                        return;
+                    }
+                    if (!data.entries.length) { tb.innerHTML = ''; em.style.display = 'block'; return; }
+                    em.style.display = 'none';
+                    tb.innerHTML = data.entries.map(e => {
+                        const name = esc(e.name);
+                        const fp = currentFilePath ? currentFilePath + '/' + e.name : e.name;
+                        const fpEsc = fp.replace(/'/g, "\\'");
+                        const cb = `<input type="checkbox" class="file-cb" value="${fpEsc}" onclick="event.stopPropagation()">`;
+                        if (e.dir) {
+                            const ic = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;color:var(--accent)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+                            return `<tr style="cursor:pointer" onclick="fileGo('${fpEsc}')"><td>${cb}</td><td>${ic} ${name}</td><td>—</td><td><button class="btn btn-sm" onclick="event.stopPropagation();fileGo('${fpEsc}')">打开</button></td></tr>`;
+                        }
+                        const ic = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;color:var(--text3)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+                        return `<tr><td>${cb}</td><td>${ic} ${name}</td><td>${fmtSize(e.size)}</td><td><button class="btn btn-sm" onclick="viewFile('${fpEsc}')">查看</button></td></tr>`;
+                    }).join('');
+                }).catch(() => toast('加载失败', false));
+        }
+        function viewFile(p) {
+            currentFilePath = p;
+            loadFiles();
+        }
+        function fmtSize(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+        function getSelectedFiles() {
+            return Array.from(document.querySelectorAll('.file-cb:checked')).map(c => c.value);
+        }
+        function toggleSelectAll() {
+            const all = document.getElementById('fileSelectAll').checked;
+            document.querySelectorAll('.file-cb').forEach(c => c.checked = all);
+        }
+        function fileBatch(action) {
+            const sel = getSelectedFiles();
+            if (!sel.length) { toast('请先选择文件', false); return; }
+            if (action === 'unzip') {
+                const exts = /\.(zip|7z|rar|gz|tgz|tar|xz|bz2|tbz2|iso|img|lzh|cab|arj|z)$/i;
+                const arcs = sel.filter(p => exts.test(p));
+                if (!arcs.length) { toast('请选择压缩包（zip/7z/rar/gz/tar/xz/iso/img 等）', false); return; }
+                if (!confirm('确认解压所选 ' + arcs.length + ' 个文件到当前目录？')) return;
+                let done = 0;
+                arcs.forEach(p => {
+                    fetch('/api/admin/files/unzip', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ path: p }) })
+                        .then(r => r.json()).then(d => { done++; toast(d.msg, d.code === 0); if (done === arcs.length) loadFiles(); });
+                });
+                return;
+            }
+            if (action === 'delete' && !confirm('确认删除所选 ' + sel.length + ' 项？此操作不可恢复！')) return;
+            const body = action === 'zip'
+                ? JSON.stringify({ paths: sel, format: document.getElementById('zipFormat').value })
+                : JSON.stringify({ paths: sel });
+            fetch('/api/admin/files/' + action, { method: 'POST', headers: authHeaders(), body })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadFiles(); });
+        }
+        function uploadFiles() {
+            const input = document.getElementById('fileUploadInput');
+            const files = input.files;
+            if (!files.length) return;
+            const fd = new FormData();
+            fd.append('dir', currentFilePath || '');
+            Array.from(files).forEach(f => fd.append('files', f));
+            fetch('/api/admin/files/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); input.value = ''; loadFiles(); })
+                .catch(() => { toast('上传失败', false); input.value = ''; });
+        }
+
+        /* ===== Logs ===== */
+        function loadLogs() {
+            fetch('/api/admin/logs?limit=200', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const tb = document.getElementById('logTbody'), em = document.getElementById('logEmpty');
+                    if (!d.data.length) { tb.innerHTML = ''; em.style.display = 'block'; return; }
+                    em.style.display = 'none';
+                    tb.innerHTML = d.data.map(l => {
+                        const st = l.s >= 400 ? 'var(--danger)' : l.s >= 300 ? 'var(--warn)' : 'var(--success)';
+                        const meth = l.m === 'GET' ? 'var(--accent)' : l.m === 'POST' ? 'var(--primary)' : l.m === 'DELETE' ? 'var(--danger)' : 'var(--text2)';
+                        return `<tr><td style="font-size:11px;color:var(--text3)">${esc(new Date(l.t).toLocaleTimeString('zh-CN'))}</td><td style="color:${meth};font-weight:600">${esc(l.m)}</td><td style="font-size:12px;font-family:monospace">${esc(l.p)}</td><td style="color:${st};font-weight:600">${l.s}</td><td style="font-size:11px;color:var(--text3)">${esc(l.ip)}</td><td style="font-size:11px;color:var(--text3)">${l.ms}ms</td></tr>`;
+                    }).join('');
+                }).catch(() => {});
+        }
+
+        /* ===== API Management ===== */
+        const API_COLORS = ['#62d5ff', '#a78bfa', '#ff85a2', '#64dd17', '#ff8c42', '#34d399', '#f59e0b', '#ff4d6a', '#00d4ff', '#c792ea'];
+        let apiChartTimer = null;
+        function loadApiStats() {
+            const span = parseInt(document.getElementById('apiChartSpan').value) || 3600;
+            fetch('/api/admin/api/stats?span=' + span, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const data = d.data;
+                    // config table
+                    const tb = document.getElementById('apiConfigTbody');
+                    tb.innerHTML = Object.entries(data.rules).map(([path, r]) => `
+                        <tr>
+                            <td style="font-family:monospace;font-size:12px">${esc(path)}</td>
+                            <td><input type="checkbox" class="api-enabled" data-path="${esc(path)}" ${r.enabled ? 'checked' : ''}></td>
+                            <td><input type="number" class="api-rps" data-path="${esc(path)}" min="0" value="${r.rps || 0}" style="width:70px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td>
+                            <td><input type="number" class="api-bw" data-path="${esc(path)}" min="0" value="${r.bandwidth || 0}" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px"></td>
+                        </tr>`).join('');
+                    document.getElementById('apiRetention').value = data.retentionDays || 1;
+                    // uptime & totals
+                    document.getElementById('apiUptime').textContent = fmtUptime(data.uptimeSec);
+                    document.getElementById('apiTotalCalls').textContent = data.totalCalls.toLocaleString();
+                    document.getElementById('apiTotalBytes').textContent = fmtSize(data.totals.bytes ? Object.values(data.totals.bytes).reduce((a,b)=>a+b,0) : 0);
+                    // per path
+                    document.getElementById('apiPerPath').innerHTML = Object.entries(data.totals.calls).map(([p, c]) =>
+                        `<div style="display:flex;justify-content:space-between;gap:16px"><span style="font-family:monospace">${esc(p)}</span><span>${c.toLocaleString()} 次 · ${fmtSize((data.totals.bytes||{})[p]||0)}</span></div>`).join('');
+                    // chart (buckets at 1s/60s/1h granularity per span)
+                    drawApiChart(data.buckets, data.rules, data.bucketUnit || 1);
+                }).catch(() => {});
+        }
+        function fmtUptime(sec) {
+            const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+            return (d ? d + '天 ' : '') + (h ? h + '小时 ' : '') + (m ? m + '分 ' : '') + s + '秒';
+        }
+        function drawApiChart(buckets, rules, unit) {
+            const canvas = document.getElementById('apiChart');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const W = rect.width, H = rect.height;
+            ctx.clearRect(0, 0, W, H);
+            const paths = Object.keys(rules);
+            if (!paths.length) return;
+            document.getElementById('apiChartLegend').innerHTML = paths.map((p, i) =>
+                `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${API_COLORS[i % API_COLORS.length]}"></span>${esc(p)}</span>`).join('');
+            if (!buckets.length) {
+                ctx.fillStyle = 'rgba(255,255,255,.3)';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('暂无数据', W / 2, H / 2);
+                return;
+            }
+            // group buckets: ~120 bars max
+            const groupSec = Math.max(1, Math.ceil(buckets.length / 120)) * unit;
+            const bars = [];
+            for (let i = 0; i < buckets.length; i += groupSec / unit) {
+                const slice = buckets.slice(i, i + groupSec / unit);
+                const g = { t: slice[0].t, calls: {}, bytes: {} };
+                slice.forEach(b => {
+                    for (const [p, c] of Object.entries(b.calls)) g.calls[p] = (g.calls[p] || 0) + c;
+                    for (const [p, by] of Object.entries(b.bytes)) g.bytes[p] = (g.bytes[p] || 0) + by;
+                });
+                bars.push(g);
+            }
+            const padL = 8, padB = 22, padT = 10;
+            const chartH = H - padB - padT;
+            const bw = Math.max(3, Math.min(20, (W - padL - 10) / bars.length));
+            const maxY = Math.max(1, ...bars.map(b => Object.values(b.calls).reduce((a, c) => a + c, 0)));
+            const labelFmt = unit >= 3600
+                ? (t) => new Date(t).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                : unit >= 60
+                    ? (t) => new Date(t).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                    : (t) => new Date(t).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            bars.forEach((b, bi) => {
+                const x = padL + bi * bw;
+                const yBase = padT + chartH;
+                let cumH = 0;
+                paths.forEach((p, pi) => {
+                    const count = b.calls[p] || 0;
+                    const h = count / maxY * chartH;
+                    ctx.fillStyle = API_COLORS[pi % API_COLORS.length];
+                    ctx.globalAlpha = 0.85;
+                    ctx.fillRect(x, yBase - cumH - h, bw - 1, h);
+                    cumH += h;
+                });
+                ctx.globalAlpha = 1;
+                if (bi % Math.max(1, Math.floor(bars.length / 6)) === 0) {
+                    ctx.fillStyle = 'rgba(255,255,255,.4)';
+                    ctx.font = '9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(labelFmt(b.t), x + bw / 2, H - 6);
+                }
+            });
+            ctx.strokeStyle = 'rgba(255,255,255,.06)';
+            for (let g = 1; g <= 4; g++) {
+                const y = padT + chartH * g / 5;
+                ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+        }
+        function saveApiConfig() {
+            const apis = {};
+            document.querySelectorAll('#apiConfigTbody tr').forEach(tr => {
+                const path = tr.querySelector('.api-enabled').dataset.path;
+                apis[path] = {
+                    enabled: tr.querySelector('.api-enabled').checked,
+                    rps: parseInt(tr.querySelector('.api-rps').value) || 0,
+                    bandwidth: parseInt(tr.querySelector('.api-bw').value) || 0
+                };
+            });
+            const retentionDays = parseInt(document.getElementById('apiRetention').value) || 1;
+            fetch('/api/admin/api', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ apis, retentionDays }) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function startApiChart() {
+            stopApiChart();
+            loadApiStats();
+            apiChartTimer = setInterval(loadApiStats, 3000);
+        }
+        function stopApiChart() { if (apiChartTimer) { clearInterval(apiChartTimer); apiChartTimer = null; } }
+
+        document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+        document.getElementById('newWordInput').addEventListener('keypress', e => { if (e.key === 'Enter') addBannedWord(); });
+        loadAdminTheme();
+    </script>
+</body>
+</html>

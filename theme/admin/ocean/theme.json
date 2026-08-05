@@ -1,0 +1,23 @@
+{
+  "id": "ocean",
+  "displayName": "ocean",
+  "variables": {
+    "bg": "#0a1628",
+    "sidebar": "#0e1c30",
+    "surface": "#101e36",
+    "surface2": "#162640",
+    "border": "rgba(0,212,255,0.12)",
+    "text": "#d4edf4",
+    "text2": "#7ab0c0",
+    "text3": "#4a8090",
+    "primary": "#00d4ff",
+    "primary2": "#5ce6c6",
+    "accent": "#33eeff",
+    "danger": "#ff5370",
+    "success": "#5ce6c6",
+    "warn": "#ffb84d",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

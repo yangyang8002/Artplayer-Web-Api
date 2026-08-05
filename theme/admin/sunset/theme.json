@@ -1,0 +1,23 @@
+{
+  "id": "sunset",
+  "displayName": "sunset",
+  "variables": {
+    "bg": "#1a1018",
+    "sidebar": "#241820",
+    "surface": "#2a1826",
+    "surface2": "#342030",
+    "border": "rgba(255,140,66,0.15)",
+    "text": "#f0e0d6",
+    "text2": "#b09580",
+    "text3": "#7a6550",
+    "primary": "#ff8c42",
+    "primary2": "#e06c9f",
+    "accent": "#ffa564",
+    "danger": "#ff5050",
+    "success": "#ff8c42",
+    "warn": "#ffbe50",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

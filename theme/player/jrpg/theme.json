@@ -1,0 +1,15 @@
+{
+  "id": "jrpg",
+  "displayName": "jrpg",
+  "variables": {
+    "--bg": "#100e08",
+    "--surface": "rgba(20,16,10,.88)",
+    "--bili-blue": "#e0b040",
+    "--bili-blue-hover": "#f0c860",
+    "--bili-pink": "#c09030",
+    "--text": "#e8e0d0",
+    "--text-dim": "#b0a080",
+    "--danger": "#e04040",
+    "--gradient": "linear-gradient(135deg,#e0b040,#c09030)"
+  }
+}

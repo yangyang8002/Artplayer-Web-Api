@@ -1,0 +1,23 @@
+{
+  "id": "bilibili",
+  "displayName": "bilibili",
+  "variables": {
+    "bg": "#080810",
+    "sidebar": "#0c0c18",
+    "surface": "#111122",
+    "surface2": "#16162a",
+    "border": "rgba(255,255,255,0.06)",
+    "text": "#e4e4f0",
+    "text2": "#8e8ea8",
+    "text3": "#5c5c78",
+    "primary": "#a78bfa",
+    "primary2": "#7c5cfc",
+    "accent": "#62d5ff",
+    "danger": "#ff4d6a",
+    "success": "#34d399",
+    "warn": "#f59e0b",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

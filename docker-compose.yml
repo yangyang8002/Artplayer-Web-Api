@@ -1,0 +1,18 @@
+services:
+  artplayer-api:
+    build: .
+    container_name: artplayer-web-api
+    restart: unless-stopped
+    ports:
+      - "1919:1919"
+    environment:
+      - PORT=1919
+      - NODE_ENV=production
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1919/api/config/public"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

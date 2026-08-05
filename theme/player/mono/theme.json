@@ -1,0 +1,15 @@
+{
+  "id": "mono",
+  "displayName": "mono",
+  "variables": {
+    "--bg": "#060606",
+    "--surface": "#141414",
+    "--bili-blue": "#888",
+    "--bili-blue-hover": "#aaa",
+    "--bili-pink": "#ddd",
+    "--text": "#e8e8e8",
+    "--text-dim": "#777",
+    "--danger": "#ccc",
+    "--gradient": "linear-gradient(135deg,#666,#ccc)"
+  }
+}

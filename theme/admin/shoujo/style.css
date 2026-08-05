@@ -1,0 +1,10 @@
+/* Shoujo theme component styles */
+#sidebar{background:linear-gradient(180deg,rgba(40,20,38,.95),rgba(26,14,24,.95));border-right:1px solid rgba(255,150,190,.15)}
+.side-nav .nav-item{border-radius:24px;padding:10px 16px}
+.side-nav .nav-item.active{background:linear-gradient(135deg,rgba(255,128,168,.25),rgba(232,96,192,.15));border:1px solid rgba(255,150,190,.3);box-shadow:0 0 16px rgba(255,128,168,.2)}
+.card,.cfg-card{border-radius:20px;border:1px solid rgba(255,150,190,.2);box-shadow:0 4px 20px rgba(255,120,160,.08)}
+.card h3 .dot,.cfg-card h4 .dot{box-shadow:0 0 8px rgba(255,128,168,.6)}
+.btn{border-radius:18px;padding:7px 20px}
+.btn-primary{background:linear-gradient(135deg,#ff80a8,#e860c0);box-shadow:0 2px 14px rgba(255,128,168,.3)}
+.row input,.cfg-row input[type="text"],.cfg-row input[type="number"],.cfg-row select{border-radius:16px;border-color:rgba(255,150,190,.25);background:rgba(60,30,50,.5)}
+.tag{border-radius:20px;background:rgba(255,128,168,.1);border-color:rgba(255,128,168,.25)}

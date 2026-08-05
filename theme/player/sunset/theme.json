@@ -1,0 +1,15 @@
+{
+  "id": "sunset",
+  "displayName": "sunset",
+  "variables": {
+    "--bg": "#1a1018",
+    "--surface": "#2a1826",
+    "--bili-blue": "#ff8c42",
+    "--bili-blue-hover": "#ffa564",
+    "--bili-pink": "#e06c9f",
+    "--text": "#f0e0d6",
+    "--text-dim": "#b09580",
+    "--danger": "#f44",
+    "--gradient": "linear-gradient(135deg,#ff8c42,#e06c9f)"
+  }
+}

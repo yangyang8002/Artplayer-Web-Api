@@ -1,0 +1,3 @@
+/* bilibili theme component styles */
+.side-nav .nav-item.active{border-left:3px solid #00a1d6}
+.card,.cfg-card{border-radius:10px}

@@ -1,0 +1,9 @@
+/* JRPG theme component styles */
+#sidebar{background:linear-gradient(180deg,rgba(24,18,10,.95),rgba(16,12,6,.95));border-right:1px solid rgba(200,170,80,.2)}
+.side-nav .nav-item.active{background:linear-gradient(90deg,rgba(200,170,80,.15),transparent);border-left:3px solid #d4a030;border-radius:0}
+.card,.cfg-card{border-radius:4px;border:1px solid rgba(200,170,80,.2);box-shadow:inset 0 0 0 1px rgba(200,170,80,.06),0 4px 20px rgba(0,0,0,.3)}
+.card::before,.card::after,.cfg-card::before,.cfg-card::after{border-width:2px;border-color:rgba(200,170,80,.5);width:18px;height:18px}
+.card h3 .dot,.cfg-card h4 .dot{box-shadow:0 0 6px rgba(200,170,80,.5)}
+.btn-primary{background:linear-gradient(180deg,#d4a030,#a87820);border:1px solid rgba(255,220,120,.4);box-shadow:0 2px 10px rgba(200,170,80,.2);border-radius:3px}
+.row input,.cfg-row input[type="text"],.cfg-row input[type="number"],.cfg-row select{border-radius:2px;border-color:rgba(200,170,80,.25);background:rgba(40,30,16,.6)}
+.tag{border-radius:3px;border-color:rgba(200,170,80,.3);background:rgba(200,170,80,.08)}

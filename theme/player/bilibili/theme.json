@@ -1,0 +1,15 @@
+{
+  "id": "bilibili",
+  "displayName": "bilibili",
+  "variables": {
+    "--bg": "#07070d",
+    "--surface": "#14141f",
+    "--bili-blue": "#00a1d6",
+    "--bili-blue-hover": "#00b3e6",
+    "--bili-pink": "#fb7299",
+    "--text": "#e6e6ee",
+    "--text-dim": "#9099a3",
+    "--danger": "#ff4d6a",
+    "--gradient": "linear-gradient(135deg,var(--bili-blue),var(--bili-pink))"
+  }
+}

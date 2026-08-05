@@ -1,0 +1,15 @@
+{
+  "id": "cyber",
+  "displayName": "cyber",
+  "variables": {
+    "--bg": "#060618",
+    "--surface": "rgba(10,10,40,.88)",
+    "--bili-blue": "#00e5ff",
+    "--bili-blue-hover": "#40f0ff",
+    "--bili-pink": "#b000ff",
+    "--text": "#d0f0ff",
+    "--text-dim": "#60c0d0",
+    "--danger": "#ff3060",
+    "--gradient": "linear-gradient(135deg,#00e5ff,#b000ff)"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "ocean",
+  "displayName": "ocean",
+  "variables": {
+    "--bg": "#0a1628",
+    "--surface": "#101e36",
+    "--bili-blue": "#00d4ff",
+    "--bili-blue-hover": "#33dfff",
+    "--bili-pink": "#5ce6c6",
+    "--text": "#d4edf4",
+    "--text-dim": "#6b9bb0",
+    "--danger": "#ff5370",
+    "--gradient": "linear-gradient(135deg,#00d4ff,#5ce6c6)"
+  }
+}

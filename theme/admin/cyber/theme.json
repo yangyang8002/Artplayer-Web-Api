@@ -1,0 +1,25 @@
+{
+  "id": "cyber",
+  "displayName": "cyber",
+  "variables": {
+    "bg": "#060618",
+    "sidebar": "#0a0a22",
+    "surface": "rgba(10,10,40,.88)",
+    "surface2": "rgba(18,18,50,.82)",
+    "border": "rgba(0,255,255,.1)",
+    "text": "#d0f0ff",
+    "text2": "#60c0d0",
+    "text3": "#3a7080",
+    "primary": "#00e5ff",
+    "primary2": "#b000ff",
+    "accent": "#ff00aa",
+    "danger": "#ff3060",
+    "success": "#00ff88",
+    "warn": "#ffaa00",
+    "radius": "6px",
+    "radiusSm": "4px",
+    "radiusLg": "10px",
+    "corner": "rgba(0,255,255,.25)",
+    "gradient": "radial-gradient(ellipse at 30% 20%,#0a0020 0%,#060618 60%,#020210 100%)"
+  }
+}

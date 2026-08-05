@@ -1,0 +1,25 @@
+{
+  "id": "neon",
+  "displayName": "neon",
+  "variables": {
+    "bg": "#080808",
+    "sidebar": "#0e0a10",
+    "surface": "rgba(14,10,18,.88)",
+    "surface2": "rgba(22,14,28,.82)",
+    "border": "rgba(255,60,60,.1)",
+    "text": "#f0e8e8",
+    "text2": "#c08080",
+    "text3": "#805050",
+    "primary": "#ff3050",
+    "primary2": "#e02070",
+    "accent": "#ff6080",
+    "danger": "#ff2040",
+    "success": "#ff6040",
+    "warn": "#ff8040",
+    "radius": "3px",
+    "radiusSm": "2px",
+    "radiusLg": "5px",
+    "corner": "rgba(255,60,60,.25)",
+    "gradient": "radial-gradient(ellipse at 30% 20%,#1a0a10 0%,#080808 60%,#040204 100%)"
+  }
+}

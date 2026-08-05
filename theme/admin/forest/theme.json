@@ -1,0 +1,23 @@
+{
+  "id": "forest",
+  "displayName": "forest",
+  "variables": {
+    "bg": "#0d120b",
+    "sidebar": "#12180e",
+    "surface": "#182114",
+    "surface2": "#1e2820",
+    "border": "rgba(100,221,23,0.12)",
+    "text": "#d8e8d0",
+    "text2": "#8aaa7a",
+    "text3": "#5a7a4a",
+    "primary": "#64dd17",
+    "primary2": "#69f0ae",
+    "accent": "#76ff03",
+    "danger": "#ff5252",
+    "success": "#69f0ae",
+    "warn": "#ccff00",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

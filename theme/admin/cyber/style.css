@@ -1,0 +1,8 @@
+/* Cyber theme component styles */
+#sidebar{border-right:1px solid rgba(0,229,255,.25);box-shadow:inset -2px 0 20px rgba(0,229,255,.05)}
+.side-nav .nav-item.active{background:linear-gradient(90deg,rgba(0,229,255,.15),rgba(176,0,255,.1));border-left:3px solid #00e5ff;box-shadow:0 0 12px rgba(0,229,255,.15);border-radius:4px}
+.card,.cfg-card{border-radius:4px;border:1px solid rgba(0,229,255,.15);clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.btn-primary{border-radius:3px;box-shadow:0 0 14px rgba(0,229,255,.25)}
+.row input,.cfg-row input[type="text"],.cfg-row input[type="number"],.cfg-row select{border-radius:3px;border-color:rgba(0,229,255,.2);background:rgba(0,20,40,.5)}
+.side-brand h1{text-shadow:0 0 10px rgba(0,229,255,.5)}
+.tag{border-radius:3px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}

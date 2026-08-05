@@ -1,0 +1,15 @@
+{
+  "id": "neon",
+  "displayName": "neon",
+  "variables": {
+    "--bg": "#080808",
+    "--surface": "rgba(14,10,18,.88)",
+    "--bili-blue": "#ff3050",
+    "--bili-blue-hover": "#ff6080",
+    "--bili-pink": "#e02070",
+    "--text": "#f0e8e8",
+    "--text-dim": "#c08080",
+    "--danger": "#ff2040",
+    "--gradient": "linear-gradient(135deg,#ff3050,#e02070)"
+  }
+}

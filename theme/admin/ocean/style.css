@@ -1,0 +1,3 @@
+/* ocean theme component styles */
+.side-nav .nav-item.active{border-left:3px solid #00d4ff}
+.card,.cfg-card{border-radius:6px;border-color:rgba(0,212,255,.12)}

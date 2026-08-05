@@ -1,0 +1,15 @@
+{
+  "id": "forest",
+  "displayName": "forest",
+  "variables": {
+    "--bg": "#0d120b",
+    "--surface": "#182114",
+    "--bili-blue": "#64dd17",
+    "--bili-blue-hover": "#76ff03",
+    "--bili-pink": "#69f0ae",
+    "--text": "#d8e8d0",
+    "--text-dim": "#7a9a6a",
+    "--danger": "#ff5252",
+    "--gradient": "linear-gradient(135deg,#64dd17,#69f0ae)"
+  }
+}

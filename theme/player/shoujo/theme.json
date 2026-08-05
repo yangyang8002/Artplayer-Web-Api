@@ -1,0 +1,15 @@
+{
+  "id": "shoujo",
+  "displayName": "shoujo",
+  "variables": {
+    "--bg": "#1a101a",
+    "--surface": "rgba(32,18,30,.88)",
+    "--bili-blue": "#ff80a8",
+    "--bili-blue-hover": "#ffa8c0",
+    "--bili-pink": "#e860c0",
+    "--text": "#f8e8f0",
+    "--text-dim": "#d0a0b8",
+    "--danger": "#ff5088",
+    "--gradient": "linear-gradient(135deg,#ff80a8,#e860c0)"
+  }
+}

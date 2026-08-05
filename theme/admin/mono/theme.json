@@ -1,0 +1,23 @@
+{
+  "id": "mono",
+  "displayName": "mono",
+  "variables": {
+    "bg": "#060606",
+    "sidebar": "#0c0c0c",
+    "surface": "#141414",
+    "surface2": "#1a1a1a",
+    "border": "rgba(255,255,255,0.08)",
+    "text": "#e8e8e8",
+    "text2": "#888",
+    "text3": "#555",
+    "primary": "#aaa",
+    "primary2": "#ddd",
+    "accent": "#999",
+    "danger": "#ccc",
+    "success": "#bbb",
+    "warn": "#aaa",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

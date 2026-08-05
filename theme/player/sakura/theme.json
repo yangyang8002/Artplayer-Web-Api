@@ -1,0 +1,15 @@
+{
+  "id": "sakura",
+  "displayName": "sakura",
+  "variables": {
+    "--bg": "#1a1218",
+    "--surface": "#261c24",
+    "--bili-blue": "#ff85a2",
+    "--bili-blue-hover": "#ff9db5",
+    "--bili-pink": "#c792ea",
+    "--text": "#f5e6ed",
+    "--text-dim": "#b89aaa",
+    "--danger": "#ff6188",
+    "--gradient": "linear-gradient(135deg,#ff85a2,#c792ea)"
+  }
+}

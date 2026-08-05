@@ -1,0 +1,25 @@
+{
+  "id": "jrpg",
+  "displayName": "jrpg",
+  "variables": {
+    "bg": "#100e08",
+    "sidebar": "#181410",
+    "surface": "rgba(20,16,10,.88)",
+    "surface2": "rgba(30,22,14,.82)",
+    "border": "rgba(200,170,80,.12)",
+    "text": "#e8e0d0",
+    "text2": "#b0a080",
+    "text3": "#706040",
+    "primary": "#e0b040",
+    "primary2": "#c09030",
+    "accent": "#f0d060",
+    "danger": "#e04040",
+    "success": "#60d080",
+    "warn": "#e0a040",
+    "radius": "4px",
+    "radiusSm": "2px",
+    "radiusLg": "8px",
+    "corner": "rgba(200,170,80,.28)",
+    "gradient": "radial-gradient(ellipse at 30% 20%,#1a1008 0%,#100e08 60%,#080604 100%)"
+  }
+}

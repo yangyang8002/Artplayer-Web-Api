@@ -1,0 +1,25 @@
+{
+  "id": "shoujo",
+  "displayName": "shoujo",
+  "variables": {
+    "bg": "#1a101a",
+    "sidebar": "#251820",
+    "surface": "rgba(32,18,30,.88)",
+    "surface2": "rgba(42,24,38,.82)",
+    "border": "rgba(255,140,180,.1)",
+    "text": "#f8e8f0",
+    "text2": "#d0a0b8",
+    "text3": "#906080",
+    "primary": "#ff80a8",
+    "primary2": "#e860c0",
+    "accent": "#ffb8d0",
+    "danger": "#ff5088",
+    "success": "#ffa0c0",
+    "warn": "#ffe0a0",
+    "radius": "12px",
+    "radiusSm": "8px",
+    "radiusLg": "18px",
+    "corner": "rgba(255,180,200,.3)",
+    "gradient": "radial-gradient(ellipse at 30% 20%,#2a1428 0%,#1a101a 60%,#120a12 100%)"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "sakura",
+  "displayName": "sakura",
+  "variables": {
+    "bg": "#1a1218",
+    "sidebar": "#201820",
+    "surface": "#2a1c26",
+    "surface2": "#342230",
+    "border": "rgba(255,133,162,0.12)",
+    "text": "#f5e6ed",
+    "text2": "#c098aa",
+    "text3": "#8a6a7a",
+    "primary": "#ff85a2",
+    "primary2": "#c792ea",
+    "accent": "#f0a0c0",
+    "danger": "#ff6188",
+    "success": "#ff85a2",
+    "warn": "#ffc06a",
+    "radius": "10px",
+    "radiusSm": "6px",
+    "radiusLg": "14px"
+  }
+}

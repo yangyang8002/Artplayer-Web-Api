@@ -1,0 +1,5 @@
+/* sakura theme component styles */
+.side-nav .nav-item{border-radius:14px}
+.side-nav .nav-item.active{background:rgba(255,133,162,.14);border:1px solid rgba(255,133,162,.2)}
+.card,.cfg-card{border-radius:14px}
+.btn{border-radius:12px}

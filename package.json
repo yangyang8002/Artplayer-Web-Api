@@ -1,10 +1,32 @@
 {
-  "name": "Artplayer-Web-Api",
-  "version": "26.8.1",
+  "name": "artplayer-web-api",
+  "version": "26.8.3",
   "description": "ArtPlayer danmaku video player with web admin panel - PoW firewall, rate limiting, multi-theme, subtitle support",
   "main": "server.js",
+  "bin": {
+    "artplayer-web-api": "server.js"
+  },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "pack": "npm pack --dry-run",
+    "prepublishOnly": "npm pack --dry-run"
+  },
+  "files": [
+    "server.js",
+    "public/",
+    "theme/",
+    "gen_perf_danmu.js",
+    "nginx.conf.example",
+    "README.md",
+    "README_CN.md",
+    "README_EN.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangyang8002/Artplayer-Web-Api.git"
   },
   "keywords": [
     "artplayer",

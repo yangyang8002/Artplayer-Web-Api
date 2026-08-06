@@ -1,4 +1,5 @@
-﻿const express = require('express');
+#!/usr/bin/env node
+const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');

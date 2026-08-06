@@ -4,7 +4,7 @@
 
 基于 [ArtPlayer](https://artplayer.org) 的弹幕视频播放器 + Web 管理后台。自带自研 Canvas 弹幕引擎、多主题系统、PoW 防爬虫、API 限流与统计、文件管理、多字幕支持。
 
-**v26.8.1** · MIT License
+**v26.8.3** · MIT License
 
 ## 目录
 
@@ -34,7 +34,27 @@
 
 ## 快速开始
 
+### 方式一：npm 安装（推荐）
+
 ```bash
+npm install -g artplayer-web-api
+artplayer-web-api                 # 全局命令
+# 或无需安装直接运行
+npx artplayer-web-api
+```
+
+### 方式二：Docker Hub 镜像
+
+```bash
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+```
+
+### 方式三：源码运行
+
+```bash
+git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
+cd Artplayer-Web-Api
+
 # 安装依赖
 npm install
 
@@ -236,7 +256,10 @@ GET /api/video/resolve?url=/test_video1.mp4
 ## Docker 部署
 
 ```bash
-# 构建并启动
+# 方式一：Docker Hub 拉取镜像
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+
+# 方式二：源码构建并启动
 docker compose up -d --build
 
 # 或直接构建

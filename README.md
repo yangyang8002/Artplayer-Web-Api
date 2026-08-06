@@ -6,11 +6,28 @@
 
 Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理。
 
-**v26.8.1**
+**v26.8.3**
 
 📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md)
 
 ## Quick Start
+
+### 方式一：npm 安装（推荐）
+
+```bash
+npm install -g artplayer-web-api
+artplayer-web-api                 # 全局命令
+# 或无需安装直接运行
+npx artplayer-web-api
+```
+
+### 方式二：Docker Hub 镜像
+
+```bash
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+```
+
+### 方式三：源码运行
 
 ```bash
 git clone https://github.com/yangyang8002/Artplayer-Web-Api.git

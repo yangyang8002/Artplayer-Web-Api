@@ -2,7 +2,24 @@
 
 > 📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md)
 
-## 方式一：docker-compose（推荐）
+## 方式一：Docker Hub 直接拉取（推荐）
+
+官方镜像已发布到 Docker Hub：[`yangyang8002/artplayer-web-api`](https://hub.docker.com/r/yangyang8002/artplayer-web-api)
+
+```bash
+docker run -d \
+  --name artplayer-web-api \
+  -p 1919:1919 \
+  -v "$(pwd)/data:/app/data" \
+  --restart unless-stopped \
+  yangyang8002/artplayer-web-api:latest
+```
+
+- 指定版本：`yangyang8002/artplayer-web-api:26.8.3`（tag 与 npm 包版本一致）
+- 启动后访问播放器 `http://localhost:1919/player/`、后台 `http://localhost:1919/admin/`
+- 镜像基于 `node:22-alpine`，仅生产依赖，自带健康检查
+
+## 方式二：docker-compose（源码构建）
 
 ```bash
 git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
@@ -14,7 +31,7 @@ docker compose up -d --build
 - 映射端口 `1919:1919`，数据卷 `./data:/app/data`
 - 自带健康检查（`/api/config/public`），失败自动重启（`restart: unless-stopped`）
 
-## 方式二：Dockerfile 直接构建
+## 方式三：Dockerfile 直接构建
 
 ```bash
 docker build -t artplayer-web-api .
@@ -70,6 +87,12 @@ location / {
 ## 升级
 
 ```bash
+# 拉取镜像方式：直接更新镜像重启
+docker pull yangyang8002/artplayer-web-api:latest
+docker stop artplayer-web-api && docker rm artplayer-web-api
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+
+# 源码构建方式
 git pull
 docker compose up -d --build
 ```

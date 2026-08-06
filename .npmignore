@@ -1,0 +1,10 @@
+node_modules/
+data/
+temp_lexicon_update/
+*.log
+.git/
+.github/
+Dockerfile
+docker-compose.yml
+DOCKER.md
+package-lock.json

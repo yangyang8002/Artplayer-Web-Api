@@ -4,7 +4,7 @@
 
 A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, and a full file manager.
 
-**v26.8.1** · MIT License
+**v26.8.3** · MIT License
 
 ## Table of Contents
 
@@ -34,7 +34,27 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 
 ## Quick Start
 
+### Option 1: npm install (recommended)
+
 ```bash
+npm install -g artplayer-web-api
+artplayer-web-api                 # global command
+# Or run without installing
+npx artplayer-web-api
+```
+
+### Option 2: Docker Hub image
+
+```bash
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+```
+
+### Option 3: Run from source
+
+```bash
+git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
+cd Artplayer-Web-Api
+
 # Install dependencies
 npm install
 
@@ -235,7 +255,10 @@ See [theme/README.md](theme/README.md) for custom themes.
 ## Docker Deployment
 
 ```bash
-# Build and start
+# Option 1: pull from Docker Hub
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+
+# Option 2: build from source and start
 docker compose up -d --build
 
 # Or build directly

@@ -8,7 +8,7 @@
 
 Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理。
 
-**v26.8.5**
+**v26.8.6**
 
 📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md)
 

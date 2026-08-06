@@ -557,7 +557,10 @@ function loadIpStats() {
     } catch { /* 忽略 */ }
 }
 loadIpStats();
-setInterval(saveIpStats, 300000);
+setInterval(saveIpStats, 60000);
+process.on('exit', saveIpStats);
+process.on('SIGINT', () => { saveIpStats(); process.exit(0); });
+process.on('SIGTERM', () => { saveIpStats(); process.exit(0); });
 
 // --- 归属地：ip2region 官方最新 xdb（自动更新）+ 内置旧库兜底 ---
 const GEO_V4_FILE = path.join(DATA_DIR, 'ip2region_v4.xdb');
@@ -1839,30 +1842,26 @@ app.get('/player/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player.html'));
 });
 
-app.get('/admin/', frameGuard, serveAdmin);
-app.use('/admin', frameGuard, express.static(path.join(__dirname, 'public')));
-
-function serveAdmin(req, res) {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-}
-
-/* 后台页面禁止被 iframe 嵌入（播放器页可自由嵌入） */
-function frameGuard(req, res, next) {
-    res.setHeader('X-Frame-Options', 'DENY');
-    next();
-}
-
-function registerAdminRoutes() {
+/* 管理后台入口（自定义 adminPath 即时生效）：
+   设置入口路径后自动替换默认 /admin/，无需重启 */
+function adminBasePath() {
     const config = readConfig();
-    if (config.security && config.security.adminPath) {
-        const p = '/' + config.security.adminPath.replace(/^\/+|\/+$/g, '') + '/';
-        if (p !== '/admin/') {
-            app.get(p, frameGuard, serveAdmin);
-            app.use(p.replace(/\/$/, ''), frameGuard, express.static(path.join(__dirname, 'public')));
-        }
-    }
+    const ap = (config.security && config.security.adminPath) ? String(config.security.adminPath).replace(/^\/+|\/+$/g, '') : '';
+    return ap ? '/' + ap : '/admin';
 }
-registerAdminRoutes();
+const adminStatic = express.static(path.join(__dirname, 'public'));
+app.use((req, res, next) => {
+    const base = adminBasePath();
+    if (req.path === base || (base !== '/' && req.path.startsWith(base + '/'))) {
+        res.setHeader('X-Frame-Options', 'DENY');
+        if (req.path === base || req.path === base + '/') {
+            return res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+        }
+        req.url = req.url.slice(base.length) || '/';
+        return adminStatic(req, res, next);
+    }
+    next();
+});
 
 // ==================== 敏感词库自动更新 ====================
 

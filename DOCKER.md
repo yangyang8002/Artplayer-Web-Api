@@ -24,7 +24,7 @@ docker run -d \
   ghcr.io/yangyang8002/artplayer-web-api:latest
 ```
 
-- 指定版本：`yangyang8002/artplayer-web-api:26.8.5`（tag 与 npm 包版本一致）
+- 指定版本：`yangyang8002/artplayer-web-api:26.8.6`（tag 与 npm 包版本一致）
 - 启动后访问播放器 `http://localhost:1919/player/`、后台 `http://localhost:1919/admin/`
 - 镜像基于 `node:22-alpine`，仅生产依赖，自带健康检查
 

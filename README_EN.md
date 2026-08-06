@@ -6,7 +6,7 @@
 
 A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, and a full file manager.
 
-**v26.8.5** · MIT License
+**v26.8.6** · MIT License
 
 ## Table of Contents
 

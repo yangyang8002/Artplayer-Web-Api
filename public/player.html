@@ -46,6 +46,7 @@
         .art-contextmenu-item:hover{background:rgba(255,255,255,.06)!important}
         .art-info{background:rgba(20,20,24,.94)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;color:#fff!important}
         .art-notice{background:rgba(0,0,0,.75)!important;border-radius:6px!important;backdrop-filter:blur(6px)}
+        .art-video-notice,.art-notice{display:none!important}
         .art-setting-panel,.art-selector-list{background:rgba(20,20,24,.94)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;color:#fff!important}
         .art-settings{right:10px!important;bottom:calc(var(--art-control-height) + 6px)!important;top:auto!important;max-height:calc(100% - 100px)!important;max-width:160px!important}
         div.art-video-player.art-backdrop .art-settings{background-color:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
@@ -75,10 +76,6 @@
 
         /* Danmaku canvas */
         #danmaku-canvas{position:absolute;inset:0;z-index:30;width:100%;height:100%;pointer-events:none}
-
-        /* Title */
-        .bili-title{position:absolute;top:clamp(10px,3.6vw,14px);left:clamp(12px,4.6vw,18px);z-index:3;color:rgba(255,255,255,.92);font-size:var(--title-fs);font-weight:500;letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;transition:opacity .3s}
-        .bili-title::before{content:'';display:inline-block;width:4px;height:13px;border-radius:2px;background:linear-gradient(180deg,var(--bili-blue),var(--bili-pink));margin-right:8px;vertical-align:-1px}
 
         /* Danmaku input */
         .bili-danmu{position:relative;display:flex;align-items:center;gap:clamp(4px,1.5vw,6px);height:100%;padding:0 clamp(4px,1.5vw,8px);pointer-events:auto;flex-shrink:1;min-width:0}
@@ -146,7 +143,7 @@
 
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.75;transform:scale(.96)}}
 
-        @media(max-width:640px){.bili-title{top:clamp(8px,2.6vw,10px);left:clamp(10px,3.2vw,12px)}.bili-overflow-panel{right:8px}}
+        @media(max-width:640px){.bili-overflow-panel{right:8px}}
     </style>
 </head>
 <body>
@@ -154,7 +151,6 @@
         <div id="player-wrapper">
             <div id="artplayer"></div>
             <canvas id="danmaku-canvas"></canvas>
-            <div class="bili-title" id="videoTitle"></div>
             <div id="overlay" class="active">
                 <div class="overlay-card" id="welcomeCard">
                     <div class="icon loading">&#9654;</div>
@@ -266,6 +262,8 @@
         this.animId=null;
         this.lastTime=0;
         this.running=false;
+        this.vid=null;          // server video id, used for seek-time refresh
+        this._lastRefresh=0;    // throttle timestamp for seek-time refresh
         this.resize();
         this._bindEvents();
     }
@@ -324,7 +322,7 @@
         this.art.on('video:play',function(){self.start()});
         this.art.on('video:playing',function(){self.start()});
         this.art.on('video:pause',function(){self.stop()});
-        this.art.on('video:seeked',function(){self._handleSeek()});
+        this.art.on('video:seeked',function(){self._handleSeek();self._refreshFromServer()});
         this.art.on('video:waiting',function(){self.stop()});
         this.art.on('video:loadedmetadata',function(){self.resize()});
         this.art.on('video:ended',function(){self.stop();self._handleSeek()});
@@ -466,6 +464,22 @@
         var c=0;
         while(c<this.data.length&&this.data[c].time<ct)c++;
         this.cursor=c;
+    };
+    /* 拖动进度条后重新拉取服务端弹幕（节流 2s），
+       这样其他端刚发的弹幕无需刷新页面即可出现 */
+    DanmakuEngine.prototype._refreshFromServer=function(){
+        var now=Date.now();
+        if(now-this._lastRefresh<2000)return;
+        this._lastRefresh=now;
+        if(!this.vid)return;
+        var self=this;
+        fetch('/api/danmu/v3/?id='+encodeURIComponent(this.vid))
+            .then(function(r){return r.json()})
+            .then(function(dd){
+                if(dd.code!==0)return;
+                var converted=dd.data.map(function(d){return{text:d[4],time:d[0],mode:d[1],color:'#'+d[2].toString(16).padStart(6,'0')}});
+                self.load(converted);
+            }).catch(function(){});
     };
     DanmakuEngine.prototype.start=function(){
         if(this.running)return;this.running=true;this.lastTime=performance.now();this._loop();
@@ -666,7 +680,6 @@
         if(!vid)vid=getVideoId(decoded);
 
         try{fetch('/api/video/map',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid:vid,url:decoded})}).catch(function(){})}catch(e){}
-        document.getElementById('videoTitle').textContent=title;document.getElementById('videoTitle').style.display='block';
 
         var subOption={};
         if(subtitleUrl){
@@ -699,6 +712,7 @@
             volume:parseFloat(localStorage.getItem('ap_volume'))||0.7,
             theme:themeColor,
             hotkey:true,screenshot:false,fullscreen:true,fullscreenWeb:true,
+            notice:false,
             miniProgressBar:true,mutex:true,backdrop:true,
             playsInline:true,setting:true,pip:true,lock:true,
             loop:false,flip:false,aspectRatio:false,playbackRate:true,
@@ -750,6 +764,7 @@
             var playerEl=document.querySelector('.art-video-player');
             if(playerEl&&dmCanvas.parentNode!==playerEl)playerEl.insertBefore(dmCanvas,playerEl.firstChild);
             dmEngine=new DanmakuEngine(dmCanvas,art);
+            dmEngine.vid=vid;
             if(serverRender&&serverRender.maxPerSecond)dmEngine.setMaxPerSecond(serverRender.maxPerSecond);
             if(serverRender&&serverRender.speedJitter!=null)dmEngine.setSpeedJitter(serverRender.speedJitter);
             dmEngine.setMargin(danmakuMask);

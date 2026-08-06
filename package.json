@@ -1,6 +1,6 @@
 {
   "name": "artplayer-web-api",
-  "version": "26.8.3",
+  "version": "26.8.4",
   "description": "ArtPlayer danmaku video player with web admin panel - PoW firewall, rate limiting, multi-theme, subtitle support",
   "main": "server.js",
   "bin": {

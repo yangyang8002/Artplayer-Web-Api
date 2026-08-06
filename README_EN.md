@@ -6,12 +6,13 @@
 
 A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, and a full file manager.
 
-**v26.8.4** · MIT License
+**v26.8.5** · MIT License
 
 ## Table of Contents
 
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [China Acceleration](#china-acceleration)
 - [Project Structure](#project-structure)
 - [Player Usage](#player-usage)
 - [Admin Panel](#admin-panel)
@@ -28,6 +29,8 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 - **DPlayer-compatible API**: `/api/danmu/v3/?id=` works with existing DPlayer danmaku clients
 - **Server-assigned video IDs**: `/api/video/resolve` issues unique 8-character alphanumeric IDs and automatically inherits legacy hash IDs (no danmaku loss on upgrade)
 - **Multi-subtitle detection**: auto-detects `.srt/.vtt/.ass` files next to the video, grouped by language (SC/TC/EN/JA/KO...), switchable in the player
+- **6-language UI**: Simplified Chinese / Traditional Chinese / Classical Chinese / English / 日本語 / Français, auto-detected from the browser with manual override
+- **Security Center**: IP geolocation (auto-updating ip2region DB, city-level with ISP), world map distribution, request/traffic anomaly detection, IP ban & whitelist
 - **Dual theme system**: independent player & admin themes, 10 themes each (incl. StyleKit anime/manga styles), custom themes supported
 - **Admin panel**: danmaku / videos / banned words / files / logs / API stats in one place
 - **API management**: per-API enable switch, RPS limit, bandwidth stats; live chart at 1s precision, selectable span (5 min ~ 3 months)
@@ -45,10 +48,14 @@ artplayer-web-api                 # global command
 npx artplayer-web-api
 ```
 
-### Option 2: Docker Hub image
+### Option 2: Docker image (Docker Hub / GHCR)
 
 ```bash
+# Docker Hub
 docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+
+# GHCR (GitHub Container Registry)
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/artplayer-web-api:latest
 ```
 
 ### Option 3: Run from source
@@ -73,6 +80,28 @@ PORT=8080 node server.js
 | Default account | `admin` / `admin123` |
 
 > The `data/` directory and default data files are created on first run. **Change the default password before going live.**
+
+## China Acceleration
+
+- **GitHub accelerator** (clone / download / raw): prefix any GitHub URL with `https://fast.fumor.top/`
+
+  ```bash
+  git clone https://fast.fumor.top/https://github.com/yangyang8002/Artplayer-Web-Api.git
+  ```
+
+- **Docker Hub mirror** (Nanjing University): replace the registry prefix with `docker.nju.edu.cn/`
+
+  ```bash
+  docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+  ```
+
+- **GHCR mirror** (Nanjing University): use the `docker.nju.edu.cn/ghcr.io/` prefix
+
+  ```bash
+  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+  ```
+
+> Images are published to Docker Hub, GHCR and npm; users in mainland China are advised to use the NJU mirrors above.
 
 ## Project Structure
 

@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Semibold.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Bold.min.css">
     <link rel="stylesheet" href="/api/theme/admin.css">
+    <script src="/i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
     <style>
         :root, [data-theme="bilibili"] {
             --bg: #080810; --sidebar: #0c0c18;
@@ -577,6 +579,7 @@
             <button class="nav-item" data-tab="files" onclick="switchTab('files')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span>文件管理</span></button>
             <button class="nav-item" data-tab="logs" onclick="switchTab('logs')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span>日志</span></button>
             <button class="nav-item" data-tab="api" onclick="switchTab('api')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span>API管理</span></button>
+            <button class="nav-item" data-tab="security" onclick="switchTab('security')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>安全中心</span></button>
             <button class="nav-item" data-tab="about" onclick="switchTab('about')"><span class="icon">&#9432;</span><span>关于</span></button>
         </nav>
         <div class="side-footer">
@@ -723,14 +726,30 @@
                     <div class="cfg-hint">管理后台自身配色，切换即时生效</div>
                 </div>
                 <div class="cfg-card">
-                    <h4><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>安全入口</h4>
+                    <h4><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>安全入口</h4>
                     <div class="cfg-row"><span>超时(分)</span><input type="number" id="cfgSessionMin" min="5" max="1440"></div>
                     <div class="cfg-row"><span>入口路径</span><input type="text" id="cfgAdminPath" placeholder="默认 /admin/"></div>
-                    <div class="cfg-hint">自定义管理入口，如填 "secret" 则入口变为 /secret/</div>
+                    <div class="cfg-row"><label><input type="checkbox" id="cfgTrustProxy"> 信任反向代理头（X-Forwarded-For）</label></div>
+                    <div class="cfg-hint">自定义管理入口，如填 "secret" 则入口变为 /secret/；反代部署需开启信任代理头，否则限流/日志取不到真实 IP</div>
                     <div style="border-top:1px solid var(--border);margin:10px 0;padding-top:10px">
                         <div class="cfg-row"><input type="text" id="cfgNewUser" placeholder="新用户名"><input type="password" id="cfgUserPwd" placeholder="密码"><button class="btn btn-sm" onclick="changeUsername()">改名</button></div>
                         <div class="cfg-row" style="margin-top:4px"><input type="password" id="cfgOldPwd" placeholder="原密码"><input type="password" id="cfgNewPwd" placeholder="新密码"><button class="btn btn-sm" onclick="changePassword()">改密</button></div>
                     </div>
+                </div>
+                <div class="cfg-card">
+                    <h4><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>语言 / Language</h4>
+                    <div class="cfg-row">
+                        <span>界面语言</span>
+                        <select id="cfgLang" data-i18n-skip onchange="setAdminLang(this.value)">
+                            <option value="zh">中文</option>
+                            <option value="zhHant">繁體中文</option>
+                            <option value="wyw">文言</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="fr">Français</option>
+                        </select>
+                    </div>
+                    <div class="cfg-hint">切换后立即生效并保存到本地</div>
                 </div>
             </div>
             <button class="btn btn-primary" onclick="saveConfig()" style="width:200px;margin-top:14px;padding:12px">保存配置</button>
@@ -826,6 +845,96 @@
             </div>
         </div>
 
+        <!-- Security -->
+        <div class="panel" id="securityPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger)"></span>安全总览</h3>
+                <div style="display:flex;gap:24px;flex-wrap:wrap">
+                    <div><div style="font-size:11px;color:var(--text3)">总请求数</div><div id="secTotalCalls" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">总流量</div><div id="secTotalBytes" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">活跃 IP（24h）</div><div id="secActiveIps" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">累计 IP 数</div><div id="secAllIps" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--danger)">异常 IP</div><div id="secAnomalyTotal" style="font-size:20px;font-weight:700;color:var(--danger)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--warn)">已封禁</div><div id="secBannedTotal" style="font-size:20px;font-weight:700;color:var(--warn)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--success)">白名单</div><div id="secWlTotal" style="font-size:20px;font-weight:700;color:var(--success)">—</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>世界地图分布
+                    <button class="btn btn-sm" onclick="renderSecMap()" style="margin-left:10px">刷新地图</button>
+                    <span style="margin-left:8px">
+                        <button class="btn btn-sm" id="secMapScopeWorld" onclick="secMapScope='world';renderSecMap()">世界</button>
+                        <button class="btn btn-sm" id="secMapScopeChina" onclick="secMapScope='china';renderSecMap()">中国省份</button>
+                    </span>
+                </h3>
+                <div id="secMap" style="width:100%;height:400px"></div>
+                <div style="font-size:11px;color:var(--text3);margin-top:6px">标记 = 有请求的 IP（按累计请求数着色），点击标记查看 IP 详情</div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>异常检测阈值</h3>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span style="font-size:12px;color:var(--text3)">请求/分</span>
+                    <input type="number" id="secReqPerMin" min="1" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">MB/分</span>
+                    <input type="number" id="secMbPerMin" min="1" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">请求/时</span>
+                    <input type="number" id="secReqPerHour" min="1" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">MB/时</span>
+                    <input type="number" id="secMbPerHour" min="1" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <button class="btn btn-sm btn-primary" onclick="saveSecConfig()">保存阈值</button>
+                    <button class="btn btn-sm" onclick="loadSecurity()">刷新</button>
+                </div>
+                <div style="font-size:11px;color:var(--text3);margin-top:6px">超过任一项即标记为异常 IP（白名单跳过）；统计窗口：分钟级取最近 5 分钟、小时级取最近 6 小时</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+                    <span style="font-size:12px;color:var(--text3)">IP 地址库</span>
+                    <span id="secGeoInfo" style="font-size:11px;color:var(--text2)">加载中...</span>
+                    <button class="btn btn-sm" onclick="updateGeoDb()">立即更新</button>
+                    <span style="font-size:11px;color:var(--text3)">ip2region 官方最新库（ip2region_v4.xdb / v6.xdb），缺失或超 7 天自动重新下载</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--danger)"></span>异常 IP <span id="secAnomalyCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <div id="secAnomalyList"></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary)"></span>IP 请求明细</h3>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+                    <span style="font-size:12px;color:var(--text3)">窗口</span>
+                    <select id="secIpWindow" onchange="loadSecIps()" style="font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;outline:none;cursor:pointer">
+                        <option value="m">5 分钟</option>
+                        <option value="h">6 小时</option>
+                    </select>
+                    <span style="font-size:12px;color:var(--text3)">排序</span>
+                    <select id="secIpSort" onchange="loadSecIps()" style="font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;outline:none;cursor:pointer">
+                        <option value="calls">总请求数</option>
+                        <option value="bytes">总流量</option>
+                        <option value="winCalls">窗口请求</option>
+                        <option value="winBytes">窗口流量</option>
+                        <option value="last">最近访问</option>
+                    </select>
+                    <input type="text" id="secIpSearch" placeholder="搜索 IP / 地区..." style="flex:1;min-width:140px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')loadSecIps()">
+                    <button class="btn btn-sm" onclick="loadSecIps()">查询</button>
+                </div>
+                <div style="overflow-x:auto">
+                    <table><thead><tr><th>IP</th><th>归属地</th><th>运营商</th><th>窗口请求</th><th>窗口流量</th><th>总请求</th><th>总流量</th><th>最近访问</th><th>状态</th><th>操作</th></tr></thead><tbody id="secIpTbody"></tbody></table>
+                </div>
+                <div class="pager" id="secIpPager"></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn)"></span>封禁与白名单</h3>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                    <input type="text" id="secBanInput" placeholder="封禁 IP（如 1.2.3.4）" style="width:180px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="secBanManual()">封禁</button>
+                    <input type="text" id="secWlInput" placeholder="白名单 IP" style="width:180px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <button class="btn btn-sm btn-primary" onclick="secWlManual()">加白</button>
+                </div>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:6px">封禁列表（403 拒绝）</div>
+                <div id="secBanList" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px"></div>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:6px">白名单（绕过 PoW / 限流 / 弹幕限频，不参与异常判定）</div>
+                <div id="secWlList" style="display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+        </div>
+
         <!-- About -->
         <div class="panel" id="aboutPanel">
             <div style="text-align:center;padding:20px 0">
@@ -897,6 +1006,10 @@
     <div id="toast"></div>
 
     <script>
+        I18N.init();
+        function t(s) { return I18N.t(s); }
+        if (document.getElementById('cfgLang')) document.getElementById('cfgLang').value = I18N.lang;
+        function setAdminLang(l) { I18N.setLang(l); location.reload(); }
         let adminToken = '', adminUser = '';
         let wordPage = 1, wordTotal = 0;
         let dmPage = 1, dmTotal = 0;
@@ -924,9 +1037,10 @@
             }).catch(() => {});
         }
         function toast(m, ok) {
-            const t = document.getElementById('toast');
-            t.textContent = m; t.className = ok ? 'toast ok show' : 'toast err show';
-            clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2800);
+            m = t(m);
+            const t2 = document.getElementById('toast');
+            t2.textContent = m; t2.className = ok ? 'toast ok show' : 'toast err show';
+            clearTimeout(t2._t); t2._t = setTimeout(() => t2.classList.remove('show'), 2800);
         }
 
         function login() {
@@ -961,6 +1075,8 @@
             document.getElementById(name + 'Panel').classList.add('active');
             if (name === 'api') startApiChart();
             else stopApiChart();
+            if (name === 'security') startSecPanel();
+            else stopSecPanel();
         }
 
         function loadBannedWords(page) {
@@ -973,7 +1089,7 @@
         }
         function renderWordList(w) {
             const c = document.getElementById('wordList');
-            c.innerHTML = w.length ? w.map(v => `<span class="tag">${esc(v)}<span class="x" onclick="deleteBannedWord('${esc(v)}')">&times;</span></span>`).join('') : '<div class="empty-state">暂无屏蔽词</div>';
+            c.innerHTML = w.length ? w.map(v => `<span class="tag" data-i18n-skip>${esc(v)}<span class="x" onclick="deleteBannedWord('${esc(v)}')">&times;</span></span>`).join('') : '<div class="empty-state">暂无屏蔽词</div>';
             document.getElementById('wordCount').textContent = `共 ${wordTotal} 条`;
         }
         function renderPager() {
@@ -1068,7 +1184,7 @@
             const tb = document.getElementById('danmuTbody'), em = document.getElementById('danmuEmpty');
             if (!list.length) { tb.innerHTML = ''; em.style.display = 'block'; document.getElementById('dmPager').innerHTML = ''; return; }
             em.style.display = 'none';
-            tb.innerHTML = list.map(d => `<tr><td>${new Date(d.date).toLocaleString('zh-CN')}</td><td style="font-size:12px;color:var(--text3)">${esc(d.vid||'-')}</td><td><span class="swatch" style="background:${d.color}"></span>${esc(d.text)}</td><td style="font-size:12px;color:var(--text3)">${d.color}</td><td>${d.type==='top'?'<span class="badge top">顶部</span>':d.type==='bottom'?'<span class="badge bottom">底部</span>':'<span class="badge scroll">滚动</span>'}</td><td><button class="btn btn-danger" onclick="deleteDanmu('${d.id}')">删除</button></td></tr>`).join('');
+            tb.innerHTML = list.map(d => `<tr><td>${new Date(d.date).toLocaleString('zh-CN')}</td><td style="font-size:12px;color:var(--text3)">${esc(d.vid||'-')}</td><td data-i18n-skip><span class="swatch" style="background:${d.color}"></span>${esc(d.text)}</td><td style="font-size:12px;color:var(--text3)">${d.color}</td><td>${d.type==='top'?'<span class="badge top">顶部</span>':d.type==='bottom'?'<span class="badge bottom">底部</span>':'<span class="badge scroll">滚动</span>'}</td><td><button class="btn btn-danger" onclick="deleteDanmu('${d.id}')">删除</button></td></tr>`).join('');
         }
         function renderDmPager() {
             const tp = Math.ceil(dmTotal / 50);
@@ -1098,6 +1214,7 @@
                     document.getElementById('cfgRenderJitter').value = (c.render && c.render.speedJitter != null) ? c.render.speedJitter : 10;
                     document.getElementById('cfgSessionMin').value = (c.security && c.security.sessionMinutes) || 120;
                     document.getElementById('cfgAdminPath').value = (c.security && c.security.adminPath) || '';
+                    document.getElementById('cfgTrustProxy').checked = !!(c.security && c.security.trustProxy !== false);
                     document.getElementById('cfgCdnEnabled').checked = !!c.cdn.enabled;
                     document.getElementById('cfgCdnUrl').value = c.cdn.baseUrl || '';
                     document.getElementById('cfgTheme').value = c.theme || 'bilibili';
@@ -1113,7 +1230,7 @@
                 rateLimit: { enabled: document.getElementById('cfgRlEnabled').checked, windowMs: parseInt(document.getElementById('cfgRlWindow').value) * 1000, max: parseInt(document.getElementById('cfgRlMax').value) },
                 danmakuLimit: { enabled: document.getElementById('cfgDlEnabled').checked, maxPerMinute: parseInt(document.getElementById('cfgDlMax').value) },
                 render: { maxPerSecond: parseInt(document.getElementById('cfgRenderMaxPerSec').value) || 250, speedJitter: parseInt(document.getElementById('cfgRenderJitter').value) || 10 },
-                security: { sessionMinutes: parseInt(document.getElementById('cfgSessionMin').value), adminPath: document.getElementById('cfgAdminPath').value.trim().replace(/^\/+|\/+$/g, '') },
+                security: { sessionMinutes: parseInt(document.getElementById('cfgSessionMin').value), adminPath: document.getElementById('cfgAdminPath').value.trim().replace(/^\/+|\/+$/g, ''), trustProxy: document.getElementById('cfgTrustProxy').checked },
                 theme: document.getElementById('cfgTheme').value,
                 adminTheme: document.getElementById('cfgAdminTheme').value,
                 cdn: { enabled: document.getElementById('cfgCdnEnabled').checked, baseUrl: document.getElementById('cfgCdnUrl').value.trim() }
@@ -1154,7 +1271,7 @@
             document.getElementById('videoCount').textContent = `共 ${list.length} 条`;
             const c = document.getElementById('videoTable');
             if (!list.length) { c.innerHTML = '<div class="empty-state">暂无映射，播放视频时会自动记录</div>'; return; }
-            c.innerHTML = `<table><thead><tr><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
+            c.innerHTML = `<table><thead><tr><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td data-i18n-skip style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td data-i18n-skip style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
         }
         function addVideo() {
             const vid = document.getElementById('newVid').value.trim();
@@ -1211,10 +1328,10 @@
                         const cb = `<input type="checkbox" class="file-cb" value="${fpEsc}" onclick="event.stopPropagation()">`;
                         if (e.dir) {
                             const ic = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;color:var(--accent)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
-                            return `<tr style="cursor:pointer" onclick="fileGo('${fpEsc}')"><td>${cb}</td><td>${ic} ${name}</td><td>—</td><td><button class="btn btn-sm" onclick="event.stopPropagation();fileGo('${fpEsc}')">打开</button></td></tr>`;
+                            return `<tr style="cursor:pointer" onclick="fileGo('${fpEsc}')"><td>${cb}</td><td data-i18n-skip>${ic} ${name}</td><td>—</td><td><button class="btn btn-sm" onclick="event.stopPropagation();fileGo('${fpEsc}')">${t('打开')}</button></td></tr>`;
                         }
                         const ic = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;color:var(--text3)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
-                        return `<tr><td>${cb}</td><td>${ic} ${name}</td><td>${fmtSize(e.size)}</td><td><button class="btn btn-sm" onclick="viewFile('${fpEsc}')">查看</button></td></tr>`;
+                        return `<tr><td>${cb}</td><td data-i18n-skip>${ic} ${name}</td><td>${fmtSize(e.size)}</td><td><button class="btn btn-sm" onclick="viewFile('${fpEsc}')">${t('查看')}</button></td></tr>`;
                     }).join('');
                 }).catch(() => toast('加载失败', false));
         }
@@ -1279,7 +1396,7 @@
                     tb.innerHTML = d.data.map(l => {
                         const st = l.s >= 400 ? 'var(--danger)' : l.s >= 300 ? 'var(--warn)' : 'var(--success)';
                         const meth = l.m === 'GET' ? 'var(--accent)' : l.m === 'POST' ? 'var(--primary)' : l.m === 'DELETE' ? 'var(--danger)' : 'var(--text2)';
-                        return `<tr><td style="font-size:11px;color:var(--text3)">${esc(new Date(l.t).toLocaleTimeString('zh-CN'))}</td><td style="color:${meth};font-weight:600">${esc(l.m)}</td><td style="font-size:12px;font-family:monospace">${esc(l.p)}</td><td style="color:${st};font-weight:600">${l.s}</td><td style="font-size:11px;color:var(--text3)">${esc(l.ip)}</td><td style="font-size:11px;color:var(--text3)">${l.ms}ms</td></tr>`;
+                        return `<tr><td style="font-size:11px;color:var(--text3)">${esc(new Date(l.t).toLocaleTimeString('zh-CN'))}</td><td style="color:${meth};font-weight:600">${esc(l.m)}</td><td data-i18n-skip style="font-size:12px;font-family:monospace">${esc(l.p)}</td><td style="color:${st};font-weight:600">${l.s}</td><td style="font-size:11px;color:var(--text3)">${esc(l.ip)}</td><td style="font-size:11px;color:var(--text3)">${l.ms}ms</td></tr>`;
                     }).join('');
                 }).catch(() => {});
         }
@@ -1406,6 +1523,266 @@
             apiChartTimer = setInterval(loadApiStats, 3000);
         }
         function stopApiChart() { if (apiChartTimer) { clearInterval(apiChartTimer); apiChartTimer = null; } }
+
+        /* ===== 安全中心 ===== */
+        let secPage = 1, secTotal = 0;
+        const SEC_IP_LIMIT = 50;
+        let secMapChart = null, secMapTimer = null, secMapScope = 'world';
+
+        function secFmtBytes(n) {
+            n = n || 0;
+            if (n >= 1073741824) return (n / 1073741824).toFixed(2) + ' GB';
+            if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB';
+            if (n >= 1024) return (n / 1024).toFixed(0) + ' KB';
+            return n + ' B';
+        }
+        function secFmtTime(t) {
+            if (!t) return '—';
+            const d = new Date(t);
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+        function loadGeoInfo() {
+            fetch('/api/admin/security/geo/info', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                const fmt = f => f ? `${f.file} ${(f.size / 1048576).toFixed(1)}MB · ${t('更新于')} ${secFmtTime(f.mtime)}` : `${f ? f.file : ''} ${t('未下载')}`;
+                const el = document.getElementById('secGeoInfo');
+                el.textContent = `v4: ${d.data.v4 ? fmt(d.data.v4) : t('未下载')}；v6: ${d.data.v6 ? fmt(d.data.v6) : t('未下载')}；${d.data.inUse ? t('已启用 xdb 查询') : t('使用兜底库')}`;
+            }).catch(() => {});
+        }
+        function updateGeoDb() {
+            const btn = event && event.target ? event.target : null;
+            if (btn) { btn.disabled = true; btn.textContent = '更新中...'; }
+            fetch('/api/admin/security/geo/update', { method: 'POST', headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    toast(d.msg, d.code === 0);
+                    if (d.code === 0) { loadGeoInfo(); renderSecMap(); }
+                }).catch(() => toast('更新失败', false))
+                .finally(() => { if (btn) { btn.disabled = false; btn.textContent = '立即更新'; } });
+        }
+        function secStatusHtml(s) {
+            if (s === 'banned') return '<span style="color:var(--danger)">已封禁</span>';
+            if (s === 'whitelist') return '<span style="color:var(--success)">白名单</span>';
+            return '<span style="color:var(--text2)">正常</span>';
+        }
+        function esc2(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        function loadSecurity() {
+            fetch('/api/admin/security/overview', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                document.getElementById('secTotalCalls').textContent = d.data.totalCalls.toLocaleString();
+                document.getElementById('secTotalBytes').textContent = secFmtBytes(d.data.totalBytes);
+                document.getElementById('secActiveIps').textContent = d.data.activeIps;
+                document.getElementById('secAllIps').textContent = d.data.allIps;
+                document.getElementById('secAnomalyTotal').textContent = d.data.anomalies;
+                document.getElementById('secBannedTotal').textContent = d.data.banned;
+                document.getElementById('secWlTotal').textContent = d.data.whitelist;
+            }).catch(() => {});
+            fetch('/api/admin/security/anomalies', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                document.getElementById('secAnomalyCount').textContent = `共 ${d.data.length} 个`;
+                const c = document.getElementById('secAnomalyList');
+                c.innerHTML = d.data.length ? '<div style="overflow-x:auto"><table><thead><tr><th>IP</th><th>地区</th><th>运营商</th><th>原因</th><th>操作</th></tr></thead><tbody>' +
+                    d.data.map(a => `<tr>
+                        <td style="color:var(--danger);font-weight:600">${esc2(a.ip)}</td>
+                        <td>${esc2(a.region)}</td>
+                        <td>${esc2(a.isp || '—')}</td>
+                        <td>${a.reasons.map(r => esc2(r)).join('<br>')}</td>
+                        <td><button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="secBan('${a.ip}','异常封禁')">封禁</button></td>
+                    </tr>`).join('') + '</tbody></table></div>'
+                    : '<div class="empty-state">暂无异常 IP</div>';
+            }).catch(() => {});
+            fetch('/api/admin/security/lists', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                const b = document.getElementById('secBanList');
+                b.innerHTML = d.data.banned.length ? d.data.banned.map(x =>
+                    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
+                        <span style="color:var(--danger);font-weight:600;font-family:monospace">${esc2(x.ip)}</span>
+                        <span style="color:var(--text3)">${esc2(x.reason || '无理由')} · ${secFmtTime(x.at)}</span>
+                        <button class="btn btn-sm" onclick="secUnban('${x.ip}')">解除</button>
+                    </div>`).join('') : '<div class="empty-state">无封禁 IP</div>';
+                const w = document.getElementById('secWlList');
+                w.innerHTML = d.data.whitelist.length ? d.data.whitelist.map(x =>
+                    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px">
+                        <span style="color:var(--success);font-weight:600;font-family:monospace">${esc2(x.ip)}</span>
+                        <span style="color:var(--text3)">${secFmtTime(x.at)}</span>
+                        <button class="btn btn-sm" onclick="secUnwl('${x.ip}')">移除</button>
+                    </div>`).join('') : '<div class="empty-state">无白名单 IP</div>';
+            }).catch(() => {});
+            fetch('/api/admin/config', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0 || !d.data.security) return;
+                const a = d.data.security.anomaly || {};
+                document.getElementById('secReqPerMin').value = a.reqPerMin || 60;
+                document.getElementById('secMbPerMin').value = a.mbPerMin || 20;
+                document.getElementById('secReqPerHour').value = a.reqPerHour || 2000;
+                document.getElementById('secMbPerHour').value = a.mbPerHour || 1024;
+            }).catch(() => {});
+        }
+        function loadSecIps() {
+            const window = document.getElementById('secIpWindow').value;
+            const sort = document.getElementById('secIpSort').value;
+            const search = document.getElementById('secIpSearch').value.trim();
+            fetch(`/api/admin/security/ips?window=${window}&sort=${sort}&search=${encodeURIComponent(search)}&page=${secPage}&limit=${SEC_IP_LIMIT}`, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    secTotal = d.data.total;
+                    const tb = document.getElementById('secIpTbody');
+                    tb.innerHTML = d.data.list.length ? d.data.list.map(x => `<tr>
+                        <td style="font-family:monospace;color:var(--accent)">${esc2(x.ip)}</td>
+                        <td>${esc2(x.region)}</td>
+                        <td>${esc2(x.isp || '—')}</td>
+                        <td>${x.winCalls}</td>
+                        <td>${secFmtBytes(x.winBytes)}</td>
+                        <td>${x.totalCalls}</td>
+                        <td>${secFmtBytes(x.totalBytes)}</td>
+                        <td>${secFmtTime(x.last)}</td>
+                        <td>${secStatusHtml(x.status)}</td>
+                        <td style="white-space:nowrap">
+                            ${x.status === 'banned' ? `<button class="btn btn-sm" onclick="secUnban('${x.ip}')">解封</button>` :
+                              x.status === 'whitelist' ? `<button class="btn btn-sm" onclick="secUnwl('${x.ip}')">移出白</button>` :
+                              `<button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="secBan('${x.ip}','手动封禁')">封禁</button>
+                               <button class="btn btn-sm btn-primary" onclick="secWl('${x.ip}')">加白</button>`}
+                        </td>
+                    </tr>`).join('') : '<tr><td colspan="10"><div class="empty-state">暂无数据</div></td></tr>';
+                    renderSecPager();
+                }).catch(() => {});
+        }
+        function renderSecPager() {
+            const tp = Math.ceil(secTotal / SEC_IP_LIMIT);
+            const p = document.getElementById('secIpPager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${secPage <= 1 ? 'disabled' : ''} onclick="secPage=${secPage - 1};loadSecIps()">上一页</button><span class="info">${secPage}/${tp}</span><button ${secPage >= tp ? 'disabled' : ''} onclick="secPage=${secPage + 1};loadSecIps()">下一页</button>`;
+        }
+        function secPost(url, body, msg) {
+            fetch(url, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => { toast(d.msg || msg, d.code === 0); if (d.code === 0) { loadSecurity(); loadSecIps(); } })
+                .catch(() => toast('请求失败', false));
+        }
+        function secBan(ip, reason) { secPost('/api/admin/security/ban', { ip, reason }, '已封禁'); }
+        function secUnban(ip) { secPost('/api/admin/security/unban', { ip }, '已解封'); }
+        function secWl(ip) { secPost('/api/admin/security/whitelist', { ip }, '已加白'); }
+        function secUnwl(ip) { secPost('/api/admin/security/unwhitelist', { ip }, '已移除'); }
+        function secBanManual() {
+            const ip = document.getElementById('secBanInput').value.trim();
+            if (!ip) return toast('请输入 IP', false);
+            secBan(ip, '手动封禁');
+            document.getElementById('secBanInput').value = '';
+        }
+        function secWlManual() {
+            const ip = document.getElementById('secWlInput').value.trim();
+            if (!ip) return toast('请输入 IP', false);
+            secWl(ip);
+            document.getElementById('secWlInput').value = '';
+        }
+        function saveSecConfig() {
+            const body = {
+                reqPerMin: parseInt(document.getElementById('secReqPerMin').value) || 60,
+                mbPerMin: parseInt(document.getElementById('secMbPerMin').value) || 20,
+                reqPerHour: parseInt(document.getElementById('secReqPerHour').value) || 2000,
+                mbPerHour: parseInt(document.getElementById('secMbPerHour').value) || 1024
+            };
+            secPost('/api/admin/security/config', body, '阈值已保存');
+        }
+        function renderSecMap() {
+            const el = document.getElementById('secMap');
+            if (!window.echarts) {
+                el.innerHTML = '<div class="empty-state">ECharts 加载失败（CDN 不可达），表格视图仍可用</div>';
+                return;
+            }
+            if (!secMapChart) {
+                secMapChart = echarts.init(el);
+                window.addEventListener('resize', () => secMapChart && secMapChart.resize());
+            }
+            document.getElementById('secMapScopeWorld').classList.toggle('btn-primary', secMapScope === 'world');
+            document.getElementById('secMapScopeChina').classList.toggle('btn-primary', secMapScope === 'china');
+            const isChina = secMapScope === 'china';
+            const mapName = isChina ? 'china' : 'world';
+            const mapUrl = isChina ? 'https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/china.json' : 'https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json';
+            const ptsReq = fetch('/api/admin/security/ips?window=m&sort=calls&limit=200', { headers: authHeaders() }).then(r => r.json());
+            const regionsReq = fetch('/api/admin/security/geo/regions?scope=' + secMapScope, { headers: authHeaders() }).then(r => r.json());
+            const mapReq = fetch(mapUrl).then(r => r.json());
+            Promise.all([ptsReq, regionsReq, mapReq]).then(([pd, rd, geoJson]) => {
+                const pts = pd.data.list.filter(x => x.coords).map(x => ({
+                    name: x.ip,
+                    value: [x.coords[0], x.coords[1], x.totalCalls],
+                    status: x.status, region: x.region, isp: x.isp || '', winCalls: x.winCalls
+                }));
+                let mapData = [];
+                if (isChina) {
+                    const agg = {};
+                    rd.data.forEach(r => { agg[r.name] = r.calls; });
+                    mapData = geoJson.features.map(f => {
+                        const name = f.properties && f.properties.name;
+                        return agg[name] != null ? { name, value: agg[name] } : { name };
+                    });
+                } else {
+                    const byCode = {}, byName = {};
+                    rd.data.forEach(r => { if (r.code) byCode[r.code] = r.calls; byName[r.name] = r.calls; });
+                    mapData = geoJson.features.map(f => {
+                        const name = f.properties && f.properties.name;
+                        const id = f.id;
+                        let v = byCode[id] != null ? byCode[id] : (byName[name] != null ? byName[name] : null);
+                        return v != null ? { name, value: v } : { name };
+                    });
+                }
+                echarts.registerMap(mapName, geoJson);
+                const maxMap = Math.max(1, ...mapData.filter(d => d.value != null).map(d => d.value));
+                const maxPts = Math.max(1, ...pts.map(p => p.value[2]));
+                secMapChart.setOption({
+                    backgroundColor: 'transparent',
+                    geo: { map: mapName, roam: true, zoom: isChina ? 1 : 1.2, itemStyle: { areaColor: '#131a2b', borderColor: 'rgba(255,255,255,.12)' } },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: p => {
+                            if (p.seriesType === 'effectScatter') {
+                                return `<b>${p.data.name}</b><br>地区：${p.data.region}<br>运营商：${p.data.isp || '—'}<br>窗口请求：${p.data.winCalls}<br>总请求：${p.data.value[2]}`;
+                            }
+                            if (p.seriesType === 'map') {
+                                return `<b>${p.name}</b><br>请求数：${p.value != null ? p.value.toLocaleString() : '—'}`;
+                            }
+                            return p.name;
+                        }
+                    },
+                    visualMap: [
+                        {
+                            min: 0, max: maxMap, seriesIndex: 0, orient: 'horizontal',
+                            left: 'center', bottom: 0, text: ['高', '低'],
+                            textStyle: { color: '#8e8ea8', fontSize: 10 },
+                            inRange: { color: ['#101826', '#1e3a5f', '#2e6e9e', '#62d5ff', '#ff4d6a'] }
+                        },
+                        { min: 0, max: maxPts, seriesIndex: 1, show: false, dimension: 2 }
+                    ],
+                    series: [
+                        {
+                            type: 'map', map: mapName, geoIndex: 0, zoom: isChina ? 1 : 1.2,
+                            itemStyle: { areaColor: '#131a2b', borderColor: 'rgba(255,255,255,.12)' },
+                            emphasis: { label: { show: false }, itemStyle: { areaColor: '#1e2940' } },
+                            select: { disabled: true },
+                            data: mapData
+                        },
+                        {
+                            type: 'effectScatter', coordinateSystem: 'geo', data: pts,
+                            symbolSize: v => Math.min(22, 6 + Math.sqrt(v[2]) * 2),
+                            rippleEffect: { brushType: 'stroke', scale: 3 },
+                            itemStyle: { color: p => p.data.status === 'banned' ? '#ff4d6a' : '#62d5ff' },
+                            label: { show: false }
+                        }
+                    ]
+                });
+            }).catch(() => {
+                el.innerHTML = '<div class="empty-state">地图数据加载失败（CDN 不可达），表格视图仍可用</div>';
+            });
+        }
+        function startSecPanel() {
+            secPage = 1;
+            loadSecurity();
+            loadSecIps();
+            loadGeoInfo();
+            if (secMapTimer) clearInterval(secMapTimer);
+            renderSecMap();
+            secMapTimer = setInterval(() => { loadSecurity(); loadSecIps(); }, 10000);
+        }
+        function stopSecPanel() { if (secMapTimer) { clearInterval(secMapTimer); secMapTimer = null; } }
 
         document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
         document.getElementById('newWordInput').addEventListener('keypress', e => { if (e.key === 'Enter') addBannedWord(); });

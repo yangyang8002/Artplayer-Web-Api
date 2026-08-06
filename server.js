@@ -3,10 +3,13 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const https = require('https');
 const { exec } = require('child_process');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const multer = require('multer');
+const IP2Region = require('ip2region').default;
+const ip2rJs = require('ip2region.js');
 
 const app = express();
 const PORT = process.env.PORT || 1919;
@@ -171,9 +174,12 @@ function logRequest(req, res, next) {
 app.use(express.json());
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    frameguard: false
 }));
 
+app.use(securityMiddleware);
 app.use(powMiddleware);
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -220,6 +226,7 @@ function verifyPayload(signed) {
 function powMiddleware(req, res, next) {
     const config = readConfig();
     if (!config.pow || !config.pow.enabled) return next();
+    if (req.ipWhitelisted) return next();
     const adminPath = (config.security && config.security.adminPath) || '/admin';
     if (req.path.startsWith('/api/') || req.path.startsWith('/admin') || req.path.startsWith(adminPath)) return next();
 
@@ -237,7 +244,14 @@ function powMiddleware(req, res, next) {
 
     const challenge = crypto.randomBytes(16).toString('hex');
     const difficulty = config.pow.difficulty || 4;
-    res.type('html').send(`<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>连接验证</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#07070d;color:#e4e4ed;display:flex;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,sans-serif}.card{text-align:center;padding:32px 40px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:#14141f;max-width:420px}h2{margin-bottom:8px;font-size:20px}#status{color:#9099a3;font-size:13px;margin-top:12px}.bar{margin-top:16px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#00a1d6,#00c3f0);border-radius:3px;transition:width .3s}</style></head><body><div class="card"><h2>正在验证连接安全...</h2><p id="status" style="font-size:13px;color:#9099a3">正在进行工作量证明计算</p><div class="bar"><div class="bar-inner" id="bar"></div></div></div><script>
+    const en = /^en/i.test(req.headers['accept-language'] || '');
+    const t1 = en ? 'Verifying connection security...' : '正在验证连接安全...';
+    const t2 = en ? 'Proof-of-work in progress' : '正在进行工作量证明计算';
+    const t3 = en ? 'Verifying, entering...' : '验证完成，正在进入...';
+    const t4 = en ? 'Computing... (' : '计算中... (';
+    const t5 = en ? 'Verification complete, entering...' : '验证完成，正在进入...';
+    const t6 = en ? 'Connection Verification' : '连接验证';
+    res.type('html').send(`<!DOCTYPE html><html lang="${en ? 'en' : 'zh'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t6}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#07070d;color:#e4e4ed;display:flex;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,sans-serif}.card{text-align:center;padding:32px 40px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:#14141f;max-width:420px}h2{margin-bottom:8px;font-size:20px}#status{color:#9099a3;font-size:13px;margin-top:12px}.bar{margin-top:16px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}.bar-inner{height:100%;width:0;background:linear-gradient(90deg,#00a1d6,#00c3f0);border-radius:3px;transition:width .3s}</style></head><body><div class="card"><h2>${t1}</h2><p id="status" style="font-size:13px;color:#9099a3">${t2}</p><div class="bar"><div class="bar-inner" id="bar"></div></div></div><script>
 const challenge='${challenge}', difficulty=${difficulty}, target='0'.repeat(difficulty);
 let found=false,nonce=0;
 function solve(){
@@ -257,13 +271,13 @@ function solve(){
                 else{if(bytes[j]<16)zeros+=1;break}
             }
             if(zeros>=difficulty){found=true;
-                document.getElementById('status').innerHTML='验证完成，正在进入...';
+                document.getElementById('status').innerHTML='${t3}';
                 fetch('/api/pow/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nonce,challenge})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload()});
                 return;
             }
             if(zeros>best){best=zeros;document.getElementById('bar').style.width=Math.min(90,Math.round(zeros/difficulty*100))+'%'}
         }
-        if(!found){document.getElementById('status').innerHTML='计算中... ('+nonce+'次)';requestAnimationFrame(step)}
+        if(!found){document.getElementById('status').innerHTML='${t4}'+nonce+'${en ? ')' : '次)'}';requestAnimationFrame(step)}
     }
     requestAnimationFrame(step);
 }
@@ -294,6 +308,7 @@ function getApiLimiter() {
         max: config.rateLimit.max || 60,
         standardHeaders: true,
         legacyHeaders: false,
+        skip: (req) => req.ipWhitelisted,
         handler: (req, res) => res.status(429).json({ code: 429, msg: '请求过于频繁,请稍后再试' })
     });
 }
@@ -399,7 +414,7 @@ const DEFAULT_CONFIG = {
     render: { maxPerSecond: 250, speedJitter: 10 },
     api: { apis: DEFAULT_API_RULES, retentionDays: 1 },
     bannedWords: { subscriptions: [] },
-    security: { sessionMinutes: 120, adminPath: '' },
+    security: { sessionMinutes: 120, adminPath: '', trustProxy: true, anomaly: { reqPerMin: 60, mbPerMin: 20, reqPerHour: 2000, mbPerHour: 1024 } },
     theme: 'bilibili',
     adminTheme: 'bilibili',
     cdn: { enabled: false, baseUrl: '' }
@@ -412,7 +427,9 @@ if (!fs.existsSync(CONFIG_FILE)) {
 function readConfig() {
     try {
         const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-        return { ...DEFAULT_CONFIG, ...raw };
+        const merged = { ...DEFAULT_CONFIG, ...raw };
+        merged.security = { ...DEFAULT_CONFIG.security, ...(raw.security || {}) };
+        return merged;
     } catch {
         return { ...DEFAULT_CONFIG };
     }
@@ -421,6 +438,14 @@ function readConfig() {
 function writeConfig(config) {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
+
+/* 信任反向代理头（X-Forwarded-For 等），默认开启；
+   关闭后 req.ip 直接取 socket 地址（直连部署） */
+function applyTrustProxy(config) {
+    const trust = !(config.security && config.security.trustProxy === false);
+    app.set('trust proxy', trust ? 1 : false);
+}
+applyTrustProxy(readConfig());
 
 function readData(filePath) {
     try {
@@ -440,6 +465,341 @@ function containsBannedWord(text) {
     return bannedWords.some(word => lowerText.includes(word.toLowerCase()));
 }
 
+// ==================== 安全中心：IP 统计 / 归属地 / 封禁 / 白名单 / 异常检测 ====================
+
+const SECURITY_FILE = path.join(DATA_DIR, 'security.json');
+initDataFile(SECURITY_FILE, { banned: {}, whitelist: {} });
+
+function readSecurity() {
+    try {
+        const d = JSON.parse(fs.readFileSync(SECURITY_FILE, 'utf8'));
+        return {
+            banned: (d && d.banned && typeof d.banned === 'object') ? d.banned : {},
+            whitelist: (d && d.whitelist && typeof d.whitelist === 'object') ? d.whitelist : {}
+        };
+    } catch { return { banned: {}, whitelist: {} }; }
+}
+function writeSecurity(s) {
+    fs.writeFileSync(SECURITY_FILE, JSON.stringify(s, null, 2));
+}
+
+// --- 每 IP 请求/流量统计（60s 与 3600s 时间桶，模式同 api-stats） ---
+const IP_LAYER_DEFS = [
+    { name: 'm', unit: 60, keep: 30 * 24 * 60 },
+    { name: 'h', unit: 3600, keep: 90 * 24 }
+];
+const ipLayers = {
+    m: { buckets: [], lastTs: -1 },
+    h: { buckets: [], lastTs: -1 }
+};
+const ipTotals = { calls: {}, bytes: {}, last: {} };
+const IP_STATS_FILE = path.join(DATA_DIR, 'ip-stats.json');
+
+function trackIp(ip, bytes) {
+    ipTotals.calls[ip] = (ipTotals.calls[ip] || 0) + 1;
+    ipTotals.bytes[ip] = (ipTotals.bytes[ip] || 0) + (bytes || 0);
+    ipTotals.last[ip] = Date.now();
+    const now = Math.floor(Date.now() / 1000);
+    for (const def of IP_LAYER_DEFS) {
+        const layer = ipLayers[def.name];
+        const ts = Math.floor(now / def.unit);
+        if (ts !== layer.lastTs) {
+            layer.lastTs = ts;
+            layer.buckets.push({ ts, ips: {} });
+            while (layer.buckets.length > def.keep) layer.buckets.shift();
+        }
+        const b = layer.buckets[layer.buckets.length - 1];
+        const e = b.ips[ip] || (b.ips[ip] = { c: 0, b: 0 });
+        e.c++; e.b += (bytes || 0);
+    }
+}
+
+/* 汇总最近 maxBuckets 个桶的每 IP 统计 */
+function ipWindowCounts(unitSec, maxBuckets) {
+    const name = unitSec === 3600 ? 'h' : 'm';
+    const layer = ipLayers[name];
+    const out = {};
+    const now = Math.floor(Date.now() / 1000);
+    for (const b of layer.buckets) {
+        if (now - b.ts * unitSec > maxBuckets * unitSec) continue;
+        for (const [ip, e] of Object.entries(b.ips)) {
+            const o = out[ip] || (out[ip] = { c: 0, b: 0 });
+            o.c += e.c; o.b += e.b;
+        }
+    }
+    return out;
+}
+
+function saveIpStats() {
+    try {
+        const payload = {
+            savedAt: Date.now(),
+            totals: ipTotals,
+            layers: Object.fromEntries(Object.entries(ipLayers).map(([k, v]) => [k, { lastTs: v.lastTs, buckets: v.buckets }]))
+        };
+        const tmp = IP_STATS_FILE + '.tmp';
+        fs.writeFileSync(tmp, JSON.stringify(payload));
+        fs.renameSync(tmp, IP_STATS_FILE);
+    } catch (e) { console.error('[ip-stats] save failed:', e.message); }
+}
+function loadIpStats() {
+    try {
+        const d = JSON.parse(fs.readFileSync(IP_STATS_FILE, 'utf8'));
+        if (d.totals) Object.assign(ipTotals, d.totals);
+        if (d.layers) {
+            for (const [name, v] of Object.entries(d.layers)) {
+                if (ipLayers[name] && Array.isArray(v.buckets)) {
+                    ipLayers[name].buckets = v.buckets;
+                    ipLayers[name].lastTs = v.lastTs || -1;
+                }
+            }
+        }
+    } catch { /* 忽略 */ }
+}
+loadIpStats();
+setInterval(saveIpStats, 300000);
+
+// --- 归属地：ip2region 官方最新 xdb（自动更新）+ 内置旧库兜底 ---
+const GEO_V4_FILE = path.join(DATA_DIR, 'ip2region_v4.xdb');
+const GEO_V6_FILE = path.join(DATA_DIR, 'ip2region_v6.xdb');
+const GEO_SOURCE_BASE = 'https://github.com/lionsoul2014/ip2region/raw/master/data/';
+let ipSearcher4 = null, ipSearcher6 = null;
+let ipGeo = null; // 旧 .db 格式兜底
+try { ipGeo = new IP2Region(); } catch (e) { console.error('[geo] 内置地址库初始化失败:', e.message); }
+
+function geoDbInfo(file) {
+    try {
+        const st = fs.statSync(file);
+        return { file: path.basename(file), size: st.size, mtime: st.mtimeMs };
+    } catch { return null; }
+}
+
+function downloadFile(url, dest) {
+    return new Promise((resolve, reject) => {
+        const parsed = new URL(url);
+        const req = https.get({ hostname: parsed.hostname, path: parsed.pathname + parsed.search, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                res.resume();
+                return downloadFile(new URL(res.headers.location, url).toString(), dest).then(resolve, reject);
+            }
+            if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
+            const tmp = dest + '.tmp';
+            const out = fs.createWriteStream(tmp);
+            res.pipe(out);
+            out.on('finish', () => {
+                out.close(() => {
+                    try { fs.renameSync(tmp, dest); resolve(); } catch (e) { reject(e); }
+                });
+            });
+            out.on('error', (e) => { try { fs.unlinkSync(tmp); } catch (x) {} reject(e); });
+        });
+        req.on('error', reject);
+        req.setTimeout(120000, () => { req.destroy(new Error('timeout')); });
+    });
+}
+
+async function reloadSearchers() {
+    if (fs.existsSync(GEO_V4_FILE)) {
+        try { ipSearcher4 = ip2rJs.newWithFileOnly(ip2rJs.IPv4, GEO_V4_FILE); } catch (e) { console.error('[geo] v4 xdb 加载失败:', e.message); ipSearcher4 = null; }
+    }
+    if (fs.existsSync(GEO_V6_FILE)) {
+        try { ipSearcher6 = ip2rJs.newWithFileOnly(ip2rJs.IPv6, GEO_V6_FILE); } catch (e) { console.error('[geo] v6 xdb 加载失败:', e.message); ipSearcher6 = null; }
+    }
+}
+
+/* 下载/更新地址库：缺失或超过 7 天则重新下载（动态更新） */
+async function ensureGeoDb(force) {
+    const week = 7 * 86400000;
+    for (const name of ['ip2region_v4.xdb', 'ip2region_v6.xdb']) {
+        const file = path.join(DATA_DIR, name);
+        const info = geoDbInfo(file);
+        if (!force && info && Date.now() - info.mtime < week) continue;
+        try {
+            console.log('[geo] 下载地址库 ' + name + ' ...');
+            await downloadFile(GEO_SOURCE_BASE + name, file);
+            console.log('[geo] ' + name + ' 更新完成');
+        } catch (e) {
+            console.error('[geo] ' + name + ' 下载失败（使用兜底库）:', e.message);
+        }
+    }
+    await reloadSearchers();
+}
+ensureGeoDb(false);
+setInterval(() => ensureGeoDb(false), 3600000); // 每小时检查一次是否需要更新
+
+const geoCache = new Map();
+function parseRegion(str) {
+    const p = String(str || '').split('|');
+    if (p.length >= 5 && p[0]) return { country: p[0], province: p[1] || '', city: p[2] === '0' ? '' : (p[2] || ''), isp: p[3] || '', code: p[4] || '' };
+    if (p.length === 1 && p[0]) return { country: p[0], province: '', city: '', isp: '', code: '' };
+    return null;
+}
+async function geoLookup(ip) {
+    const clean = String(ip || '').replace(/^::ffff:/, '');
+    if (!clean) return null;
+    if (geoCache.has(clean)) return geoCache.get(clean);
+    let res = null;
+    try {
+        if (clean.includes(':') && ipSearcher6) {
+            const region = await ipSearcher6.search(clean);
+            if (region) res = parseRegion(region);
+        } else if (ipSearcher4) {
+            const region = await ipSearcher4.search(clean);
+            if (region) res = parseRegion(region);
+        }
+    } catch (e) { /* 单次失败忽略 */ }
+    if (!res && ipGeo) {
+        try {
+            const r = ipGeo.search(clean);
+            if (r && (r.country || r.province || r.city)) res = { country: r.country, province: r.province, city: r.city, isp: r.isp, code: '' };
+        } catch (e) { /* 忽略 */ }
+    }
+    geoCache.set(clean, res);
+    if (geoCache.size > 5000) {
+        const first = geoCache.keys().next().value;
+        if (first !== undefined) geoCache.delete(first);
+    }
+    return res;
+}
+
+/* 中国省份 / 国家（中英文名 + ISO 国家码）→ 经纬度（地图标记用） */
+const PROVINCE_COORDS = {
+    '北京': [116.40, 39.90], '天津': [117.20, 39.13], '上海': [121.47, 31.23], '重庆': [106.55, 29.56],
+    '河北': [114.50, 38.04], '山西': [112.55, 37.87], '辽宁': [123.43, 41.80], '吉林': [125.32, 43.90],
+    '黑龙江': [126.63, 45.75], '江苏': [118.78, 32.04], '浙江': [120.15, 30.28], '安徽': [117.28, 31.86],
+    '福建': [119.30, 26.08], '江西': [115.89, 28.68], '山东': [117.00, 36.65], '河南': [113.65, 34.76],
+    '湖北': [114.30, 30.59], '湖南': [112.98, 28.19], '广东': [113.28, 23.13], '海南': [110.35, 20.02],
+    '四川': [104.07, 30.67], '贵州': [106.71, 26.57], '云南': [102.71, 25.04], '陕西': [108.95, 34.27],
+    '甘肃': [103.82, 36.06], '青海': [101.78, 36.62], '台湾': [121.50, 25.03], '内蒙古': [111.75, 40.84],
+    '广西': [108.32, 22.82], '西藏': [91.13, 29.65], '宁夏': [106.28, 38.47], '新疆': [87.62, 43.83],
+    '香港': [114.17, 22.28], '澳门': [113.55, 22.20]
+};
+const COUNTRY_COORDS = {
+    '美国': [-98.58, 39.83], 'United States': [-98.58, 39.83], 'US': [-98.58, 39.83],
+    '日本': [138.25, 36.20], 'Japan': [138.25, 36.20], 'JP': [138.25, 36.20],
+    '韩国': [127.77, 35.90], 'South Korea': [127.77, 35.90], 'KR': [127.77, 35.90],
+    '英国': [-0.13, 51.50], 'United Kingdom': [-0.13, 51.50], 'GB': [-0.13, 51.50],
+    '德国': [10.45, 51.17], 'Germany': [10.45, 51.17], 'DE': [10.45, 51.17],
+    '法国': [2.35, 48.86], 'France': [2.35, 48.86], 'FR': [2.35, 48.86],
+    '俄罗斯': [37.62, 55.75], 'Russia': [37.62, 55.75], 'RU': [37.62, 55.75],
+    '加拿大': [-106.35, 56.13], 'Canada': [-106.35, 56.13], 'CA': [-106.35, 56.13],
+    '澳大利亚': [133.78, -25.27], 'Australia': [133.78, -25.27], 'AU': [133.78, -25.27],
+    '印度': [78.96, 20.59], 'India': [78.96, 20.59], 'IN': [78.96, 20.59],
+    '新加坡': [103.82, 1.35], 'Singapore': [103.82, 1.35], 'SG': [103.82, 1.35],
+    '马来西亚': [101.98, 3.14], 'Malaysia': [101.98, 3.14], 'MY': [101.98, 3.14],
+    '泰国': [100.50, 13.75], 'Thailand': [100.50, 13.75], 'TH': [100.50, 13.75],
+    '越南': [105.85, 21.03], 'Vietnam': [105.85, 21.03], 'VN': [105.85, 21.03],
+    '印度尼西亚': [106.85, -6.21], 'Indonesia': [106.85, -6.21], 'ID': [106.85, -6.21],
+    '菲律宾': [121.00, 14.60], 'Philippines': [121.00, 14.60], 'PH': [121.00, 14.60],
+    '荷兰': [4.90, 52.37], 'Netherlands': [4.90, 52.37], 'NL': [4.90, 52.37],
+    '瑞士': [7.45, 46.95], 'Switzerland': [7.45, 46.95], 'CH': [7.45, 46.95],
+    '瑞典': [18.07, 59.33], 'Sweden': [18.07, 59.33], 'SE': [18.07, 59.33],
+    '意大利': [12.50, 41.90], 'Italy': [12.50, 41.90], 'IT': [12.50, 41.90],
+    '西班牙': [-3.70, 40.42], 'Spain': [-3.70, 40.42], 'ES': [-3.70, 40.42],
+    '波兰': [21.01, 52.23], 'Poland': [21.01, 52.23], 'PL': [21.01, 52.23],
+    '土耳其': [32.85, 39.93], 'Turkey': [32.85, 39.93], 'TR': [32.85, 39.93],
+    '以色列': [35.21, 31.78], 'Israel': [35.21, 31.78], 'IL': [35.21, 31.78],
+    '阿联酋': [54.37, 24.45], 'United Arab Emirates': [54.37, 24.45], 'AE': [54.37, 24.45],
+    '沙特阿拉伯': [46.68, 24.69], 'Saudi Arabia': [46.68, 24.69], 'SA': [46.68, 24.69],
+    '巴基斯坦': [73.05, 33.68], 'Pakistan': [73.05, 33.68], 'PK': [73.05, 33.68],
+    '哈萨克斯坦': [71.47, 51.17], 'Kazakhstan': [71.47, 51.17], 'KZ': [71.47, 51.17],
+    '蒙古': [106.92, 47.91], 'Mongolia': [106.92, 47.91], 'MN': [106.92, 47.91],
+    '缅甸': [96.16, 16.87], 'Myanmar': [96.16, 16.87], 'MM': [96.16, 16.87],
+    '巴西': [-47.93, -15.79], 'Brazil': [-47.93, -15.79], 'BR': [-47.93, -15.79],
+    '阿根廷': [-58.38, -34.60], 'Argentina': [-58.38, -34.60], 'AR': [-58.38, -34.60],
+    '智利': [-70.65, -33.45], 'Chile': [-70.65, -33.45], 'CL': [-70.65, -33.45],
+    '墨西哥': [-99.13, 19.43], 'Mexico': [-99.13, 19.43], 'MX': [-99.13, 19.43],
+    '南非': [28.05, -26.20], 'South Africa': [28.05, -26.20], 'ZA': [28.05, -26.20],
+    '埃及': [31.24, 30.04], 'Egypt': [31.24, 30.04], 'EG': [31.24, 30.04],
+    '新西兰': [174.78, -41.29], 'New Zealand': [174.78, -41.29], 'NZ': [174.78, -41.29],
+    '中国': [104.20, 35.90], 'China': [104.20, 35.90], 'CN': [104.20, 35.90],
+    '香港': [114.17, 22.28], 'Hong Kong': [114.17, 22.28], 'HK': [114.17, 22.28],
+    '台湾': [121.50, 25.03], 'Taiwan': [121.50, 25.03], 'TW': [121.50, 25.03],
+    '澳门': [113.55, 22.20], 'Macau': [113.55, 22.20], 'MO': [113.55, 22.20]
+};
+
+async function geoRegionText(ip) {
+    const g = await geoLookup(ip);
+    if (!g) return '未知';
+    return [g.country, g.province, g.city].filter(Boolean).join('·') || '未知';
+}
+function normProvince(p) {
+    return String(p || '').replace(/壮族自治区$|回族自治区$|维吾尔自治区$|自治区$|特别行政区$|省$|市$/, '');
+}
+async function geoCoords(ip) {
+    const g = await geoLookup(ip);
+    if (!g) return null;
+    const prov = normProvince(g.province);
+    if (g.country === '中国' || g.country === 'China' || g.code === 'CN' || PROVINCE_COORDS[prov]) {
+        if (PROVINCE_COORDS[prov]) return PROVINCE_COORDS[prov];
+        if (g.city) {
+            for (const [k, v] of Object.entries(PROVINCE_COORDS)) if (g.city.includes(k)) return v;
+        }
+    }
+    if (g.code && COUNTRY_COORDS[g.code]) return COUNTRY_COORDS[g.code];
+    if (g.country && COUNTRY_COORDS[g.country]) return COUNTRY_COORDS[g.country];
+    if (prov && COUNTRY_COORDS[prov]) return COUNTRY_COORDS[prov];
+    return null;
+}
+
+// --- 安全中间件：封禁拦截 + 每 IP 统计 + 白名单标记 ---
+function securityMiddleware(req, res, next) {
+    const ip = String(req.ip || req.socket.remoteAddress || 'unknown').replace(/^::ffff:/, '');
+    req.clientIp = ip;
+    const sec = readSecurity();
+    if (sec.banned[ip]) {
+        return res.status(403).json({ code: 403, msg: 'IP 已被封禁' });
+    }
+    req.ipWhitelisted = !!sec.whitelist[ip];
+    let n = 0;
+    const origWrite = res.write.bind(res);
+    const origEnd = res.end.bind(res);
+    res.write = function (chunk, ...rest) {
+        if (chunk) n += Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(String(chunk));
+        return origWrite(chunk, ...rest);
+    };
+    res.end = function (chunk, ...rest) {
+        if (chunk) n += Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(String(chunk));
+        trackIp(ip, n);
+        return origEnd(chunk, ...rest);
+    };
+    next();
+}
+
+// --- 异常检测（白名单跳过，阈值可配置） ---
+function getAnomalyThresholds() {
+    const a = (readConfig().security || {}).anomaly || {};
+    return {
+        reqPerMin: a.reqPerMin || 60,
+        mbPerMin: a.mbPerMin || 20,
+        reqPerHour: a.reqPerHour || 2000,
+        mbPerHour: a.mbPerHour || 1024
+    };
+}
+async function computeAnomalies() {
+    const t = getAnomalyThresholds();
+    const sec = readSecurity();
+    const m5 = ipWindowCounts(60, 5);   // 最近 5 分钟
+    const h6 = ipWindowCounts(3600, 6); // 最近 6 小时
+    const ips = new Set([...Object.keys(m5), ...Object.keys(h6)]);
+    const out = [];
+    for (const ip of ips) {
+        if (sec.whitelist[ip]) continue;
+        const reasons = [];
+        const mc = m5[ip] || { c: 0, b: 0 };
+        const hc = h6[ip] || { c: 0, b: 0 };
+        const rpm = mc.c / 5, mbpm = mc.b / 1024 / 1024 / 5;
+        const rph = hc.c / 6, mbph = hc.b / 1024 / 1024 / 6;
+        if (rpm > t.reqPerMin) reasons.push(`请求频率 ${rpm.toFixed(1)} 次/分 > ${t.reqPerMin}`);
+        if (mbpm > t.mbPerMin) reasons.push(`流量 ${mbpm.toFixed(1)} MB/分 > ${t.mbPerMin}`);
+        if (rph > t.reqPerHour) reasons.push(`请求 ${rph.toFixed(1)} 次/时 > ${t.reqPerHour}`);
+        if (mbph > t.mbPerHour) reasons.push(`流量 ${mbph.toFixed(1)} MB/时 > ${t.mbPerHour}`);
+        if (reasons.length) out.push({ ip, reasons, m5: mc, h6: hc, region: await geoRegionText(ip), isp: (await geoLookup(ip) || {}).isp || '' });
+    }
+    out.sort((a, b) => (b.m5.c + b.h6.c) - (a.m5.c + a.h6.c));
+    return out;
+}
+
 // ==================== 弹幕API ====================
 
 const danmakuCounters = new Map();
@@ -447,6 +807,7 @@ const danmakuCounters = new Map();
 function checkDanmakuLimit(req, res) {
     const config = readConfig();
     if (!config.danmakuLimit || !config.danmakuLimit.enabled) return true;
+    if (req.ipWhitelisted) return true;
     const max = config.danmakuLimit.maxPerMinute || 10;
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     const key = 'dm_' + ip;
@@ -1085,6 +1446,7 @@ app.post('/api/admin/config', checkAdmin, (req, res) => {
     if (adminTheme) config.adminTheme = adminTheme;
     if (cdn) config.cdn = { ...config.cdn, ...cdn };
     writeConfig(config);
+    applyTrustProxy(config);
     res.json({ code: 0, msg: '配置已更新', data: config });
 });
 
@@ -1180,6 +1542,189 @@ app.delete('/api/admin/danmu', checkAdmin, (req, res) => {
     danmuList.splice(index, 1);
     writeData(DANMU_FILE, danmuList);
     res.json({ code: 0, msg: '删除成功' });
+});
+
+// ==================== 安全中心 API ====================
+
+function isValidIp(ip) {
+    return typeof ip === 'string' && /^[\d.]+$/.test(ip) && ip.split('.').length === 4;
+}
+
+app.get('/api/admin/security/overview', checkAdmin, async (req, res) => {
+    const sec = readSecurity();
+    const dayAgo = Date.now() - 86400000;
+    let active = 0;
+    for (const t of Object.values(ipTotals.last)) if (t > dayAgo) active++;
+    res.json({
+        code: 0, data: {
+            totalCalls: Object.values(ipTotals.calls).reduce((a, b) => a + b, 0),
+            totalBytes: Object.values(ipTotals.bytes).reduce((a, b) => a + b, 0),
+            activeIps: active,
+            allIps: Object.keys(ipTotals.calls).length,
+            banned: Object.keys(sec.banned).length,
+            whitelist: Object.keys(sec.whitelist).length,
+            anomalies: (await computeAnomalies()).length
+        }
+    });
+});
+
+app.get('/api/admin/security/ips', checkAdmin, async (req, res) => {
+    const sec = readSecurity();
+    const window = req.query.window || 'm';
+    const sort = req.query.sort || 'calls';
+    const search = (req.query.search || '').toLowerCase();
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const win = ipWindowCounts(window === 'h' ? 3600 : 60, window === 'h' ? 6 : 5);
+    const rows = [];
+    for (const ip of Object.keys(ipTotals.calls)) {
+        const w = win[ip] || { c: 0, b: 0 };
+        const g = await geoLookup(ip);
+        const region = g ? [g.country, g.province, g.city].filter(Boolean).join('·') || '未知' : '未知';
+        rows.push({
+            ip,
+            region,
+            isp: (g && g.isp) || '',
+            coords: await geoCoords(ip),
+            winCalls: w.c, winBytes: w.b,
+            totalCalls: ipTotals.calls[ip] || 0,
+            totalBytes: ipTotals.bytes[ip] || 0,
+            last: ipTotals.last[ip] || 0,
+            status: sec.banned[ip] ? 'banned' : (sec.whitelist[ip] ? 'whitelist' : 'normal'),
+            bannedReason: (sec.banned[ip] && sec.banned[ip].reason) || ''
+        });
+    }
+    if (search) {
+        const f = rows.filter(r => r.ip.includes(search) || r.region.toLowerCase().includes(search));
+        rows.length = 0; rows.push(...f);
+    }
+    rows.sort((a, b) => {
+        if (sort === 'bytes') return b.totalBytes - a.totalBytes;
+        if (sort === 'last') return b.last - a.last;
+        if (sort === 'winBytes') return b.winBytes - a.winBytes;
+        if (sort === 'winCalls') return b.winCalls - a.winCalls;
+        return b.totalCalls - a.totalCalls;
+    });
+    const total = rows.length;
+    const start = (page - 1) * limit;
+    res.json({ code: 0, data: { list: rows.slice(start, start + limit), total, page, limit } });
+});
+
+app.get('/api/admin/security/anomalies', checkAdmin, async (req, res) => {
+    res.json({ code: 0, data: await computeAnomalies() });
+});
+
+app.get('/api/admin/security/lists', checkAdmin, (req, res) => {
+    const sec = readSecurity();
+    res.json({
+        code: 0,
+        data: {
+            banned: Object.entries(sec.banned).map(([ip, v]) => ({ ip, reason: (v && v.reason) || '', at: (v && v.at) || 0 })),
+            whitelist: Object.entries(sec.whitelist).map(([ip, v]) => ({ ip, at: (v && v.at) || 0 }))
+        }
+    });
+});
+
+app.post('/api/admin/security/ban', checkAdmin, (req, res) => {
+    const { ip, reason } = req.body;
+    if (!isValidIp(ip)) return res.status(400).json({ code: 1, msg: '无效 IP' });
+    const sec = readSecurity();
+    sec.banned[ip] = { reason: String(reason || '').slice(0, 200), at: Date.now() };
+    delete sec.whitelist[ip];
+    writeSecurity(sec);
+    res.json({ code: 0, msg: '已封禁 ' + ip });
+});
+
+app.post('/api/admin/security/unban', checkAdmin, (req, res) => {
+    const { ip } = req.body;
+    if (!isValidIp(ip)) return res.status(400).json({ code: 1, msg: '无效 IP' });
+    const sec = readSecurity();
+    delete sec.banned[ip];
+    writeSecurity(sec);
+    res.json({ code: 0, msg: '已解除封禁 ' + ip });
+});
+
+app.post('/api/admin/security/whitelist', checkAdmin, (req, res) => {
+    const { ip } = req.body;
+    if (!isValidIp(ip)) return res.status(400).json({ code: 1, msg: '无效 IP' });
+    const sec = readSecurity();
+    if (!sec.whitelist[ip]) sec.whitelist[ip] = { at: Date.now() };
+    delete sec.banned[ip];
+    writeSecurity(sec);
+    res.json({ code: 0, msg: '已加入白名单 ' + ip });
+});
+
+app.post('/api/admin/security/unwhitelist', checkAdmin, (req, res) => {
+    const { ip } = req.body;
+    if (!isValidIp(ip)) return res.status(400).json({ code: 1, msg: '无效 IP' });
+    const sec = readSecurity();
+    delete sec.whitelist[ip];
+    writeSecurity(sec);
+    res.json({ code: 0, msg: '已移出白名单 ' + ip });
+});
+
+app.post('/api/admin/security/config', checkAdmin, (req, res) => {
+    const { reqPerMin, mbPerMin, reqPerHour, mbPerHour } = req.body;
+    const config = readConfig();
+    config.security = {
+        ...config.security,
+        anomaly: {
+            reqPerMin: Math.max(1, parseInt(reqPerMin) || 60),
+            mbPerMin: Math.max(1, parseInt(mbPerMin) || 20),
+            reqPerHour: Math.max(1, parseInt(reqPerHour) || 2000),
+            mbPerHour: Math.max(1, parseInt(mbPerHour) || 1024)
+        }
+    };
+    writeConfig(config);
+    res.json({ code: 0, msg: '阈值已保存' });
+});
+
+app.get('/api/admin/security/geo/info', checkAdmin, (req, res) => {
+    res.json({ code: 0, data: { v4: geoDbInfo(GEO_V4_FILE), v6: geoDbInfo(GEO_V6_FILE), inUse: !!(ipSearcher4 || ipSearcher6) } });
+});
+
+/* 地图区域聚合：world = 按国家（名称对齐 echarts world.json），china = 按省份（短名） */
+const WORLD_CODE_NAMES = {
+    'CN': 'China', 'US': 'United States', 'JP': 'Japan', 'KR': 'Korea',
+    'GB': 'United Kingdom', 'DE': 'Germany', 'FR': 'France', 'RU': 'Russia', 'CA': 'Canada',
+    'AU': 'Australia', 'IN': 'India', 'SG': 'Singapore', 'MY': 'Malaysia', 'TH': 'Thailand',
+    'VN': 'Vietnam', 'ID': 'Indonesia', 'PH': 'Philippines', 'NL': 'Netherlands',
+    'CH': 'Switzerland', 'SE': 'Sweden', 'IT': 'Italy', 'ES': 'Spain', 'PL': 'Poland',
+    'TR': 'Turkey', 'IL': 'Israel', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia',
+    'PK': 'Pakistan', 'KZ': 'Kazakhstan', 'MN': 'Mongolia', 'MM': 'Myanmar', 'BR': 'Brazil',
+    'AR': 'Argentina', 'CL': 'Chile', 'MX': 'Mexico', 'ZA': 'South Africa', 'EG': 'Egypt',
+    'NZ': 'New Zealand'
+};
+app.get('/api/admin/security/geo/regions', checkAdmin, async (req, res) => {
+    const scope = req.query.scope === 'china' ? 'china' : 'world';
+    const agg = {};
+    for (const ip of Object.keys(ipTotals.calls)) {
+        const g = await geoLookup(ip);
+        if (!g) continue;
+        const v = ipTotals.calls[ip], b = ipTotals.bytes[ip] || 0;
+        if (scope === 'china') {
+            const isCN = g.code === 'CN' || g.country === '中国' || g.country === 'China' || PROVINCE_COORDS[normProvince(g.province)];
+            const name = isCN ? (normProvince(g.province) || '中国') : '海外';
+            const e = agg[name] || (agg[name] = { code: '', calls: 0, bytes: 0, ips: 0 });
+            e.calls += v; e.bytes += b; e.ips++;
+        } else {
+            if (!g.country || g.country === '0' || g.country === 'Reserved' || g.country === '保留' || g.country === '内网IP' || g.country === '保留地址' || g.country === '本机地址' || g.country === '局域网' || g.country === '未知' || g.country === 'Unknown') continue;
+            const name = WORLD_CODE_NAMES[g.code] || (g.country === '中国' ? 'China' : g.country) || g.country;
+            const e = agg[name] || (agg[name] = { code: g.code || '', calls: 0, bytes: 0, ips: 0 });
+            e.calls += v; e.bytes += b; e.ips++;
+        }
+    }
+    const list = Object.entries(agg).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.calls - a.calls);
+    res.json({ code: 0, data: list });
+});
+
+app.post('/api/admin/security/geo/update', checkAdmin, async (req, res) => {
+    try {
+        await ensureGeoDb(true);
+        res.json({ code: 0, msg: '地址库已更新', data: { v4: geoDbInfo(GEO_V4_FILE), v6: geoDbInfo(GEO_V6_FILE) } });
+    } catch (e) {
+        res.json({ code: 1, msg: '更新失败: ' + e.message });
+    }
 });
 
 // ==================== 字幕检测 ====================
@@ -1294,11 +1839,17 @@ app.get('/player/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player.html'));
 });
 
-app.get('/admin/', serveAdmin);
-app.use('/admin', express.static(path.join(__dirname, 'public')));
+app.get('/admin/', frameGuard, serveAdmin);
+app.use('/admin', frameGuard, express.static(path.join(__dirname, 'public')));
 
 function serveAdmin(req, res) {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+}
+
+/* 后台页面禁止被 iframe 嵌入（播放器页可自由嵌入） */
+function frameGuard(req, res, next) {
+    res.setHeader('X-Frame-Options', 'DENY');
+    next();
 }
 
 function registerAdminRoutes() {
@@ -1306,8 +1857,8 @@ function registerAdminRoutes() {
     if (config.security && config.security.adminPath) {
         const p = '/' + config.security.adminPath.replace(/^\/+|\/+$/g, '') + '/';
         if (p !== '/admin/') {
-            app.get(p, serveAdmin);
-            app.use(p.replace(/\/$/, ''), express.static(path.join(__dirname, 'public')));
+            app.get(p, frameGuard, serveAdmin);
+            app.use(p.replace(/\/$/, ''), frameGuard, express.static(path.join(__dirname, 'public')));
         }
     }
 }

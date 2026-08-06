@@ -6,12 +6,13 @@
 
 基于 [ArtPlayer](https://artplayer.org) 的弹幕视频播放器 + Web 管理后台。自带自研 Canvas 弹幕引擎、多主题系统、PoW 防爬虫、API 限流与统计、文件管理、多字幕支持。
 
-**v26.8.4** · MIT License
+**v26.8.5** · MIT License
 
 ## 目录
 
 - [特性](#特性)
 - [快速开始](#快速开始)
+- [中国用户加速](#中国用户加速)
 - [目录结构](#目录结构)
 - [播放器使用](#播放器使用)
 - [管理后台](#管理后台)
@@ -28,6 +29,8 @@
 - **DPlayer 兼容 API**：`/api/danmu/v3/?id=` 可直接对接现有 DPlayer 弹幕生态
 - **服务端视频 ID**：`/api/video/resolve` 为每个视频分配 8 位唯一 ID（数字字母混合），自动继承旧散列 ID 的历史弹幕
 - **多字幕**：自动检测同目录 `.srt/.vtt/.ass` 字幕并按语言（简繁日英韩...）分组，播放器内一键切换
+- **六语言界面**：简体中文 / 繁體中文 / 文言 / English / 日本語 / Français，自动检测浏览器语言 + 手动切换，覆盖播放器与后台全部界面
+- **安全中心**：IP 地理定位（ip2region 地址库自动更新，城市级精确到运营商）、世界地图分布、请求/流量异常检测、IP 封禁与白名单
 - **双主题系统**：播放器主题与后台主题完全独立，各 10 套主题（含 StyleKit 动漫/漫画风格），支持自定义导入
 - **Web 管理后台**：弹幕/视频/屏蔽词/文件/日志/API 统计 一站式管理
 - **API 管理**：每个 API 独立开关、RPS 限速、带宽统计；1 秒精度实时曲线，时间跨度可调（5 分钟 ~ 3 个月）
@@ -45,10 +48,14 @@ artplayer-web-api                 # 全局命令
 npx artplayer-web-api
 ```
 
-### 方式二：Docker Hub 镜像
+### 方式二：Docker 镜像（Docker Hub / GHCR）
 
 ```bash
+# Docker Hub
 docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+
+# GHCR（GitHub Container Registry）
+docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/artplayer-web-api:latest
 ```
 
 ### 方式三：源码运行
@@ -73,6 +80,28 @@ PORT=8080 node server.js
 | 默认账号 | `admin` / `admin123` |
 
 > 首次启动自动创建 `data/` 目录及默认数据文件，默认账号已初始化（**上线前请务必修改密码**）。
+
+## 中国用户加速
+
+- **GitHub 加速**（clone / 下载 / raw 通用）：在原始 GitHub 链接前加 `https://fast.fumor.top/`
+
+  ```bash
+  git clone https://fast.fumor.top/https://github.com/yangyang8002/Artplayer-Web-Api.git
+  ```
+
+- **Docker Hub 镜像加速**（南大源）：将镜像前缀替换为 `docker.nju.edu.cn/`
+
+  ```bash
+  docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+  ```
+
+- **GHCR 镜像加速**（南大源）：`docker.nju.edu.cn/ghcr.io/` 前缀
+
+  ```bash
+  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+  ```
+
+> 镜像已同时发布到 Docker Hub、GHCR 与 npm；国内拉取镜像建议使用上述南大源加速。
 
 ## 目录结构
 

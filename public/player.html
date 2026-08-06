@@ -156,14 +156,14 @@
                     <div class="icon loading">&#9654;</div>
                     <h2>ArtPlayer 弹幕播放器</h2>
                     <p>在地址栏添加 <span class="code">?url=视频链接</span> 开始播放</p>
-                    <input type="text" id="urlInput" placeholder="粘贴视频地址 (支持 mp4 / m3u8 / flv)">
+                    <input type="text" id="urlInput" placeholder="粘贴视频地址 (支持 mp4 / m3u8 / flv)" data-i18n-ph="粘贴视频地址 (支持 mp4 / m3u8 / flv)">
                     <button onclick="loadFromInput()">开始播放</button>
                 </div>
                 <div class="overlay-card hidden" id="errorCard">
                     <div class="icon error">&#10006;</div>
                     <h2>播放出错</h2>
                     <p id="errorText"></p>
-                    <input type="text" id="urlInputRetry" placeholder="重新输入视频地址">
+                    <input type="text" id="urlInputRetry" placeholder="重新输入视频地址" data-i18n-ph="重新输入视频地址">
                     <button onclick="loadFromInput(true)">重试</button>
                 </div>
             </div>
@@ -171,12 +171,15 @@
     </div>
     <div id="toast"></div>
 
+    <script src="/i18n.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
 
     <script>
 (function(){
+    I18N.init();
+    var t=I18N.t;
     var art=null, vid='', dmEngine=null;
     var danmakuVisible=true, danmakuOpacity=parseFloat(localStorage.getItem('ap_dm_opacity'))||1, danmakuSpeed=parseFloat(localStorage.getItem('ap_dm_speed'))||7, danmakuMask=parseInt(localStorage.getItem('ap_dm_mask')||'0')||0;
     var subtitleVisible=true, subtitleSize=parseInt(localStorage.getItem('ap_sub_fs'))||20, subtitleBottom=parseInt(localStorage.getItem('ap_sub_bottom'))||15;
@@ -198,7 +201,7 @@
     function hideOverlay(){document.getElementById('overlay').classList.add('hidden')}
     function loadFromInput(retry){
         var input=retry?document.getElementById('urlInputRetry'):document.getElementById('urlInput');
-        var url=input.value.trim();if(!url){showToast('请输入视频地址',true);return}initPlayer(url);
+        var url=input.value.trim();if(!url){showToast(t('请输入视频地址'),true);return}initPlayer(url);
     }
     function getVideoId(url){
         var v=url;try{var u=new URL(url);v=u.pathname+u.search}catch(e){}
@@ -636,7 +639,9 @@
 
     /* ===== Init Player ===== */
     async function initPlayer(url){
-        var decoded=decodeURIComponent(url).trim();
+        /* qs('url') 已解码一次（页面级编码）；此处必须原样使用，
+           签名 URL 的查询串被二次解码会破坏签名（SignatureDoesNotMatch） */
+        var decoded=url.trim();
         if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(decoded)&&!decoded.startsWith('/'))decoded='/'+decoded;
 
         var serverTheme=null,serverRender=null;
@@ -706,8 +711,13 @@
 
         var themeColor=getComputedStyle(document.documentElement).getPropertyValue('--bili-blue').trim();
 
+        /* ArtPlayer 原生控件语言（播放/暂停/音量等按钮提示） */
+        var artLangs={zh:'zh-cn',zhHant:'zh-tw',wyw:'zh-cn',en:'en',ja:'ja',fr:'fr'};
+        var artLang=artLangs[I18N.lang]||'zh-cn';
+
         var options={
             container:'#artplayer',url:decoded,
+            lang:artLang,
             autoplay:true,autoSize:true,autoMini:true,
             volume:parseFloat(localStorage.getItem('ap_volume'))||0.7,
             theme:themeColor,
@@ -719,35 +729,47 @@
             customType:customType,
             settings:[
                 {
-                    html:'弹幕开关',icon:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+                    html:t('弹幕开关'),icon:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
                      switch:true,width:170,onSwitch:function(item){danmakuVisible=!item.switch;if(dmEngine)danmakuVisible?dmEngine.show():dmEngine.hide();return!item.switch}
                 },
                 {
-                    html:'弹幕设置',width:170,
+                    html:t('弹幕设置'),width:170,
                     selector:[
-                        {html:'透明度',width:170,range:[danmakuOpacity,0.2,1,0.01],onRange:function(item){danmakuOpacity=item.range[0];localStorage.setItem('ap_dm_opacity',String(item.range[0]));if(dmEngine)dmEngine.setOpacity(item.range[0]);return Math.round(item.range[0]*100)+'%'}},
-                        {html:'速度',width:170,range:[danmakuSpeed,3,15,0.1],onRange:function(item){danmakuSpeed=item.range[0];localStorage.setItem('ap_dm_speed',String(item.range[0]));if(dmEngine)dmEngine.setSpeed(item.range[0]);return(item.range[0]).toFixed(1)+'s'}},
-                        {html:'数量',width:170,range:[parseFloat(localStorage.getItem('ap_dm_density'))||100,5,100,1],onRange:function(item){if(dmEngine)dmEngine.setDensity(item.range[0]);return Math.round(item.range[0])+'%'}},
-                        {html:'顶/底堆叠',width:170,range:[parseFloat(localStorage.getItem('ap_dm_stack'))||100,10,100,1],onRange:function(item){if(dmEngine)dmEngine.setFixedStack(item.range[0]);return Math.round(item.range[0])+'%'}},
-                        {html:'底边距',width:170,range:[danmakuMask,0,100,1],onRange:function(item){applyDanmakuMask(item.range[0]);return Math.round(item.range[0])+'%'}}
+                        {html:t('透明度'),width:170,range:[danmakuOpacity,0.2,1,0.01],onRange:function(item){danmakuOpacity=item.range[0];localStorage.setItem('ap_dm_opacity',String(item.range[0]));if(dmEngine)dmEngine.setOpacity(item.range[0]);return Math.round(item.range[0]*100)+'%'}},
+                        {html:t('速度'),width:170,range:[danmakuSpeed,3,15,0.1],onRange:function(item){danmakuSpeed=item.range[0];localStorage.setItem('ap_dm_speed',String(item.range[0]));if(dmEngine)dmEngine.setSpeed(item.range[0]);return(item.range[0]).toFixed(1)+'s'}},
+                        {html:t('数量'),width:170,range:[parseFloat(localStorage.getItem('ap_dm_density'))||100,5,100,1],onRange:function(item){if(dmEngine)dmEngine.setDensity(item.range[0]);return Math.round(item.range[0])+'%'}},
+                        {html:t('顶/底堆叠'),width:170,range:[parseFloat(localStorage.getItem('ap_dm_stack'))||100,10,100,1],onRange:function(item){if(dmEngine)dmEngine.setFixedStack(item.range[0]);return Math.round(item.range[0])+'%'}},
+                        {html:t('底边距'),width:170,range:[danmakuMask,0,100,1],onRange:function(item){applyDanmakuMask(item.range[0]);return Math.round(item.range[0])+'%'}}
                     ]
                 },
                 {
-                    html:'字幕设置',width:170,
+                    html:t('字幕设置'),width:170,
                     selector:[
-                        {html:'字幕开关',width:170,switch:true,onSwitch:function(item){subtitleVisible=!item.switch;var el=document.querySelector('.art-subtitle');if(el)el.style.display=subtitleVisible?'':'none';return!item.switch}},
-                        {html:'字幕大小',width:170,range:[subtitleSize,14,32,1],onRange:function(item){subtitleSize=item.range[0];localStorage.setItem('ap_sub_fs',String(item.range[0]));if(art)art.subtitle.style({fontSize:item.range[0]+'px'});return item.range[0]+'px'}},
-                        {html:'字幕底距',width:170,range:[subtitleBottom,5,80,1],onRange:function(item){subtitleBottom=item.range[0];localStorage.setItem('ap_sub_bottom',String(item.range[0]));var p=document.querySelector('.art-video-player');if(p)p.style.setProperty('--art-subtitle-bottom',item.range[0]+'px');return item.range[0]+'px'}},
-                        {html:'字幕选择',width:170,selector:subtitleList.map(function(s,i){return{html:s.title,value:i,default:i===currentSub}}),onSelect:function(item){if(art&&subtitleList[item.value]){art.subtitle.switch(subtitleList[item.value].url,{name:subtitleList[item.value].title});currentSub=item.value}return item.html}}
+                        {html:t('字幕开关'),width:170,switch:true,onSwitch:function(item){subtitleVisible=!item.switch;var el=document.querySelector('.art-subtitle');if(el)el.style.display=subtitleVisible?'':'none';return!item.switch}},
+                        {html:t('字幕大小'),width:170,range:[subtitleSize,14,32,1],onRange:function(item){subtitleSize=item.range[0];localStorage.setItem('ap_sub_fs',String(item.range[0]));if(art)art.subtitle.style({fontSize:item.range[0]+'px'});return item.range[0]+'px'}},
+                        {html:t('字幕底距'),width:170,range:[subtitleBottom,5,80,1],onRange:function(item){subtitleBottom=item.range[0];localStorage.setItem('ap_sub_bottom',String(item.range[0]));var p=document.querySelector('.art-video-player');if(p)p.style.setProperty('--art-subtitle-bottom',item.range[0]+'px');return item.range[0]+'px'}},
+                        {html:t('字幕选择'),width:170,selector:subtitleList.map(function(s,i){return{html:s.title,value:i,default:i===currentSub}}),onSelect:function(item){if(art&&subtitleList[item.value]){art.subtitle.switch(subtitleList[item.value].url,{name:subtitleList[item.value].title});currentSub=item.value}return item.html}}
                     ]
                 },
-                {html:'统计信息',onClick:function(){var p=document.querySelector('.ap-stats-panel');if(p){p.classList.toggle('open');buildStats()}return'统计信息'}}
+                {html:t('统计信息'),onClick:function(){var p=document.querySelector('.ap-stats-panel');if(p){p.classList.toggle('open');buildStats()}return t('统计信息')}},
+                {
+                    html:t('语言'),width:170,
+                    selector:[
+                        {html:'中文',value:'zh',default:I18N.lang==='zh'},
+                        {html:'繁體中文',value:'zhHant',default:I18N.lang==='zhHant'},
+                        {html:'文言',value:'wyw',default:I18N.lang==='wyw'},
+                        {html:'English',value:'en',default:I18N.lang==='en'},
+                        {html:'日本語',value:'ja',default:I18N.lang==='ja'},
+                        {html:'Français',value:'fr',default:I18N.lang==='fr'}
+                    ],
+                    onSelect:function(item){I18N.setLang(item.value);var u=new URL(location.href);u.searchParams.delete('lang');location.href=u.toString();return item.html}
+                }
             ],
             controls:[{
                 position:'right',
                 html:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
-                tooltip:'截图',style:{order:10},
-                click:function(artIns){var vv=artIns.video;if(vv&&vv.readyState>=2){try{var cv=document.createElement('canvas');cv.width=vv.videoWidth;cv.height=vv.videoHeight;cv.getContext('2d').drawImage(vv,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast('截图已保存')}catch(e){showToast('截图失败（可能因跨域限制）',true)}}else{showToast('视频未就绪',true)}}
+                tooltip:t('截图'),style:{order:10},
+                click:function(){var vv=this.video;if(vv&&vv.readyState>=2){try{var cv=document.createElement('canvas');cv.width=vv.videoWidth;cv.height=vv.videoHeight;cv.getContext('2d').drawImage(vv,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast(t('截图已保存'))}catch(e){showToast(t('截图失败（可能因跨域限制）'),true)}}else{showToast(t('视频未就绪'),true)}}
             }]
         };
 
@@ -797,16 +819,16 @@
             var videoOk=false;
             art.on('video:loadeddata',function(){videoOk=true});art.on('video:playing',function(){videoOk=true});
             art.on('video:error',function(){
-                if(videoOk||(art.video&&art.video.readyState>0)){showToast('视频加载出现暂时性问题',true);return}
-                var code=art.video&&art.video.error?art.video.error.code:'';var msg=code===4?'视频格式不支持':code===3?'视频解码失败':code===2?'网络错误':'视频加载失败';
-                showError(msg+'，请检查地址是否正确');
+                if(videoOk||(art.video&&art.video.readyState>0)){showToast(t('视频加载出现暂时性问题'),true);return}
+                var code=art.video&&art.video.error?art.video.error.code:'';var msg=code===4?t('视频格式不支持'):code===3?t('视频解码失败'):code===2?t('网络错误'):t('视频加载失败');
+                showError(msg+t('，请检查地址是否正确'));
             });
 
             /* Custom UI */
             setTimeout(function(){
                 setupCommentBox();injectScreenshotFloat();injectStatsPanel();setupOverflow();
             },600);
-        }catch(e){showError('播放器初始化失败: '+e.message)}
+        }catch(e){showError(t('播放器初始化失败: ')+e.message)}
     }
 
     /* ===== Danmaku Input ===== */
@@ -818,15 +840,15 @@
         if(!dmEngine){setTimeout(setupCommentBox,300);return}
 
         var colors=['#ffffff','#e54256','#ffe133','#64dd17','#39ccff','#fb7299','#a855f7'];
-        var types=[{v:0,n:'滚动'},{v:1,n:'顶部'},{v:2,n:'底部'}];
+        var types=[{v:0,n:t('滚动')},{v:1,n:t('顶部')},{v:2,n:t('底部')}];
         var curColor='#ffffff',curType=0;
 
         var wrap=document.createElement('div');wrap.className='bili-danmu';
-        var colorBtn=document.createElement('button');colorBtn.className='bd-color';colorBtn.title='弹幕设置';colorBtn.innerHTML='<span class="dot" style="background:'+curColor+'"></span>';
+        var colorBtn=document.createElement('button');colorBtn.className='bd-color';colorBtn.title=t('弹幕设置');colorBtn.innerHTML='<span class="dot" style="background:'+curColor+'"></span>';
         var panel=document.createElement('div');panel.className='bd-color-panel';
-        panel.innerHTML='<div class="bd-colors">'+colors.map(function(c){return'<button data-c="'+c+'" style="background:'+c+'"></button>'}).join('')+'</div><div class="bd-types">'+types.map(function(t){return'<button data-t="'+t.v+'">'+t.n+'</button>'}).join('')+'</div>';
-        var input=document.createElement('input');input.className='bd-input';input.type='text';input.maxLength=30;input.placeholder='发个友善的弹幕见证当下';
-        var sendBtn=document.createElement('button');sendBtn.className='bd-send';sendBtn.title='发送弹幕';sendBtn.innerHTML=ICONS.send();
+        panel.innerHTML='<div class="bd-colors">'+colors.map(function(c){return'<button data-c="'+c+'" style="background:'+c+'"></button>'}).join('')+'</div><div class="bd-types">'+types.map(function(t2){return'<button data-t="'+t2.v+'">'+t2.n+'</button>'}).join('')+'</div>';
+        var input=document.createElement('input');input.className='bd-input';input.type='text';input.maxLength=30;input.placeholder=t('发个友善的弹幕见证当下');
+        var sendBtn=document.createElement('button');sendBtn.className='bd-send';sendBtn.title=t('发送弹幕');sendBtn.innerHTML=ICONS.send();
         wrap.append(colorBtn,panel,input,sendBtn);
         /* Danmaku box lives inside the left control group as a flex child:
            it can never overlap the buttons, and it hides together with the
@@ -840,15 +862,15 @@
 
         function doSend(){
             var text=input.value.trim();
-            if(!text){showToast('要输入弹幕内容哦',true);return}
-            if(!dmEngine){showToast('弹幕引擎未就绪',true);return}
+            if(!text){showToast(t('要输入弹幕内容哦'),true);return}
+            if(!dmEngine){showToast(t('弹幕引擎未就绪'),true);return}
             var danmuData={id:vid,player:vid,author:'user_'+Math.random().toString(36).substr(2,6),time:art.currentTime,text:text,color:parseInt(curColor.replace('#',''),16),type:curType};
             fetch('/api/danmu/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(danmuData)})
                 .then(function(r){return r.json()})
                 .then(function(d){
-                    if(d.code===0){dmEngine.emit({text:text,color:curColor,mode:curType,time:d.data.time});input.value='';showToast('弹幕已发送')}
-                    else showToast(d.msg||'发送失败',true);
-                }).catch(function(){showToast('发送失败',true)});
+                    if(d.code===0){dmEngine.emit({text:text,color:curColor,mode:curType,time:d.data.time});input.value='';showToast(t('弹幕已发送'))}
+                    else showToast(t(d.msg)||t('发送失败'),true);
+                }).catch(function(){showToast(t('发送失败'),true)});
         }
         sendBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();doSend()});
         input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();e.stopPropagation();doSend()}});
@@ -858,8 +880,8 @@
     /* ===== Screenshot ===== */
     function injectScreenshotFloat(){
         var app=document.querySelector('.art-video-player');if(!app||document.querySelector('.bili-screenshot'))return;
-        var btn=document.createElement('button');btn.className='bili-screenshot';btn.title='截图';btn.innerHTML=ICONS.camera();
-        btn.addEventListener('click',function(e){e.stopPropagation();if(art&&art.video&&art.video.readyState>=2){try{var cv=document.createElement('canvas');cv.width=art.video.videoWidth;cv.height=art.video.videoHeight;cv.getContext('2d').drawImage(art.video,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast('截图已保存')}catch(e){showToast('截图失败',true)}}else{showToast('视频未就绪',true)}});
+        var btn=document.createElement('button');btn.className='bili-screenshot';btn.title=t('截图');btn.innerHTML=ICONS.camera();
+        btn.addEventListener('click',function(e){e.stopPropagation();if(art&&art.video&&art.video.readyState>=2){try{var cv=document.createElement('canvas');cv.width=art.video.videoWidth;cv.height=art.video.videoHeight;cv.getContext('2d').drawImage(art.video,0,0);var a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='screenshot-'+Date.now()+'.png';a.click();showToast(t('截图已保存'))}catch(e){showToast(t('截图失败'),true)}}else{showToast(t('视频未就绪'),true)}});
         app.appendChild(btn);
     }
 
@@ -867,18 +889,18 @@
     function injectStatsPanel(){
         var app=document.querySelector('.art-video-player');if(!app||document.querySelector('.ap-stats-panel'))return;
         var p=document.createElement('div');p.className='ap-stats-panel';
-        p.innerHTML='<div class="ap-stats-sec">视频信息</div><div class="ap-stats-row"><span>编码</span><b id="st-codec">—</b></div><div class="ap-stats-row"><span>源类型</span><b id="st-src">—</b></div><div class="ap-stats-row"><span>分辨率</span><b id="st-res">—</b></div><div class="ap-stats-row"><span>帧率</span><b id="st-fps">—</b></div><div class="ap-stats-row"><span>丢帧</span><b id="st-drop">—</b></div><div class="ap-stats-row"><span>码率</span><b id="st-bw">—</b></div><div class="ap-stats-row"><span>时长</span><b id="st-dur">—</b></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">浏览器解码能力</div><div class="ap-stats-row"><span>H.264</span><span id="st-h264" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC (H.265)</span><span id="st-hevc" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 10bit</span><span id="st-hevc10" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1</span><span id="st-av1" class="ap-badge">—</span></div><div class="ap-stats-row"><span>VP9</span><span id="st-vp9" class="ap-badge">—</span></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">硬解流畅度</div><div class="ap-stats-row"><span>HEVC 1080p</span><span id="mc-hevc-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 4K</span><span id="mc-hevc-4k" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 1080p</span><span id="mc-av1-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 4K</span><span id="mc-av1-4k" class="ap-badge">—</span></div>';
+        p.innerHTML='<div class="ap-stats-sec">'+t('视频信息')+'</div><div class="ap-stats-row"><span>'+t('编码')+'</span><b id="st-codec">—</b></div><div class="ap-stats-row"><span>'+t('源类型')+'</span><b id="st-src">—</b></div><div class="ap-stats-row"><span>'+t('分辨率')+'</span><b id="st-res">—</b></div><div class="ap-stats-row"><span>'+t('帧率')+'</span><b id="st-fps">—</b></div><div class="ap-stats-row"><span>'+t('丢帧')+'</span><b id="st-drop">—</b></div><div class="ap-stats-row"><span>'+t('码率')+'</span><b id="st-bw">—</b></div><div class="ap-stats-row"><span>'+t('时长')+'</span><b id="st-dur">—</b></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">'+t('浏览器解码能力')+'</div><div class="ap-stats-row"><span>H.264</span><span id="st-h264" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC (H.265)</span><span id="st-hevc" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 10bit</span><span id="st-hevc10" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1</span><span id="st-av1" class="ap-badge">—</span></div><div class="ap-stats-row"><span>VP9</span><span id="st-vp9" class="ap-badge">—</span></div><div class="ap-stats-sec" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px">'+t('硬解流畅度')+'</div><div class="ap-stats-row"><span>HEVC 1080p</span><span id="mc-hevc-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>HEVC 4K</span><span id="mc-hevc-4k" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 1080p</span><span id="mc-av1-1080" class="ap-badge">—</span></div><div class="ap-stats-row"><span>AV1 4K</span><span id="mc-av1-4k" class="ap-badge">—</span></div>';
         app.appendChild(p);
         document.addEventListener('click',function(e){if(p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.art-setting-item')&&!e.target.closest('.art-contextmenu'))p.classList.remove('open')});
     }
     function statsEl(id){return document.getElementById(id)}
     function fmtTime(s){if(!isFinite(s))return'—';s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return(h>0?h+':':'')+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
-    function setBadge(id,val){var b=statsEl(id);if(!b)return;var cls='no',txt='不支持';if(val==='probably'){cls='ok';txt='原生支持'}else if(val==='maybe'){cls='soft';txt='可能支持'}b.className='ap-badge '+cls;b.textContent=txt}
+    function setBadge(id,val){var b=statsEl(id);if(!b)return;var cls='no',txt=t('不支持');if(val==='probably'){cls='ok';txt=t('原生支持')}else if(val==='maybe'){cls='soft';txt=t('可能支持')}b.className='ap-badge '+cls;b.textContent=txt}
     function buildStats(){
         if(!art||!art.video)return;var v=art.video;
-        var srcNames={normal:'MP4 / 直链',hls:'HLS',flv:'FLV'};var srcType='normal';var url=(art.option&&art.option.url)||'';
+        var srcNames={normal:t('MP4 / 直链'),hls:'HLS',flv:'FLV'};var srcType='normal';var url=(art.option&&art.option.url)||'';
         if(url.includes('.m3u8'))srcType='hls';else if(url.includes('.flv'))srcType='flv';statsEl('st-src').textContent=srcNames[srcType]||srcType;
-        var codec='';if(srcType==='hls'&&art.hls){var lv=art.hls.levels&&art.hls.levels[art.hls.currentLevel||0];codec=(lv&&(lv.videoCodec||(lv.attrs&&lv.attrs.CODECS)))||''}else if(srcType==='flv'&&art.flv&&art.flv.mediaInfo)codec=art.flv.mediaInfo.videoCodec||'';statsEl('st-codec').textContent=codec||'浏览器原生解码';
+        var codec='';if(srcType==='hls'&&art.hls){var lv=art.hls.levels&&art.hls.levels[art.hls.currentLevel||0];codec=(lv&&(lv.videoCodec||(lv.attrs&&lv.attrs.CODECS)))||''}else if(srcType==='flv'&&art.flv&&art.flv.mediaInfo)codec=art.flv.mediaInfo.videoCodec||'';statsEl('st-codec').textContent=codec||t('浏览器原生解码');
         statsEl('st-res').textContent=(v.videoWidth&&v.videoHeight)?v.videoWidth+' × '+v.videoHeight:'—';statsEl('st-dur').textContent=fmtTime(v.duration);
         var sup=detectCodecs();setBadge('st-h264',sup.h264);setBadge('st-hevc',sup.hevc);setBadge('st-hevc10',sup.hevc10);setBadge('st-av1',sup.av1);setBadge('st-vp9',sup.vp9);
         if(v.getVideoPlaybackQuality){try{var q=v.getVideoPlaybackQuality();if(q)statsEl('st-drop').textContent=q.droppedVideoFrames||0}catch(e){}}
@@ -886,13 +908,13 @@
         probeMediaCaps();
     }
     function detectCodecs(){var v=document.createElement('video');var p=function(m){try{return v.canPlayType(m)}catch(e){return''}};return{h264:p('video/mp4; codecs="avc1.42E01E"')||p('video/mp4; codecs="avc1.64001F"'),hevc:p('video/mp4; codecs="hev1.1.6.L93.B0"')||p('video/mp4; codecs="hvc1.1.6.L93.B0"'),hevc10:p('video/mp4; codecs="hev1.2.4.L120.90"')||p('video/mp4; codecs="hvc1.2.4.L120.90"'),av1:p('video/mp4; codecs="av01.0.05M.08"')||p('video/webm; codecs="av01.0.05M.08"'),vp9:p('video/webm; codecs="vp9"')}}
-    async function probeMediaCaps(){if(!navigator.mediaCapabilities||!navigator.mediaCapabilities.decodingInfo)return;var items=[{id:'mc-hevc-1080',mime:'video/mp4; codecs="hev1.1.6.L93.B0"',w:1920,h:1080,br:8000000},{id:'mc-hevc-4k',mime:'video/mp4; codecs="hev1.2.4.L120.90"',w:3840,h:2160,br:25000000},{id:'mc-av1-1080',mime:'video/mp4; codecs="av01.0.05M.08"',w:1920,h:1080,br:6000000},{id:'mc-av1-4k',mime:'video/mp4; codecs="av01.0.05M.08"',w:3840,h:2160,br:18000000}];for(var i=0;i<items.length;i++){var it=items[i],el=statsEl(it.id);if(!el)continue;try{var r=await navigator.mediaCapabilities.decodingInfo({type:'file',video:{contentType:it.mime,width:it.w,height:it.h,bitrate:it.br,framerate:30}});if(!r.supported){el.className='ap-badge no';el.textContent='不支持'}else if(r.smooth&&r.powerEfficient){el.className='ap-badge ok';el.textContent='硬解流畅'}else if(r.smooth){el.className='ap-badge soft';el.textContent='流畅'}else{el.className='ap-badge soft';el.textContent='软解'}}catch(e){el.className='ap-badge no';el.textContent='—'}}}
+    async function probeMediaCaps(){if(!navigator.mediaCapabilities||!navigator.mediaCapabilities.decodingInfo)return;var items=[{id:'mc-hevc-1080',mime:'video/mp4; codecs="hev1.1.6.L93.B0"',w:1920,h:1080,br:8000000},{id:'mc-hevc-4k',mime:'video/mp4; codecs="hev1.2.4.L120.90"',w:3840,h:2160,br:25000000},{id:'mc-av1-1080',mime:'video/mp4; codecs="av01.0.05M.08"',w:1920,h:1080,br:6000000},{id:'mc-av1-4k',mime:'video/mp4; codecs="av01.0.05M.08"',w:3840,h:2160,br:18000000}];for(var i=0;i<items.length;i++){var it=items[i],el=statsEl(it.id);if(!el)continue;            try{var r=await navigator.mediaCapabilities.decodingInfo({type:'file',video:{contentType:it.mime,width:it.w,height:it.h,bitrate:it.br,framerate:30}});if(!r.supported){el.className='ap-badge no';el.textContent=t('不支持')}else if(r.smooth&&r.powerEfficient){el.className='ap-badge ok';el.textContent=t('硬解流畅')}else if(r.smooth){el.className='ap-badge soft';el.textContent=t('流畅')}else{el.className='ap-badge soft';el.textContent=t('软解')}}catch(e){el.className='ap-badge no';el.textContent='—'}}}
 
     /* ===== Overflow ===== */
     function setupOverflow(){
         var app=document.querySelector('.art-video-player');var bottom=app?app.querySelector('.art-bottom'):null;
         var rightBar=bottom?bottom.querySelector('.art-controls-right'):null;if(!rightBar||document.querySelector('.bili-overflow-btn'))return;
-        var overflowBtn=document.createElement('div');overflowBtn.className='art-control bili-overflow-btn';overflowBtn.title='更多选项';overflowBtn.innerHTML=ICONS.more();overflowBtn.style.display='none';
+        var overflowBtn=document.createElement('div');overflowBtn.className='art-control bili-overflow-btn';overflowBtn.title=t('更多选项');overflowBtn.innerHTML=ICONS.more();overflowBtn.style.display='none';
         var popup=document.createElement('div');popup.className='bili-overflow-panel';bottom.appendChild(popup);rightBar.appendChild(overflowBtn);
         overflowBtn.addEventListener('click',function(e){e.stopPropagation();popup.classList.toggle('open')});
         document.addEventListener('click',function(e){if(!popup.contains(e.target)&&e.target!==overflowBtn)popup.classList.remove('open')});

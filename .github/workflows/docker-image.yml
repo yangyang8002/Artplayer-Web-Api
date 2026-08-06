@@ -1,5 +1,5 @@
-# Builds and pushes the Docker image to Docker Hub on tags matching v*
-# Requires the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets.
+# Builds and pushes the Docker image to Docker Hub and GHCR on tags matching v*
+# Requires the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets (GHCR uses GITHUB_TOKEN).
 
 name: Publish Docker image
 
@@ -11,6 +11,9 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +22,13 @@ jobs:
         with:
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -38,3 +48,5 @@ jobs:
           tags: |
             yangyang8002/artplayer-web-api:latest
             yangyang8002/artplayer-web-api:${{steps.meta.outputs.version}}
+            ghcr.io/yangyang8002/artplayer-web-api:latest
+            ghcr.io/yangyang8002/artplayer-web-api:${{steps.meta.outputs.version}}

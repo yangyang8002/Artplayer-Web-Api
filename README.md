@@ -1,5 +1,7 @@
 # ArtPlayer Web API
 
+<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/Artplayer-Web-Api@master/public/favicon.svg" width="96" height="96" alt="ArtPlayer Web API"></p>
+
 **ArtPlayer 弹幕视频播放器 + Web 管理后台**
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

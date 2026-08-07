@@ -414,7 +414,7 @@ const DEFAULT_CONFIG = {
     render: { maxPerSecond: 250, speedJitter: 10 },
     api: { apis: DEFAULT_API_RULES, retentionDays: 1 },
     bannedWords: { subscriptions: [] },
-    security: { sessionMinutes: 120, adminPath: '', trustProxy: true, anomaly: { reqPerMin: 60, mbPerMin: 20, reqPerHour: 2000, mbPerHour: 1024 } },
+    security: { sessionMinutes: 120, adminPath: '', trustProxy: true, anomaly: { reqPerMin: 60, mbPerMin: 20, reqPerHour: 2000, mbPerHour: 1024 }, loginLimit: { maxFail: 5, windowMin: 10, lockMin: 15 } },
     theme: 'bilibili',
     adminTheme: 'bilibili',
     cdn: { enabled: false, baseUrl: '' }
@@ -429,6 +429,7 @@ function readConfig() {
         const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
         const merged = { ...DEFAULT_CONFIG, ...raw };
         merged.security = { ...DEFAULT_CONFIG.security, ...(raw.security || {}) };
+        merged.security.loginLimit = { ...DEFAULT_CONFIG.security.loginLimit, ...((raw.security && raw.security.loginLimit) || {}) };
         return merged;
     } catch {
         return { ...DEFAULT_CONFIG };
@@ -481,6 +482,39 @@ function readSecurity() {
 }
 function writeSecurity(s) {
     fs.writeFileSync(SECURITY_FILE, JSON.stringify(s, null, 2));
+}
+
+// --- 登录记录与失败锁定（持久化，重启恢复） ---
+const LOGIN_LOG_FILE = path.join(DATA_DIR, 'login-logs.json');
+const LOGIN_FAIL_FILE = path.join(DATA_DIR, 'login-fails.json');
+initDataFile(LOGIN_LOG_FILE, []);
+initDataFile(LOGIN_FAIL_FILE, {});
+
+function readLoginLogs() {
+    try {
+        const d = JSON.parse(fs.readFileSync(LOGIN_LOG_FILE, 'utf8'));
+        return Array.isArray(d) ? d : [];
+    } catch { return []; }
+}
+function writeLoginLogs(list) {
+    try {
+        if (list.length > 500) list = list.slice(-500);
+        fs.writeFileSync(LOGIN_LOG_FILE, JSON.stringify(list));
+    } catch (e) { console.error('[login-log] save failed:', e.message); }
+}
+function readLoginFails() {
+    try {
+        const d = JSON.parse(fs.readFileSync(LOGIN_FAIL_FILE, 'utf8'));
+        return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+    } catch { return {}; }
+}
+function writeLoginFails(d) {
+    try { fs.writeFileSync(LOGIN_FAIL_FILE, JSON.stringify(d)); } catch (e) { console.error('[login-fail] save failed:', e.message); }
+}
+function logLogin(ip, username, ok, reason) {
+    const list = readLoginLogs();
+    list.push({ ip: String(ip || ''), u: String(username || '').slice(0, 50), ok: !!ok, t: Date.now(), r: String(reason || '') });
+    writeLoginLogs(list);
 }
 
 // --- 每 IP 请求/流量统计（60s 与 3600s 时间桶，模式同 api-stats） ---
@@ -1106,23 +1140,58 @@ const loginLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.ipWhitelisted,
     handler: (req, res) => res.status(429).json({ code: 429, msg: '登录尝试过于频繁，请1分钟后再试' })
 });
 
-app.post('/api/admin/login', loginLimiter, (req, res) => {
+/* 登录失败锁定：每 IP 计数，超过阈值锁定（配置可调，持久化） */
+function loginGuard(req, res, next) {
+    const ip = req.clientIp || req.ip || 'unknown';
+    const L = (readConfig().security || {}).loginLimit || {};
+    const maxFail = L.maxFail || 5, windowMin = L.windowMin || 10, lockMin = L.lockMin || 15;
+    const fails = readLoginFails();
+    const f = fails[ip];
+    if (f && f.lockedUntil && f.lockedUntil > Date.now()) {
+        logLogin(ip, req.body && req.body.username, false, 'locked');
+        const mins = Math.ceil((f.lockedUntil - Date.now()) / 60000);
+        return res.status(429).json({ code: 429, msg: '登录已锁定，请' + mins + '分钟后再试' });
+    }
+    req.loginGuard = { maxFail, windowMin, lockMin, fails };
+    next();
+}
+
+app.post('/api/admin/login', loginLimiter, loginGuard, (req, res) => {
+    const ip = req.clientIp || req.ip || 'unknown';
     const { username, password } = req.body;
+    const g = req.loginGuard;
     if (!username || !password) {
+        logLogin(ip, username, false, 'params');
         return res.status(400).json({ code: 1, msg: '请输入账号和密码' });
     }
     const accounts = readAccounts();
     const account = accounts[username];
-    if (!account) {
+    const ok = !!account && hashPassword(password, account.salt) === account.hash;
+    if (!ok) {
+        const fails = g.fails;
+        const now = Date.now();
+        let f = fails[ip];
+        if (!f) { f = { count: 0, firstAt: now, lockedUntil: 0 }; fails[ip] = f; }
+        if (now - f.firstAt > g.windowMin * 60000) { f.count = 0; f.firstAt = now; }
+        f.count++;
+        if (f.count >= g.maxFail) {
+            f.lockedUntil = now + g.lockMin * 60000;
+            f.count = 0;
+            writeLoginFails(fails);
+            logLogin(ip, username, false, 'lock:' + g.lockMin);
+            return res.status(429).json({ code: 429, msg: '登录失败次数过多，已锁定' + g.lockMin + '分钟' });
+        }
+        writeLoginFails(fails);
+        logLogin(ip, username, false, 'fail');
         return res.status(401).json({ code: 2, msg: '账号或密码错误' });
     }
-    const hash = hashPassword(password, account.salt);
-    if (hash !== account.hash) {
-        return res.status(401).json({ code: 2, msg: '账号或密码错误' });
-    }
+    delete g.fails[ip];
+    writeLoginFails(g.fails);
+    logLogin(ip, username, true, 'ok');
     const token = generateToken(username);
     res.json({ code: 0, msg: '登录成功', data: { token, username, name: account.name || username } });
 });
@@ -1680,6 +1749,42 @@ app.post('/api/admin/security/config', checkAdmin, (req, res) => {
     };
     writeConfig(config);
     res.json({ code: 0, msg: '阈值已保存' });
+});
+
+app.get('/api/admin/security/logins', checkAdmin, async (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const search = (req.query.search || '').toLowerCase();
+    let list = readLoginLogs().slice().reverse();
+    if (search) {
+        list = list.filter(x => x.ip.includes(search) || String(x.u || '').toLowerCase().includes(search));
+    }
+    const total = list.length;
+    const rows = await Promise.all(list.slice((page - 1) * limit, page * limit).map(async x => ({
+        ...x,
+        region: await geoRegionText(x.ip)
+    })));
+    const fails = readLoginFails();
+    const now = Date.now();
+    const locked = Object.entries(fails)
+        .filter(([, v]) => v.lockedUntil > now)
+        .map(([ip, v]) => ({ ip, until: v.lockedUntil }));
+    res.json({ code: 0, data: { list: rows, total, page, limit, locked } });
+});
+
+app.post('/api/admin/security/login-limit', checkAdmin, (req, res) => {
+    const { maxFail, windowMin, lockMin } = req.body;
+    const config = readConfig();
+    config.security = {
+        ...config.security,
+        loginLimit: {
+            maxFail: Math.max(1, parseInt(maxFail) || 5),
+            windowMin: Math.max(1, parseInt(windowMin) || 10),
+            lockMin: Math.max(1, parseInt(lockMin) || 15)
+        }
+    };
+    writeConfig(config);
+    res.json({ code: 0, msg: '登录防护设置已保存' });
 });
 
 app.get('/api/admin/security/geo/info', checkAdmin, (req, res) => {

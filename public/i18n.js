@@ -150,6 +150,17 @@ var I18N = (function () {
         ' 次/时 > ': ' /hour > ', '流量 ': 'Traffic ', ' MB/分 > ': ' MB/min > ', ' MB/时 > ': ' MB/hour > ',
         '请求 ': 'Requests ', '次/分': 'req/min', '次/时': 'req/hour',
         '地址库已更新': 'IP database updated', '更新于': 'updated',
+        '登录记录与防护': 'Login Records & Protection', '结果': 'Result', '账号': 'Username',
+        '成功': 'Success', '失败': 'Failed', '锁定': 'Locked', '触发锁定': 'Lock triggered',
+        '锁定中拒绝': 'Rejected (locked)', '账号或密码错误': 'Wrong username or password',
+        '参数不完整': 'Missing parameters', '登录异常封禁': 'Login anomaly ban',
+        '失败超限，锁定 ': 'Too many failures, locked for ', ' 分钟': ' minutes',
+        '当前锁定 ': 'Currently locked: ', ' 个 IP': ' IP(s)', '暂无登录记录': 'No login records',
+        '失败锁定': 'Fail lock', '次 /': 'tries /', '分内，锁定': 'min, lock for',
+        '登录防护设置已保存': 'Login protection saved', '登录已锁定，请': 'Login locked, retry in ',
+        ' 分钟后再试': ' minutes', '登录失败次数过多，已锁定': 'Too many failures, locked for ',
+        '登录尝试过于频繁，请1分钟后再试': 'Too many login attempts, retry in 1 minute',
+        '请输入账号和密码': 'Enter username and password', '登录成功': 'Logged in',
 
         /* ===== 后台：关于 ===== */
         '功能一览': 'Features',

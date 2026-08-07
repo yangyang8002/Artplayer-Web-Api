@@ -6,7 +6,7 @@
 
 基于 [ArtPlayer](https://artplayer.org) 的弹幕视频播放器 + Web 管理后台。自带自研 Canvas 弹幕引擎、多主题系统、PoW 防爬虫、API 限流与统计、文件管理、多字幕支持。
 
-**v26.8.6** · MIT License
+**v26.8.7** · MIT License
 
 ## 目录
 

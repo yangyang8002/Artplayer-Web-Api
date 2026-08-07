@@ -933,6 +933,26 @@
                 <div style="font-size:12px;color:var(--text2);margin-bottom:6px">白名单（绕过 PoW / 限流 / 弹幕限频，不参与异常判定）</div>
                 <div id="secWlList" style="display:flex;flex-direction:column;gap:4px"></div>
             </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>登录记录与防护
+                    <button class="btn btn-sm" onclick="loadLoginLogs()" style="margin-left:10px">刷新</button>
+                </h3>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+                    <span style="font-size:12px;color:var(--text3)">失败锁定</span>
+                    <input type="number" id="secLoginMaxFail" min="1" max="50" style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">次 /</span>
+                    <input type="number" id="secLoginWindow" min="1" max="120" style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">分内，锁定</span>
+                    <input type="number" id="secLoginLock" min="1" max="1440" style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none">
+                    <span style="font-size:12px;color:var(--text3)">分</span>
+                    <button class="btn btn-sm btn-primary" onclick="saveLoginLimit()">保存</button>
+                    <span id="secLoginLocked" style="font-size:11px;color:var(--danger)"></span>
+                </div>
+                <div style="overflow-x:auto">
+                    <table><thead><tr><th>时间</th><th>IP</th><th>账号</th><th>结果</th><th>说明</th><th>地区</th><th>操作</th></tr></thead><tbody id="secLoginTbody"></tbody></table>
+                </div>
+                <div class="pager" id="secLoginPager"></div>
+            </div>
         </div>
 
         <!-- About -->
@@ -1616,6 +1636,10 @@
                 document.getElementById('secMbPerMin').value = a.mbPerMin || 20;
                 document.getElementById('secReqPerHour').value = a.reqPerHour || 2000;
                 document.getElementById('secMbPerHour').value = a.mbPerHour || 1024;
+                const ll = d.data.security.loginLimit || {};
+                document.getElementById('secLoginMaxFail').value = ll.maxFail || 5;
+                document.getElementById('secLoginWindow').value = ll.windowMin || 10;
+                document.getElementById('secLoginLock').value = ll.lockMin || 15;
             }).catch(() => {});
         }
         function loadSecIps() {
@@ -1682,6 +1706,60 @@
                 mbPerHour: parseInt(document.getElementById('secMbPerHour').value) || 1024
             };
             secPost('/api/admin/security/config', body, '阈值已保存');
+        }
+        /* ===== 登录记录与防护 ===== */
+        let loginPage = 1, loginTotal = 0;
+        const LOGIN_LIMIT = 50;
+        function secLoginStatus(x) {
+            if (x.ok) return '<span style="color:var(--success)">成功</span>';
+            if (x.r === 'locked') return '<span style="color:var(--warn)">锁定</span>';
+            if (x.r && x.r.indexOf('lock:') === 0) return '<span style="color:var(--danger)">触发锁定</span>';
+            return '<span style="color:var(--danger)">失败</span>';
+        }
+        function secLoginReason(x) {
+            if (x.r === 'ok') return '—';
+            if (x.r === 'locked') return '锁定中拒绝';
+            if (x.r === 'fail') return '账号或密码错误';
+            if (x.r === 'params') return '参数不完整';
+            if (x.r && x.r.indexOf('lock:') === 0) return `失败超限，锁定 ${x.r.split(':')[1]} 分钟`;
+            return esc2(x.r || '');
+        }
+        function loadLoginLogs() {
+            fetch(`/api/admin/security/logins?page=${loginPage}&limit=${LOGIN_LIMIT}`, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    loginTotal = d.data.total;
+                    const tb = document.getElementById('secLoginTbody');
+                    tb.innerHTML = d.data.list.length ? d.data.list.map(x => `<tr>
+                        <td style="font-size:11px;color:var(--text3);white-space:nowrap">${secFmtTime(x.t)}</td>
+                        <td style="font-family:monospace;color:var(--accent)">${esc2(x.ip)}</td>
+                        <td>${esc2(x.u || '—')}</td>
+                        <td>${secLoginStatus(x)}</td>
+                        <td style="font-size:12px;color:var(--text2)">${secLoginReason(x)}</td>
+                        <td>${esc2(x.region)}</td>
+                        <td style="white-space:nowrap">
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="secBan('${x.ip}','登录异常封禁')">封禁</button>
+                            <button class="btn btn-sm btn-primary" onclick="secWl('${x.ip}')">加白</button>
+                        </td>
+                    </tr>`).join('') : '<tr><td colspan="7"><div class="empty-state">暂无登录记录</div></td></tr>';
+                    renderLoginPager();
+                    const locked = d.data.locked || [];
+                    document.getElementById('secLoginLocked').textContent = locked.length ? `当前锁定 ${locked.length} 个 IP` : '';
+                }).catch(() => {});
+        }
+        function renderLoginPager() {
+            const tp = Math.ceil(loginTotal / LOGIN_LIMIT);
+            const p = document.getElementById('secLoginPager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${loginPage <= 1 ? 'disabled' : ''} onclick="loginPage=${loginPage - 1};loadLoginLogs()">上一页</button><span class="info">${loginPage}/${tp}</span><button ${loginPage >= tp ? 'disabled' : ''} onclick="loginPage=${loginPage + 1};loadLoginLogs()">下一页</button>`;
+        }
+        function saveLoginLimit() {
+            const body = {
+                maxFail: parseInt(document.getElementById('secLoginMaxFail').value) || 5,
+                windowMin: parseInt(document.getElementById('secLoginWindow').value) || 10,
+                lockMin: parseInt(document.getElementById('secLoginLock').value) || 15
+            };
+            secPost('/api/admin/security/login-limit', body, '登录防护设置已保存');
         }
         function renderSecMap() {
             const el = document.getElementById('secMap');
@@ -1775,12 +1853,14 @@
         }
         function startSecPanel() {
             secPage = 1;
+            loginPage = 1;
             loadSecurity();
             loadSecIps();
+            loadLoginLogs();
             loadGeoInfo();
             if (secMapTimer) clearInterval(secMapTimer);
             renderSecMap();
-            secMapTimer = setInterval(() => { loadSecurity(); loadSecIps(); }, 10000);
+            secMapTimer = setInterval(() => { loadSecurity(); loadSecIps(); loadLoginLogs(); }, 10000);
         }
         function stopSecPanel() { if (secMapTimer) { clearInterval(secMapTimer); secMapTimer = null; } }
 

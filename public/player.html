@@ -29,6 +29,9 @@
         #app{display:flex;flex-direction:column;width:100%;height:100%}
         #player-wrapper{flex:1;position:relative;background:#000;min-height:0}
         #artplayer{width:100%;height:100%}
+        /* iframe 嵌入模式：播放器按视频宽高比贴合，无黑边 */
+        body.embed-mode #app{justify-content:center;align-items:center}
+        body.embed-mode #player-wrapper{flex:none;margin:auto}
 
         /* ArtPlayer overrides */
         .art-video-player{font-family:'MiSans',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif!important}
@@ -186,6 +189,22 @@
     var subtitleList=[], currentSub=-1;
     var currentTheme=localStorage.getItem('ap_theme')||'bilibili';
     var _overflowSystem=null;
+    /* iframe 嵌入时开启贴合模式（无黑边） */
+    var isEmbed=window.self!==window.top;
+    if(isEmbed)document.body.classList.add('embed-mode');
+    function fitPlayer(){
+        var app=document.getElementById('app');
+        var wrap=document.getElementById('player-wrapper');
+        if(!app||!wrap||!art||!art.video)return;
+        var v=art.video;
+        if(!v.videoWidth||!v.videoHeight)return;
+        var aw=app.clientWidth||window.innerWidth, ah=app.clientHeight||window.innerHeight;
+        var aspect=v.videoWidth/v.videoHeight;
+        var w=aw, h=Math.round(w/aspect);
+        if(h>ah){h=ah;w=Math.round(h*aspect)}
+        wrap.style.width=Math.max(1,w)+'px';
+        wrap.style.height=Math.max(1,h)+'px';
+    }
 
     function qs(n){return new URLSearchParams(location.search).get(n)}
     function showToast(m,e){
@@ -810,6 +829,14 @@
             var saved=parseFloat(localStorage.getItem('ap_pos_'+vid))||0;
             if(saved>3){art.on('video:loadedmetadata',function(){if(art.duration>saved+10)setTimeout(function(){art.seek=saved},400)})}
             setInterval(function(){if(art&&art.video&&!art.video.paused)localStorage.setItem('ap_pos_'+vid,art.currentTime)},5000);
+
+            /* iframe 嵌入：视频元数据就绪后按宽高比贴合，窗口变化时重新计算 */
+            if(isEmbed){
+                art.on('video:loadedmetadata',function(){fitPlayer()});
+                art.on('video:loadeddata',function(){fitPlayer()});
+                window.addEventListener('resize',function(){fitPlayer()});
+                setTimeout(fitPlayer,1200);
+            }
 
             /* Theme: server config always wins, localStorage is only a fallback */
             if(serverTheme)setTheme(serverTheme);else setTheme(currentTheme);

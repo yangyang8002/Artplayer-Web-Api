@@ -1027,7 +1027,10 @@
                     <div><span style="font-size:11px;color:var(--text3)">当前版本</span><div id="depsCurVer" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
                     <div><span style="font-size:11px;color:var(--text3)">最新版本</span><div id="depsLatestVer" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
                     <div><span style="font-size:11px;color:var(--text3)">部署方式</span><div id="depsDeploy" style="font-size:14px;font-weight:600;color:var(--text2)">—</div></div>
-                    <div style="margin-left:auto"><button class="btn btn-sm btn-primary" id="depsUpBtn" style="display:none" onclick="runUpdate()">更新到最新版</button></div>
+                    <div style="margin-left:auto;display:flex;gap:8px">
+                        <button class="btn btn-sm btn-primary" id="depsUpBtn" style="display:none" data-label="更新到最新版" onclick="runUpdate(false)">更新到最新版</button>
+                        <button class="btn btn-sm" id="depsForceBtn" style="display:none" onclick="runUpdate(true)">强制重装</button>
+                    </div>
                 </div>
                 <div id="depsNotes" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;max-height:140px;overflow:auto;white-space:pre-wrap"></div>
             </div>
@@ -1514,7 +1517,7 @@
                     <h3 style="text-align:center"><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>版本更新</h3>
                     <div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">
                         当前版本 <span id="upCurrent" style="font-family:monospace;color:var(--accent)">—</span>
-                        <span id="upLatestWrap" style="display:none">→ 最新 <span id="upLatest" style="font-family:monospace;color:var(--success)">—</span></span>
+                        <span id="upLatestWrap">→ 最新 <span id="upLatest" style="font-family:monospace;color:var(--success)">—</span></span>
                         <span id="upDeploy" style="margin-left:8px;font-size:11px;color:var(--text3)"></span>
                     </div>
                     <div id="upNotes" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;max-height:160px;overflow:auto;white-space:pre-wrap;text-align:left"></div>
@@ -1524,10 +1527,12 @@
                         <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="upSource" value="git"> Git</label>
                         <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="upSource" value="npm"> npm</label>
                     </div>
-                    <div style="display:flex;justify-content:center;gap:8px">
+                    <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
                         <button class="btn btn-sm" onclick="checkUpdate(true)">检查更新</button>
-                        <button class="btn btn-sm btn-primary" id="upRunBtn" style="display:none" onclick="runUpdate()">更新到最新版</button>
+                        <button class="btn btn-sm btn-primary" id="upRunBtn" style="display:none" data-label="更新到最新版" onclick="runUpdate(false)">更新到最新版</button>
+                        <button class="btn btn-sm" id="upForceBtn" style="display:none" onclick="runUpdate(true)">强制重装当前版本</button>
                     </div>
+                    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px">无新版本时也可点「强制重装当前版本」修复损坏文件 / 追赶热修复（需重启，自动备份数据）</div>
                 </div>
 <div class="card" style="max-width:520px;margin:0 auto">
                 <h3 style="text-align:center"><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>功能一览</h3>
@@ -2915,7 +2920,16 @@
                         document.getElementById('depsLatestVer').textContent = v.latest;
                         document.getElementById('depsDeploy').textContent = v.deploy;
                         const btn = document.getElementById('depsUpBtn');
-                        btn.style.display = v.hasUpdate ? '' : 'none';
+                        const fbtn = document.getElementById('depsForceBtn');
+                        btn.style.display = '';
+                        fbtn.style.display = '';
+                        if (v.hasUpdate) {
+                            btn.disabled = false;
+                            btn.textContent = '更新到最新版 v' + v.latest;
+                        } else {
+                            btn.disabled = true;
+                            btn.textContent = '已是最新版本';
+                        }
                         const notes = document.getElementById('depsNotes');
                         if (v.hasUpdate && v.releaseNotes) {
                             notes.style.display = 'block';
@@ -2963,7 +2977,7 @@
                 .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
         }
 
-        /* ===== 版本更新（关于页 + 依赖页共用） ===== */
+        /* ===== 版本更新（关于页 + 依赖页共用；升级按钮始终可见） ===== */
         function checkUpdate(force) {
             fetch('/api/admin/update/check' + (force ? '?force=1' : ''), { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
@@ -2974,33 +2988,43 @@
                     const wrap = document.getElementById('upLatestWrap');
                     const notes = document.getElementById('upNotes');
                     const btn = document.getElementById('upRunBtn');
+                    const fbtn = document.getElementById('upForceBtn');
+                    const srow = document.getElementById('upSourceRow');
+                    wrap.style.display = '';
+                    document.getElementById('upLatest').textContent = u.latest || u.current;
+                    srow.style.display = 'flex';
                     if (u.hasUpdate) {
-                        wrap.style.display = '';
-                        document.getElementById('upLatest').textContent = u.latest;
                         if (u.releaseNotes) { notes.style.display = 'block'; notes.textContent = u.releaseNotes; }
+                        btn.disabled = false;
                         btn.style.display = '';
-                        document.getElementById('upSourceRow').style.display = 'flex';
+                        btn.textContent = '更新到最新版 v' + u.latest;
                     } else {
-                        wrap.style.display = '';
-                        document.getElementById('upLatest').textContent = u.latest || u.current;
                         notes.style.display = 'none';
-                        btn.style.display = 'none';
-                        document.getElementById('upSourceRow').style.display = 'none';
+                        btn.disabled = true;
+                        btn.style.display = '';
+                        btn.textContent = '已是最新版本';
                     }
+                    if (fbtn) fbtn.style.display = '';
                 }).catch(() => toast('检查更新失败（网络不可达）', false));
         }
-        function runUpdate() {
+        function runUpdate(force) {
             const sel = document.querySelector('input[name="upSource"]:checked');
             const source = sel ? sel.value : 'auto';
-            if (!confirm('确认更新到最新版？将自动备份数据并重启服务，期间服务不可用')) return;
+            if (force) {
+                if (!confirm('确认强制重装当前版本？将重新拉取代码并安装依赖（修复损坏文件/追赶热修复），服务会短暂重启')) return;
+            } else {
+                if (!confirm('确认更新到最新版？将自动备份数据并重启服务，期间服务不可用')) return;
+            }
             const btn = document.getElementById('upRunBtn');
+            const fbtn = document.getElementById('upForceBtn');
             btn.disabled = true; btn.textContent = '更新中...';
-            fetch('/api/admin/update/run', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source, restart: true }) })
+            if (fbtn) fbtn.disabled = true;
+            fetch('/api/admin/update/run', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source, restart: true, force: !!force }) })
                 .then(r => r.json()).then(d => {
                     toast(d.msg, d.code === 0);
                     if (d.code === 0) { btn.textContent = '更新已启动，服务即将重启...'; setTimeout(() => location.reload(), 8000); }
-                    else { btn.disabled = false; btn.textContent = '更新到最新版'; }
-                }).catch(() => { btn.disabled = false; btn.textContent = '更新到最新版'; toast('更新请求失败', false); });
+                    else { btn.disabled = false; btn.textContent = btn.dataset.label || '更新到最新版'; if (fbtn) fbtn.disabled = false; }
+                }).catch(() => { btn.disabled = false; btn.textContent = btn.dataset.label || '更新到最新版'; if (fbtn) fbtn.disabled = false; toast('更新请求失败', false); });
         }
 
         /* ===== 数据库管理 ===== */

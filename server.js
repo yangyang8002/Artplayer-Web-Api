@@ -3549,10 +3549,11 @@ app.get('/api/admin/update/check', checkAdmin, async (req, res) => {
 /* 执行更新：交由独立进程 update.js（备份 data/ → 更新代码 → 校验 → 依赖安装 → 重启）
    来源可选：git（git pull）/ npm（下载 npm 包覆盖）/ auto（按部署方式自动） */
 app.post('/api/admin/update/run', checkAdmin, async (req, res) => {
-    const { restart, source } = req.body || {};
+    const { restart, source, force } = req.body || {};
     const deploy = detectDeploy();
     const info = await checkVersionUpdate(true).catch(() => null);
-    if (info && !info.hasUpdate) return res.json({ code: 1, msg: '当前已是最新版本', data: { current: APP_VERSION, latest: info.latest } });
+    /* force=true 允许「无新版本时强制重装当前版本」（修复损坏文件/追赶热修复） */
+    if (info && !info.hasUpdate && !force) return res.json({ code: 1, msg: '当前已是最新版本', data: { current: APP_VERSION, latest: info.latest } });
     if (deploy === 'docker') {
         return res.json({ code: 1, msg: 'Docker 部署请在宿主机执行: docker pull yangyang8002/open-video-api:latest && docker compose up -d' });
     }
@@ -3565,6 +3566,7 @@ app.post('/api/admin/update/run', checkAdmin, async (req, res) => {
     /* 启动独立更新进程（不占用当前进程执行更新，避免文件句柄/状态问题） */
     const args = [path.join(__dirname, 'update.js'), '--source=' + (source === 'npm' || source === 'git' ? source : 'auto')];
     if (restart === false) args.push('--no-restart');
+    if (force) args.push('--force');
     const child = require('child_process').spawn(process.execPath, args, {
         cwd: __dirname,
         env: { ...process.env, PORT: String(PORT) },
@@ -3572,8 +3574,8 @@ app.post('/api/admin/update/run', checkAdmin, async (req, res) => {
         stdio: 'ignore'
     });
     child.unref();
-    console.log('[更新] 已启动独立更新进程 PID=' + child.pid + ' source=' + source);
-    res.json({ code: 0, msg: '更新进程已启动（来源: ' + (source === 'git' ? 'Git' : source === 'npm' ? 'npm' : '自动') + '；后台执行：备份数据 → 更新代码 → 安装依赖 → ' + (restart === false ? '等待手动重启' : '自动重启') + '），日志见 data/update.log', data: { pid: child.pid, deploy, source } });
+    console.log('[更新] 已启动独立更新进程 PID=' + child.pid + ' source=' + source + (force ? ' force=1' : ''));
+    res.json({ code: 0, msg: '更新进程已启动（来源: ' + (source === 'git' ? 'Git' : source === 'npm' ? 'npm' : '自动') + '）后台执行：备份 → 拉取代码 → 清单校验 → 依赖安装 → ' + (restart === false ? '等待手动重启' : '自动重启') + '；日志见 data/update.log', data: { pid: child.pid, deploy, source, force: !!force } });
 });
 
 // 主题 API

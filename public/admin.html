@@ -1984,7 +1984,9 @@
         function fmtSize(b) {
             if (b < 1024) return b + ' B';
             if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-            return (b / 1048576).toFixed(1) + ' MB';
+            if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+            if (b < 1099511627776) return (b / 1073741824).toFixed(2) + ' GB';
+            return (b / 1099511627776).toFixed(2) + ' TB';
         }
         function getSelectedFiles() {
             return Array.from(document.querySelectorAll('.file-cb:checked')).map(c => c.value);
@@ -2514,7 +2516,8 @@
                     document.getElementById('dashPerfInfo').textContent = 'v' + pf.version + ' · ' + (pf.platform || '');
                     if (dt.disk) {
                         const used = Math.max(0, dt.disk.total - dt.disk.free);
-                        document.getElementById('dashDisk').textContent = fmtSize(used) + ' / ' + fmtSize(dt.disk.total);
+                        const pct = dt.disk.total > 0 ? Math.round(used / dt.disk.total * 100) : 0;
+                        document.getElementById('dashDisk').textContent = fmtSize(used) + ' / ' + fmtSize(dt.disk.total) + ' (' + pct + '%)';
                     } else {
                         document.getElementById('dashDisk').textContent = '—';
                     }

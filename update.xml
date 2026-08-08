@@ -3,7 +3,7 @@
 <update>
   <version>26.8.11</version>
   <date>2026-08-08</date>
-  <message>v26.8.11: fmtSize GB/TB units, disk usage with percentage</message>
+  <message>v26.8.11: global pagination with 10/20/50/100 per page for all admin lists (words/danmu/videos/subs/logs/security ips/logins/db browse/backups/cloud); plugins &amp; deps lists load directly (no paging)</message>
   <files>
   <file path=".dockerignore" sha256="92b725988b57a03160cb825d470f929fbecbf4ee25b4dbc28a7fdb3a8c41a781" size="78"/>
   <file path=".github/social-preview.png" sha256="0949997a033350b2096a95f68c4a3eaabe2e3952913e91a0bec59807bbfdb246" size="21642"/>
@@ -36,7 +36,7 @@
   <file path="plugins/openvideo-plugin-demo/lib/index.js" sha256="ba732d8c18dfb4abe7c729eec1e427ecf4c67f0b3248fbacbd6205ab4c89b0eb" size="3838"/>
   <file path="plugins/openvideo-plugin-demo/package.json" sha256="8ee40affefa20d00eff1dd1ebf6004985df58e3f4f6b692b22d5046cb74e17d8" size="1257"/>
   <file path="public/CUSTOM_THEME.md" sha256="a4394eb9fd4e0d7b68d0273fd957ec17cadfa2a0481aa28f5f55298c006008c0" size="3271"/>
-  <file path="public/admin.html" sha256="0b88ee38a74b325365e600c632640fb134cfc80988db160786c729a4fc8f36f1" size="256884"/>
+  <file path="public/admin.html" sha256="14490888e5183eb7ea043e0f85fb466a40dbff87dc30e9162d2316524574ac4a" size="259611"/>
   <file path="public/favicon-128.png" sha256="de8371137f6c9648f8728550e71de67fb5460771062ec1b45970909a1e5dd3dc" size="2034"/>
   <file path="public/favicon.svg" sha256="ca0f3061d459fc5636914978579613a6a8b626dc69123909eceee07d2f3c8d9f" size="555"/>
   <file path="public/i18n.js" sha256="e9335fa7aa95d934385e62a374256885d6ac522a8e7aa5c7549d3c4340306b9b" size="104950"/>

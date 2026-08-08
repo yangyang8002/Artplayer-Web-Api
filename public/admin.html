@@ -585,6 +585,14 @@
         .perf-metric:hover { border-color:rgba(124,92,252,.35); }
         .perf-metric .k { font-size:11px; color:var(--text3); letter-spacing:.3px; }
         .perf-metric .v { font-size:19px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; color:var(--text); }
+        /* 通用分页条 */
+        .pager-row { display:flex; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap; }
+        .pager-row .info { font-size:12px; color:var(--text3); }
+        .pager-row .pg-size { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text3); margin-left:10px; }
+        .pager-row .pg-size select {
+            background:var(--surface2); color:var(--text); border:1px solid var(--border);
+            border-radius:6px; padding:4px 8px; font-size:12px; outline:none; cursor:pointer;
+        }
         /* 初始化向导步骤指示 */
         .init-step { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0; font-size:12px; color:var(--text3); border-radius:8px; background:rgba(255,255,255,.03); transition:all .2s; }
         .init-step span { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:var(--surface2); border:1px solid var(--border); }
@@ -914,6 +922,7 @@
                     <button class="btn btn-sm" onclick="videoCopyCodes('direct')">复制直链</button>
                 </h3>
                 <div id="videoTable" class="empty-state">加载中...</div>
+                <div class="pager" id="videoPager"></div>
             </div>
             <div id="codeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closeCodeModal()">
                 <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:min(720px,92vw);max-height:84vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
@@ -1152,9 +1161,15 @@
         <div class="panel" id="logsPanel">
             <div class="card">
                 <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>请求日志</h3>
-                <div style="display:flex;gap:8px;margin-bottom:12px">
+                <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
                     <button class="btn btn-sm" onclick="loadLogs()">刷新</button>
                     <span style="font-size:11px;color:var(--text3);align-self:center">最近 500 条请求记录</span>
+                    <label class="pg-size" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-left:auto">条数
+                        <select id="logLimitSel" onchange="logState.limit=+this.value;loadLogs()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;outline:none;cursor:pointer">
+                            <option value="10">10 条</option><option value="50">50 条</option>
+                            <option value="100" selected>100 条</option><option value="200">200 条</option>
+                        </select>
+                    </label>
                 </div>
                 <div style="overflow-x:auto">
                     <table><thead><tr><th>时间</th><th>方法</th><th>路径</th><th>状态</th><th>IP</th><th>耗时</th></tr></thead><tbody id="logTbody"></tbody></table>
@@ -1380,12 +1395,14 @@
                     <button class="btn btn-sm" style="margin-left:6px" onclick="restoreSelectedBackups()">恢复所选</button>
                 </h3>
                 <div id="backupList" style="font-size:12px">加载中...</div>
+                <div class="pager" id="bkPager"></div>
             </div>
             <div class="card">
                 <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>云端备份列表
                     <button class="btn btn-sm" style="margin-left:8px" onclick="loadCloudList()">刷新</button>
                 </h3>
                 <div id="cloudList" style="font-size:12px">加载中...</div>
+                <div class="pager" id="cloudPager"></div>
             </div>
 
             <div id="backupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closeBackupModal()">
@@ -1540,10 +1557,40 @@
         if (document.getElementById('cfgLang')) document.getElementById('cfgLang').value = I18N.lang;
         function setAdminLang(l) { I18N.setLang(l); location.reload(); }
         let adminToken = '', adminUser = '';
-        let wordPage = 1, wordTotal = 0;
-        let dmPage = 1, dmTotal = 0;
-        const WORD_LIMIT = 50;
+        let wordState = { page: 1, total: 0, limit: 50 };
+        let dmState = { page: 1, total: 0, limit: 50 };
         function authHeaders() { return { 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' }; }
+
+        /* ===== 通用分页条（每页 10/20/50/100 可切换） =====
+           插件列表 / 依赖列表按需求不做分页，直接全量加载 */
+        const PAGE_SIZES = [10, 20, 50, 100];
+        const __pagers = {};
+        function pagerHTML(uid, state, load) {
+            __pagers[uid] = { state, load };
+            const tp = Math.max(1, Math.ceil(state.total / state.limit));
+            if (tp <= 1 && state.total <= state.limit) return '';
+            return `<div class="pager-row">
+                <button class="btn btn-sm" ${state.page <= 1 ? 'disabled' : ''} onclick="__pg('${uid}',${state.page - 1})">上一页</button>
+                <span class="info">${state.page} / ${tp} · 共 ${state.total} 条</span>
+                <button class="btn btn-sm" ${state.page >= tp ? 'disabled' : ''} onclick="__pg('${uid}',${state.page + 1})">下一页</button>
+                <label class="pg-size">每页
+                    <select onchange="__pgLimit('${uid}',this.value)">${PAGE_SIZES.map(n => `<option value="${n}" ${n === state.limit ? 'selected' : ''}>${n} 项</option>`).join('')}</select>
+                </label>
+            </div>`;
+        }
+        function __pg(uid, p) {
+            const s = __pagers[uid];
+            if (!s) return;
+            s.state.page = Math.max(1, p);
+            s.load();
+        }
+        function __pgLimit(uid, n) {
+            const s = __pagers[uid];
+            if (!s) return;
+            s.state.limit = parseInt(n) || 50;
+            s.state.page = 1;
+            s.load();
+        }
         function setAdminTheme(name) { document.documentElement.dataset.theme = name; localStorage.setItem('ap_admin_theme', name); if (document.getElementById('cfgAdminTheme')) document.getElementById('cfgAdminTheme').value = name; }
         function loadAdminTheme() {
             var t = localStorage.getItem('ap_admin_theme') || 'bilibili';
@@ -1723,24 +1770,21 @@
 
         function loadBannedWords(page) {
             const s = document.getElementById('wordSearch').value.trim();
-            page = page || 1;
-            fetch(`/api/admin/banned-words?page=${page}&limit=${WORD_LIMIT}&search=${encodeURIComponent(s)}`, { headers: authHeaders() })
+            wordState.page = page || wordState.page;
+            fetch(`/api/admin/banned-words?page=${wordState.page}&limit=${wordState.limit}&search=${encodeURIComponent(s)}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
-                    if (d.code === 0) { wordPage = d.data.page; wordTotal = d.data.total; renderWordList(d.data.words); renderPager(); }
+                    if (d.code === 0) { wordState.page = d.data.page; wordState.total = d.data.total; renderWordList(d.data.words); renderWordPager(); }
                 });
         }
         function renderWordList(w) {
             const c = document.getElementById('wordList');
             c.innerHTML = w.length ? w.map(v => `<span class="tag" data-i18n-skip>${esc(v)}<span class="x" onclick="deleteBannedWord('${esc(v)}')">&times;</span></span>`).join('') : '<div class="empty-state">暂无屏蔽词</div>';
-            document.getElementById('wordCount').textContent = `共 ${wordTotal} 条`;
+            document.getElementById('wordCount').textContent = `共 ${wordState.total} 条`;
         }
-        function renderPager() {
-            const tp = Math.ceil(wordTotal / WORD_LIMIT);
-            const p = document.getElementById('wordPager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${wordPage<=1?'disabled':''} onclick="loadBannedWords(${wordPage-1})">上一页</button><span class="info">${wordPage}/${tp}</span><button ${wordPage>=tp?'disabled':''} onclick="loadBannedWords(${wordPage+1})">下一页</button>`;
+        function renderWordPager() {
+            document.getElementById('wordPager').innerHTML = pagerHTML('words', wordState, loadBannedWords);
         }
-        function onWordSearch() { wordPage = 1; loadBannedWords(1); }
+        function onWordSearch() { wordState.page = 1; loadBannedWords(1); }
         function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
         function addBannedWord() {
             const w = document.getElementById('newWordInput').value.trim();
@@ -1754,7 +1798,7 @@
         function deleteBannedWord(w) {
             fetch('/api/admin/banned-words', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ word: w }) })
                 .then(r => r.json()).then(d => {
-                    if (d.code === 0) { toast('已删除', true); const TP = Math.ceil((wordTotal - 1) / WORD_LIMIT); if (wordPage > TP && TP > 0) wordPage = TP; loadBannedWords(wordPage); }
+                    if (d.code === 0) { toast('已删除', true); const TP = Math.ceil((wordState.total - 1) / wordState.limit); if (wordState.page > TP && TP > 0) wordState.page = TP; loadBannedWords(wordState.page); }
                 });
         }
 
@@ -1791,19 +1835,19 @@
         function loadDanmu(page) {
             const vid = document.getElementById('dmFilterVid').value.trim();
             const search = document.getElementById('dmFilterText').value.trim();
-            page = page || 1;
-            let url = '/api/admin/danmu?page=' + page + '&limit=50';
+            dmState.page = page || dmState.page;
+            let url = '/api/admin/danmu?page=' + dmState.page + '&limit=' + dmState.limit;
             if (vid) url += '&vid=' + encodeURIComponent(vid);
             if (search) url += '&search=' + encodeURIComponent(search);
             fetch(url, { headers: authHeaders() }).then(r => r.json()).then(d => {
-                if (d.code === 0) { dmPage = d.data.page; dmTotal = d.data.total; renderDanmuTable(d.data.list); renderDmPager(); }
+                if (d.code === 0) { dmState.page = d.data.page; dmState.total = d.data.total; renderDanmuTable(d.data.list); renderDmPager(); }
             });
         }
-        function applyDmFilter() { dmPage = 1; loadDanmu(1); }
+        function applyDmFilter() { dmState.page = 1; loadDanmu(1); }
         function clearDmFilter() {
             document.getElementById('dmFilterVid').value = '';
             document.getElementById('dmFilterText').value = '';
-            dmPage = 1; loadDanmu(1);
+            dmState.page = 1; loadDanmu(1);
         }
         function loadVids() {
             fetch('/api/admin/danmu/vids', { headers: authHeaders() }).then(r => r.json()).then(d => {
@@ -1829,10 +1873,7 @@
             tb.innerHTML = list.map(d => `<tr><td>${new Date(d.date).toLocaleString('zh-CN')}</td><td style="font-size:12px;color:var(--text3)">${esc(d.vid||'-')}</td><td data-i18n-skip><span class="swatch" style="background:${d.color}"></span>${esc(d.text)}</td><td style="font-size:12px;color:var(--text3)">${d.color}</td><td>${d.type==='top'?'<span class="badge top">顶部</span>':d.type==='bottom'?'<span class="badge bottom">底部</span>':'<span class="badge scroll">滚动</span>'}</td><td><button class="btn btn-danger" onclick="deleteDanmu('${d.id}')">删除</button></td></tr>`).join('');
         }
         function renderDmPager() {
-            const tp = Math.ceil(dmTotal / 50);
-            const p = document.getElementById('dmPager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${dmPage<=1?'disabled':''} onclick="loadDanmu(${dmPage-1})">上一页</button><span class="info">${dmPage}/${tp}（共${dmTotal}条）</span><button ${dmPage>=tp?'disabled':''} onclick="loadDanmu(${dmPage+1})">下一页</button>`;
+            document.getElementById('dmPager').innerHTML = pagerHTML('danmu', dmState, loadDanmu);
         }
         function deleteDanmu(id) {
             if (!confirm('确认删除？')) return;
@@ -1904,16 +1945,20 @@
                 }).catch(() => toast('连接失败', false));
         }
 
+        let allVideos = [], videoState = { page: 1, total: 0, limit: 50 };
         function loadVideos() {
             fetch('/api/admin/videos', { headers: authHeaders() }).then(r => r.json()).then(d => {
-                if (d.code === 0) renderVideos(d.data);
+                if (d.code === 0) { allVideos = d.data || []; videoState.total = allVideos.length; renderVideos(); }
             });
         }
-        function renderVideos(list) {
-            document.getElementById('videoCount').textContent = `共 ${list.length} 条`;
+        function renderVideos() {
+            document.getElementById('videoCount').textContent = `共 ${videoState.total} 条`;
             const c = document.getElementById('videoTable');
-            if (!list.length) { c.innerHTML = '<div class="empty-state">暂无映射，播放视频时会自动记录</div>'; return; }
+            if (!allVideos.length) { c.innerHTML = '<div class="empty-state">暂无映射，播放视频时会自动记录</div>'; document.getElementById('videoPager').innerHTML = ''; return; }
+            const start = (videoState.page - 1) * videoState.limit;
+            const list = allVideos.slice(start, start + videoState.limit);
             c.innerHTML = `<table><thead><tr><th style="width:32px"><input type="checkbox" id="videoSelectAllTop" onclick="videoToggleSelectAll()" style="accent-color:var(--primary)"></th><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td><input type="checkbox" class="video-cb" value="${esc(v.vid)}" style="accent-color:var(--primary)"></td><td data-i18n-skip style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td data-i18n-skip style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
+            document.getElementById('videoPager').innerHTML = pagerHTML('videos', videoState, renderVideos);
         }
         function addVideo() {
             const vid = document.getElementById('newVid').value.trim();
@@ -2030,8 +2075,11 @@
         }
 
         /* ===== Logs ===== */
+        let logState = { limit: 100 };
         function loadLogs() {
-            fetch('/api/admin/logs?limit=200', { headers: authHeaders() })
+            const lim = document.getElementById('logLimitSel');
+            if (lim) logState.limit = +lim.value;
+            fetch('/api/admin/logs?limit=' + logState.limit, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
                     const tb = document.getElementById('logTbody'), em = document.getElementById('logEmpty');
@@ -2169,8 +2217,7 @@
         function stopApiChart() { if (apiChartTimer) { clearInterval(apiChartTimer); apiChartTimer = null; } }
 
         /* ===== 安全中心 ===== */
-        let secPage = 1, secTotal = 0;
-        const SEC_IP_LIMIT = 50;
+        let secIpState = { page: 1, total: 0, limit: 50 };
         let secMapChart = null, secMapTimer = null, secMapScope = 'world';
 
         function secFmtBytes(n) {
@@ -2270,10 +2317,10 @@
             const window = document.getElementById('secIpWindow').value;
             const sort = document.getElementById('secIpSort').value;
             const search = document.getElementById('secIpSearch').value.trim();
-            fetch(`/api/admin/security/ips?window=${window}&sort=${sort}&search=${encodeURIComponent(search)}&page=${secPage}&limit=${SEC_IP_LIMIT}`, { headers: authHeaders() })
+            fetch(`/api/admin/security/ips?window=${window}&sort=${sort}&search=${encodeURIComponent(search)}&page=${secIpState.page}&limit=${secIpState.limit}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
-                    secTotal = d.data.total;
+                    secIpState.total = d.data.total;
                     const tb = document.getElementById('secIpTbody');
                     tb.innerHTML = d.data.list.length ? d.data.list.map(x => `<tr>
                         <td style="font-family:monospace;color:var(--accent)">${esc2(x.ip)}</td>
@@ -2296,10 +2343,7 @@
                 }).catch(() => {});
         }
         function renderSecPager() {
-            const tp = Math.ceil(secTotal / SEC_IP_LIMIT);
-            const p = document.getElementById('secIpPager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${secPage <= 1 ? 'disabled' : ''} onclick="secPage=${secPage - 1};loadSecIps()">上一页</button><span class="info">${secPage}/${tp}</span><button ${secPage >= tp ? 'disabled' : ''} onclick="secPage=${secPage + 1};loadSecIps()">下一页</button>`;
+            document.getElementById('secIpPager').innerHTML = pagerHTML('secIps', secIpState, loadSecIps);
         }
         function secPost(url, body, msg) {
             fetch(url, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
@@ -2332,8 +2376,7 @@
             secPost('/api/admin/security/config', body, '阈值已保存');
         }
         /* ===== 登录记录与防护 ===== */
-        let loginPage = 1, loginTotal = 0;
-        const LOGIN_LIMIT = 50;
+        let loginState = { page: 1, total: 0, limit: 50 };
         function secLoginStatus(x) {
             if (x.ok) return '<span style="color:var(--success)">成功</span>';
             if (x.r === 'locked') return '<span style="color:var(--warn)">锁定</span>';
@@ -2349,10 +2392,10 @@
             return esc2(x.r || '');
         }
         function loadLoginLogs() {
-            fetch(`/api/admin/security/logins?page=${loginPage}&limit=${LOGIN_LIMIT}`, { headers: authHeaders() })
+            fetch(`/api/admin/security/logins?page=${loginState.page}&limit=${loginState.limit}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
-                    loginTotal = d.data.total;
+                    loginState.total = d.data.total;
                     const tb = document.getElementById('secLoginTbody');
                     tb.innerHTML = d.data.list.length ? d.data.list.map(x => `<tr>
                         <td style="font-size:11px;color:var(--text3);white-space:nowrap">${secFmtTime(x.t)}</td>
@@ -2372,10 +2415,7 @@
                 }).catch(() => {});
         }
         function renderLoginPager() {
-            const tp = Math.ceil(loginTotal / LOGIN_LIMIT);
-            const p = document.getElementById('secLoginPager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${loginPage <= 1 ? 'disabled' : ''} onclick="loginPage=${loginPage - 1};loadLoginLogs()">上一页</button><span class="info">${loginPage}/${tp}</span><button ${loginPage >= tp ? 'disabled' : ''} onclick="loginPage=${loginPage + 1};loadLoginLogs()">下一页</button>`;
+            document.getElementById('secLoginPager').innerHTML = pagerHTML('logins', loginState, loadLoginLogs);
         }
         function saveLoginLimit() {
             const body = {
@@ -2476,8 +2516,8 @@
             });
         }
         function startSecPanel() {
-            secPage = 1;
-            loginPage = 1;
+            secIpState.page = 1;
+            loginState.page = 1;
             loadSecurity();
             loadSecIps();
             loadLoginLogs();
@@ -2945,7 +2985,7 @@
         }
 
         /* ===== 数据库管理 ===== */
-        let dbBrowsePage = 1, dbBrowseTotal = 0;
+        let dbBrowseState = { page: 1, total: 0, limit: 50 };
         const DB_TYPES_UI = ['json', 'sqlite', 'mysql', 'mariadb', 'postgres', 'mongodb'];
         function loadDbInfo() {
             fetch('/api/admin/db/info', { headers: authHeaders() })
@@ -2993,10 +3033,10 @@
         function loadDbBrowse() {
             const table = document.getElementById('dbBrowseTable').value;
             const search = document.getElementById('dbBrowseSearch').value.trim();
-            fetch(`/api/admin/db/data?table=${table}&page=${dbBrowsePage}&limit=50&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
+            fetch(`/api/admin/db/data?table=${table}&page=${dbBrowseState.page}&limit=${dbBrowseState.limit}&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
-                    dbBrowseTotal = d.data.total;
+                    dbBrowseState.total = d.data.total;
                     const rows = d.data.list || [];
                     const head = document.getElementById('dbBrowseHead');
                     const body = document.getElementById('dbBrowseBody');
@@ -3016,16 +3056,14 @@
                 }).catch(() => {});
         }
         function renderDbBrowsePager() {
-            const tp = Math.ceil(dbBrowseTotal / 50);
-            const p = document.getElementById('dbBrowsePager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${dbBrowsePage <= 1 ? 'disabled' : ''} onclick="dbBrowsePage=${dbBrowsePage - 1};loadDbBrowse()">上一页</button><span class="info">${dbBrowsePage}/${tp}</span><button ${dbBrowsePage >= tp ? 'disabled' : ''} onclick="dbBrowsePage=${dbBrowsePage + 1};loadDbBrowse()">下一页</button>`;
+            document.getElementById('dbBrowsePager').innerHTML = pagerHTML('dbBrowse', dbBrowseState, loadDbBrowse);
         }
         function exportDb() {
             window.open('/api/admin/db/export', '_blank');
         }
 
         /* ===== 备份中心 ===== */
+        let allBackups = [], bkState = { page: 1, total: 0, limit: 50 };
         function loadBackups() {
             fetch('/api/admin/backup/list', { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
@@ -3033,21 +3071,28 @@
                     const data = d.data;
                     const cfg = data.config;
                     document.getElementById('bkStatus').textContent = cfg.enabled ? `启用 · 每 ${cfg.intervalHours} 小时 · 保留 ${cfg.maxKeep} 份` : '未启用';
-                    const c = document.getElementById('backupList');
-                    const list = data.backups || [];
-                    if (!list.length) { c.innerHTML = '<div class="empty-state">暂无备份</div>'; return; }
-                    c.innerHTML = list.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
-                        <input type="checkbox" class="bk-cb" value="${esc(b.name)}" style="accent-color:var(--primary)">
-                        <span style="font-family:monospace;flex:1;min-width:160px">${esc(b.name)}</span>
-                        <span style="color:var(--text3)">${fmtSize(b.size)}</span>
-                        <span style="color:var(--text3)">${new Date(b.mtime).toLocaleString('zh-CN')}</span>
-                        <span style="display:flex;gap:6px">
-                            <button class="btn btn-sm" onclick="downloadBackup('${esc(b.name)}')">下载</button>
-                            <button class="btn btn-sm btn-primary" onclick="restoreBackup('${esc(b.name)}')">恢复</button>
-                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteBackup('${esc(b.name)}')">删除</button>
-                        </span>
-                    </div>`).join('');
+                    allBackups = data.backups || [];
+                    bkState.total = allBackups.length;
+                    renderBackups();
                 }).catch(() => {});
+        }
+        function renderBackups() {
+            const c = document.getElementById('backupList');
+            if (!allBackups.length) { c.innerHTML = '<div class="empty-state">暂无备份</div>'; document.getElementById('bkPager').innerHTML = ''; return; }
+            const start = (bkState.page - 1) * bkState.limit;
+            const list = allBackups.slice(start, start + bkState.limit);
+            c.innerHTML = list.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
+                <input type="checkbox" class="bk-cb" value="${esc(b.name)}" style="accent-color:var(--primary)">
+                <span style="font-family:monospace;flex:1;min-width:160px">${esc(b.name)}</span>
+                <span style="color:var(--text3)">${fmtSize(b.size)}</span>
+                <span style="color:var(--text3)">${new Date(b.mtime).toLocaleString('zh-CN')}</span>
+                <span style="display:flex;gap:6px">
+                    <button class="btn btn-sm" onclick="downloadBackup('${esc(b.name)}')">下载</button>
+                    <button class="btn btn-sm btn-primary" onclick="restoreBackup('${esc(b.name)}')">恢复</button>
+                    <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteBackup('${esc(b.name)}')">删除</button>
+                </span>
+            </div>`).join('');
+            document.getElementById('bkPager').innerHTML = pagerHTML('backups', bkState, renderBackups);
         }
         function bkToggleSelectAll() {
             const on = document.getElementById('bkSelectAll').checked;
@@ -3209,13 +3254,17 @@
             fetch('/api/admin/cloud/test', { method: 'POST', headers: authHeaders(), body: JSON.stringify(x) })
                 .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
         }
+        let allCloud = [], cloudState = { page: 1, total: 0, limit: 50 };
         function loadCloudList() {
             fetch('/api/admin/cloud/list', { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) { document.getElementById('cloudList').innerHTML = '<div class="empty-state">' + esc(d.msg || '云端未配置') + '</div>'; return; }
                     const c = document.getElementById('cloudList');
-                    const list = d.data || [];
-                    if (!list.length) { c.innerHTML = '<div class="empty-state">云端无备份</div>'; return; }
+                    allCloud = d.data || [];
+                    cloudState.total = allCloud.length;
+                    if (!allCloud.length) { c.innerHTML = '<div class="empty-state">云端无备份</div>'; document.getElementById('cloudPager').innerHTML = ''; return; }
+                    const start = (cloudState.page - 1) * cloudState.limit;
+                    const list = allCloud.slice(start, start + cloudState.limit);
                     c.innerHTML = list.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
                         <span style="font-family:monospace;flex:1;min-width:160px">${esc(b.name)}</span>
                         <span style="color:var(--text3)">${fmtSize(b.size || 0)}</span>
@@ -3225,8 +3274,10 @@
                             <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteCloudBackup('${esc(b.name)}')">删除</button>
                         </span>
                     </div>`).join('');
+                    document.getElementById('cloudPager').innerHTML = pagerHTML('cloud', cloudState, renderCloudList);
                 }).catch(() => {});
         }
+        function renderCloudList() { loadCloudList(); }
         function downloadCloudBackup(name) {
             fetch('/api/admin/cloud/download', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBackups(); });
@@ -3238,8 +3289,7 @@
         }
 
         /* ===== 字幕管理 ===== */
-        let subPage = 1, subTotal = 0;
-        const SUB_LIMIT = 50;
+        let subState = { page: 1, total: 0, limit: 50 };
         function subNewTypeChange() {
             const t = document.querySelector('input[name="subNewType"]:checked').value;
             document.getElementById('subNewUrlRow').style.display = t === 'url' ? '' : 'none';
@@ -3247,13 +3297,13 @@
         }
         function loadSubtitles() {
             const search = document.getElementById('subSearch').value.trim();
-            fetch(`/api/admin/subtitles?page=${subPage}&limit=${SUB_LIMIT}&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
+            fetch(`/api/admin/subtitles?page=${subState.page}&limit=${subState.limit}&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
-                    subTotal = d.data.total;
+                    subState.total = d.data.total;
                     const c = document.getElementById('subTable');
                     const list = d.data.list || [];
-                    document.getElementById('subCount').textContent = '共 ' + subTotal + ' 条';
+                    document.getElementById('subCount').textContent = '共 ' + subState.total + ' 条';
                     if (!list.length) { c.innerHTML = '<div class="empty-state">暂无字幕</div>'; document.getElementById('subPager').innerHTML = ''; return; }
                     c.innerHTML = '<div style="overflow-x:auto"><table><thead><tr><th>名称</th><th>语言</th><th>类型</th><th>状态</th><th>操作</th></tr></thead><tbody>' + list.map(s => `<tr>
                         <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(s.name)}">${esc(s.name)}</td>
@@ -3271,10 +3321,7 @@
                 }).catch(() => {});
         }
         function renderSubPager() {
-            const tp = Math.ceil(subTotal / SUB_LIMIT);
-            const p = document.getElementById('subPager');
-            if (tp <= 1) { p.innerHTML = ''; return; }
-            p.innerHTML = `<button ${subPage <= 1 ? 'disabled' : ''} onclick="subPage=${subPage - 1};loadSubtitles()">上一页</button><span class="info">${subPage}/${tp}</span><button ${subPage >= tp ? 'disabled' : ''} onclick="subPage=${subPage + 1};loadSubtitles()">下一页</button>`;
+            document.getElementById('subPager').innerHTML = pagerHTML('subs', subState, loadSubtitles);
         }
         function addSubtitle() {
             const name = document.getElementById('subNewName').value.trim();

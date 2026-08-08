@@ -908,9 +908,6 @@
                     <input type="text" id="newVidUrl" placeholder="视频链接 (URL)">
                     <button class="btn btn-primary" onclick="addVideo()">保存</button>
                 </div>
-                <div class="row" style="margin-top:10px">
-                    <select id="newVidSubs" multiple style="flex:1;min-height:60px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none" title="可选：为新视频关联字幕（Ctrl 多选）"></select>
-                </div>
             </div>
             <div class="card">
                 <h3><span class="dot" style="background:var(--accent)"></span>视频列表 <span id="videoCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span>
@@ -936,33 +933,55 @@
             </div>
         </div>
 
-        <!-- Subtitles -->
+        <!-- Subtitles（视频 → 字幕 管理模式） -->
         <div class="panel" id="subsPanel">
-            <div class="card">
-                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>添加字幕</h3>
-                <div class="cfg-row"><span>名称</span><input type="text" id="subNewName" placeholder="如：动画第一话"></div>
-                <div class="cfg-row"><span>语言</span><input type="text" id="subNewLang" placeholder="如：zh / en / ja（留空自动识别）"></div>
-                <div class="cfg-row"><span>类型</span>
-                    <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="url" checked onchange="subNewTypeChange()"> 链接</label>
-                    <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="text" onchange="subNewTypeChange()"> 文本内容</label>
-                    <label class="btn btn-sm" style="cursor:pointer">上传文件<input type="file" id="subNewFile" multiple accept=".srt,.vtt,.ass,.ssa,.webvtt" style="display:none" onchange="uploadSubtitleFiles()"></label>
-                </div>
-                <div id="subNewUrlRow"><div class="cfg-row"><span>链接</span><input type="text" id="subNewUrl" placeholder="https://..."></div>
-                    <div class="cfg-row"><span>保存方式</span>
-                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="0" checked> 直接保存链接（播放时远程加载）</label>
-                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="1"> 立即下载到本地（本地化）</label>
+            <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+                <div style="width:300px;flex-shrink:0;min-width:260px">
+                    <div class="card">
+                        <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>视频列表 <span id="svCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                        <input type="text" id="svSearch" placeholder="搜索视频码 / 链接..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;outline:none;margin-bottom:10px" onkeydown="if(event.key==='Enter')loadSubVideos()">
+                        <div id="subVideoList" style="font-size:12px;max-height:56vh;overflow:auto">加载中...</div>
+                        <div class="pager" id="subVideoPager"></div>
                     </div>
                 </div>
-                <div id="subNewTextRow" style="display:none"><textarea id="subNewText" rows="6" placeholder="WEBVTT / SRT 字幕内容..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;outline:none"></textarea></div>
-                <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-sm btn-primary" onclick="addSubtitle()">保存字幕</button></div>
-            </div>
-            <div class="card">
-                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>字幕列表 <span id="subCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span>
-                    <input type="text" id="subSearch" placeholder="搜索..." style="margin-left:10px;width:160px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')loadSubtitles()">
-                    <button class="btn btn-sm" style="margin-left:6px" onclick="loadSubtitles()">搜索</button>
-                </h3>
-                <div id="subTable" class="empty-state">加载中...</div>
-                <div class="pager" id="subPager"></div>
+                <div style="flex:1;min-width:320px">
+                    <div class="card">
+                        <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>视频字幕
+                            <span id="svInfo" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:8px"></span>
+                        </h3>
+                        <div id="svSubs" class="empty-state">请先在左侧选择一个视频</div>
+                        <div class="pager" id="subPager"></div>
+                    </div>
+                    <div class="card" id="svAddCard" style="display:none">
+                        <h3><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>添加字幕到该视频（可多个，支持双语）</h3>
+                        <div class="cfg-row"><span>名称</span><input type="text" id="subNewName" placeholder="如：第一话 简体中文字幕"></div>
+                        <div class="cfg-row"><span>语言</span>
+                            <input type="text" id="subNewLang" placeholder="如 zh / ja / en；双语填 zh,ja" style="flex:1">
+                            <span style="display:flex;gap:4px;margin-left:8px" id="svLangChips">
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('zh')">简中</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('zh-hant')">繁中</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('en')">EN</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('ja')">日</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('ko')">韩</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('zh,ja')">中日双语</button>
+                                <button type="button" class="btn btn-sm" onclick="svAddLang('zh,en')">中英双语</button>
+                            </span>
+                        </div>
+                        <div class="cfg-row"><span>类型</span>
+                            <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="url" checked onchange="subNewTypeChange()"> 链接</label>
+                            <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="text" onchange="subNewTypeChange()"> 文本内容</label>
+                            <label class="btn btn-sm" style="cursor:pointer">上传文件<input type="file" id="subNewFile" multiple accept=".srt,.vtt,.ass,.ssa,.webvtt" style="display:none" onchange="uploadSubtitleFiles()"></label>
+                        </div>
+                        <div id="subNewUrlRow"><div class="cfg-row"><span>链接</span><input type="text" id="subNewUrl" placeholder="https://..."></div>
+                            <div class="cfg-row"><span>保存方式</span>
+                                <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="0" checked> 直接保存链接（播放时远程加载）</label>
+                                <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="1"> 立即下载到本地（本地化）</label>
+                            </div>
+                        </div>
+                        <div id="subNewTextRow" style="display:none"><textarea id="subNewText" rows="6" placeholder="WEBVTT / SRT 字幕内容..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;outline:none"></textarea></div>
+                        <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-sm btn-primary" onclick="addSubtitle()">保存字幕</button></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1765,7 +1784,7 @@
             if (name === 'deps' && !window._depsLoaded) { window._depsLoaded = true; loadDeps(false); }
             if (name === 'db' && !window._dbLoaded) { window._dbLoaded = true; loadDbInfo(); loadDbBrowse(); }
             if (name === 'backup' && !window._bkLoaded) { window._bkLoaded = true; loadBackups(); loadCloudList(); }
-            if (name === 'subs' && !window._subsLoaded) { window._subsLoaded = true; loadSubtitles(); }
+            if (name === 'subs' && !window._subsLoaded) { window._subsLoaded = true; loadSubVideos(); }
         }
 
         function loadBannedWords(page) {
@@ -3295,39 +3314,82 @@
             document.getElementById('subNewUrlRow').style.display = t === 'url' ? '' : 'none';
             document.getElementById('subNewTextRow').style.display = t === 'text' ? '' : 'none';
         }
+        /* ===== 字幕管理（视频 → 字幕） ===== */
+        let subVideos = [], subVideosAll = [], subVideoState = { page: 1, total: 0, limit: 50 };
+        let subVideoCounts = {}, curSubVid = '', curSubUrl = '';
+        function loadSubVideos() {
+            const search = document.getElementById('svSearch').value.trim().toLowerCase();
+            fetch('/api/admin/videos', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                subVideosAll = (d.data || []).filter(v => !search || String(v.vid).toLowerCase().includes(search) || String(v.url).toLowerCase().includes(search));
+                subVideoState.total = subVideosAll.length;
+                renderSubVideos();
+            });
+            fetch('/api/admin/subtitles/video-counts', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code === 0) { subVideoCounts = d.data; renderSubVideos(); }
+            }).catch(() => {});
+        }
+        function renderSubVideos() {
+            document.getElementById('svCount').textContent = '共 ' + subVideoState.total + ' 个';
+            const c = document.getElementById('subVideoList');
+            if (!subVideosAll.length) { c.innerHTML = '<div class="empty-state">暂无视频映射</div>'; document.getElementById('subVideoPager').innerHTML = ''; return; }
+            const start = (subVideoState.page - 1) * subVideoState.limit;
+            const list = subVideosAll.slice(start, start + subVideoState.limit);
+            c.innerHTML = list.map(v => {
+                const n = subVideoCounts[v.vid] || 0;
+                const active = v.vid === curSubVid;
+                return `<div class="sv-item ${active ? 'on' : ''}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid ${active ? 'rgba(124,92,252,.45)' : 'var(--border)'};background:${active ? 'rgba(124,92,252,.12)' : 'rgba(255,255,255,.02)'};margin-bottom:6px;transition:all .15s" onclick="selectSubVideo('${esc(v.vid)}','${esc(v.url)}')">
+                    <div style="flex:1;min-width:0">
+                        <div style="font-family:monospace;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.vid)}</div>
+                        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.url)}</div>
+                    </div>
+                    <span class="pl-chip" style="${n ? 'color:var(--success)' : ''}">${n} 字幕</span>
+                </div>`;
+            }).join('');
+            document.getElementById('subVideoPager').innerHTML = pagerHTML('subVideos', subVideoState, renderSubVideos);
+        }
+        function selectSubVideo(vid, url) {
+            curSubVid = vid;
+            curSubUrl = url;
+            renderSubVideos();
+            document.getElementById('svInfo').textContent = vid + (url ? ' · ' + url : '');
+            document.getElementById('svAddCard').style.display = '';
+            subState.page = 1;
+            loadSubtitles();
+        }
         function loadSubtitles() {
-            const search = document.getElementById('subSearch').value.trim();
-            fetch(`/api/admin/subtitles?page=${subState.page}&limit=${subState.limit}&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
+            if (!curSubVid) { document.getElementById('svSubs').innerHTML = '<div class="empty-state">请先在左侧选择一个视频</div>'; document.getElementById('subPager').innerHTML = ''; return; }
+            fetch(`/api/admin/subtitles?vid=${encodeURIComponent(curSubVid)}&page=${subState.page}&limit=${subState.limit}`, { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
                     if (d.code !== 0) return;
                     subState.total = d.data.total;
-                    const c = document.getElementById('subTable');
+                    const c = document.getElementById('svSubs');
                     const list = d.data.list || [];
-                    document.getElementById('subCount').textContent = '共 ' + subState.total + ' 条';
-                    if (!list.length) { c.innerHTML = '<div class="empty-state">暂无字幕</div>'; document.getElementById('subPager').innerHTML = ''; return; }
+                    if (!list.length) { c.innerHTML = '<div class="empty-state">该视频暂无字幕，可在右侧添加</div>'; document.getElementById('subPager').innerHTML = ''; return; }
                     c.innerHTML = '<div style="overflow-x:auto"><table><thead><tr><th>名称</th><th>语言</th><th>类型</th><th>状态</th><th>操作</th></tr></thead><tbody>' + list.map(s => `<tr>
                         <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(s.name)}">${esc(s.name)}</td>
-                        <td style="font-size:12px;color:var(--text3)">${esc(s.langName || s.lang || '—')}</td>
+                        <td>${(s.langs && s.langs.length > 1) ? `<span class="pl-chip" style="color:var(--warn)" title="双语字幕">${esc(s.langs.map(l => l).join(' + '))}</span>` : `<span style="font-size:12px;color:var(--text3)">${esc(s.langName || s.lang || '—')}</span>`}</td>
                         <td style="font-size:12px;color:var(--text3)">${esc(s.type)}</td>
                         <td>${s.localized ? '<span style="color:var(--success)">本地</span>' : '<span style="color:var(--text3)">远程</span>'}</td>
                         <td style="white-space:nowrap">
-                            <button class="btn btn-sm" onclick="applySubtitle('${s.id}')">应用</button>
-                            <button class="btn btn-sm" onclick="unapplySubtitle('${s.id}')">取消</button>
                             ${s.type === 'url' && !s.localized ? `<button class="btn btn-sm" onclick="localizeSubtitle('${s.id}')">本地化</button>` : ''}
+                            <button class="btn btn-sm" onclick="removeSubFromVideo('${s.id}')">移除</button>
                             <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteSubtitle('${s.id}')">删除</button>
                         </td>
                     </tr>`).join('') + '</tbody></table></div>';
                     renderSubPager();
                 }).catch(() => {});
         }
-        function renderSubPager() {
-            document.getElementById('subPager').innerHTML = pagerHTML('subs', subState, loadSubtitles);
+        function svAddLang(langs) {
+            const el = document.getElementById('subNewLang');
+            el.value = el.value.trim() ? el.value.trim() + ',' + langs : langs;
         }
         function addSubtitle() {
+            if (!curSubVid) return toast('请先选择视频', false);
             const name = document.getElementById('subNewName').value.trim();
-            const lang = document.getElementById('subNewLang').value.trim();
+            const langs = document.getElementById('subNewLang').value.trim();
             const t = document.querySelector('input[name="subNewType"]:checked').value;
-            const body = { name, lang, type: t };
+            const body = { name, lang: langs, langs, type: t, vid: curSubVid };
             if (t === 'url') {
                 const url = document.getElementById('subNewUrl').value.trim();
                 if (!/^https?:\/\//i.test(url)) return toast('请输入有效的字幕链接', false);
@@ -3339,31 +3401,32 @@
                 body.content = content;
             }
             fetch('/api/admin/subtitles', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
-                .then(r => r.json()).then(d => { toast(d.msg || '已添加', d.code === 0); if (d.code === 0) { document.getElementById('subNewName').value = ''; document.getElementById('subNewUrl').value = ''; document.getElementById('subNewText').value = ''; loadSubtitles(); } });
+                .then(r => r.json()).then(d => { toast(d.msg || '已添加', d.code === 0); if (d.code === 0) { document.getElementById('subNewName').value = ''; document.getElementById('subNewLang').value = ''; document.getElementById('subNewUrl').value = ''; document.getElementById('subNewText').value = ''; loadSubtitles(); loadSubVideos(); } });
         }
         function uploadSubtitleFiles() {
+            if (!curSubVid) return toast('请先选择视频', false);
             const input = document.getElementById('subNewFile');
             if (!input.files.length) return;
             const fd = new FormData();
+            fd.append('vid', curSubVid);
             Array.from(input.files).forEach(f => fd.append('files', f));
             fetch('/api/admin/subtitles/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd })
-                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); input.value = ''; if (d.code === 0) loadSubtitles(); });
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); input.value = ''; if (d.code === 0) { loadSubtitles(); loadSubVideos(); } });
         }
+        /* 仅移除该视频的字幕关联（保留字幕库） */
+        function removeSubFromVideo(id) {
+            if (!confirm('确认从该视频移除字幕？（字幕库保留）')) return;
+            fetch('/api/admin/subtitles', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id, vid: curSubVid }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); loadSubVideos(); });
+        }
+        /* 彻底删除字幕（从字幕库与所有视频移除） */
         function deleteSubtitle(id) {
-            if (!confirm('确认删除该字幕？')) return;
-            fetch('/api/admin/subtitles', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id }) })
-                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
+            if (!confirm('确认删除该字幕？（将从字幕库与所有视频移除）')) return;
+            fetch('/api/admin/subtitles', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id, deleteLibrary: true }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); loadSubVideos(); });
         }
         function localizeSubtitle(id) {
             fetch('/api/admin/subtitles/localize', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
-                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
-        }
-        function applySubtitle(id) {
-            fetch('/api/admin/subtitles/apply', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
-                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
-        }
-        function unapplySubtitle(id) {
-            fetch('/api/admin/subtitles/unapply', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
         }
 

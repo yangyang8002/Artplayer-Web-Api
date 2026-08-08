@@ -2776,6 +2776,18 @@ function subLangName(lang) {
     };
     return map[String(lang || '').toLowerCase()] || String(lang || '');
 }
+/* 解析语言：支持数组或 "zh,ja" / "zh+ja" / "zh  ja"（双语字幕） */
+function parseLangs(input) {
+    let arr = [];
+    if (Array.isArray(input)) arr = input.map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    else if (typeof input === 'string') arr = input.split(/[,，+、\s]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+    return arr.slice(0, 8);
+}
+function langsName(langs) {
+    if (!langs || !langs.length) return '';
+    if (langs.length === 1) return subLangName(langs[0]);
+    return langs.map(l => subLangName(l)).join(' + ');
+}
 
 /* 字幕内容获取：url 类型可远程拉取（限 5MB + 内网防护），file 类型读本地，text 类型直接返回 */
 async function subtitleContent(sub) {
@@ -2841,28 +2853,51 @@ async function detectOpenlistSubs(videoUrl) {
 
 app.get('/api/admin/subtitles', checkAdmin, async (req, res) => {
     const search = (req.query.search || '').toLowerCase();
+    const vid = String(req.query.vid || '');
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     let list = await store.subtitleAll();
-    if (search) list = list.filter(s => String(s.name || '').toLowerCase().includes(search) || String(s.id || '').includes(search) || String(s.lang || '').includes(search));
+    /* 按视频过滤：仅返回已关联到该视频的字幕（视频→字幕 管理模式） */
+    if (vid) {
+        const subsMap = await store.videoSubsAll();
+        const ids = Array.isArray(subsMap[vid]) ? subsMap[vid] : [];
+        const byId = {};
+        for (const s of list) byId[s.id] = s;
+        list = ids.map(id => byId[id]).filter(Boolean);
+    } else if (search) {
+        list = list.filter(s => String(s.name || '').toLowerCase().includes(search) || String(s.id || '').includes(search) || String(s.lang || '').includes(search));
+    }
     list.sort((a, b) => b.createdAt - a.createdAt);
     const total = list.length;
     const start = (page - 1) * limit;
-    res.json({ code: 0, data: { list: list.slice(start, start + limit), total, page, limit } });
+    res.json({ code: 0, data: { list: list.slice(start, start + limit), total, page, limit, vid } });
+});
+
+/* 各视频的字幕数量（视频→字幕 管理模式的列表徽标） */
+app.get('/api/admin/subtitles/video-counts', checkAdmin, async (req, res) => {
+    const subsMap = await store.videoSubsAll();
+    const counts = {};
+    for (const [vid, ids] of Object.entries(subsMap)) {
+        if (Array.isArray(ids) && ids.length) counts[vid] = ids.length;
+    }
+    res.json({ code: 0, data: counts });
 });
 
 app.post('/api/admin/subtitles', checkAdmin, async (req, res) => {
-    const { name, lang, type, url, content, localize } = req.body || {};
+    const { name, lang, langs, type, url, content, localize, vid } = req.body || {};
     if (type !== 'url' && type !== 'text') return res.status(400).json({ code: 1, msg: '字幕类型仅支持链接或文本' });
     if (!name || !String(name).trim()) return res.status(400).json({ code: 1, msg: '字幕名称不能为空' });
     if (type === 'url' && !/^https?:\/\//i.test(url)) return res.status(400).json({ code: 1, msg: '无效的字幕链接' });
     if (type === 'url' && !(await isSafeSubtitleUrl(url))) return res.status(400).json({ code: 1, msg: '字幕链接指向内网/保留地址，已拒绝' });
     if (type === 'text' && (!content || content.length > 1024 * 1024)) return res.status(400).json({ code: 1, msg: '字幕内容为空或过大' });
+    /* 语言：支持双语（如 "zh,ja"），存 langs 数组，lang 取首个 */
+    const langsArr = parseLangs(langs != null ? langs : lang);
     const sub = {
         id: await genSubId(),
         name: String(name).trim().slice(0, 100),
-        lang: String(lang || '').toLowerCase().slice(0, 20),
-        langName: subLangName(lang),
+        lang: langsArr[0] || '',
+        langs: langsArr,
+        langName: langsName(langsArr) || (langsArr[0] ? subLangName(langsArr[0]) : ''),
         type,
         url: type === 'url' ? String(url).slice(0, 2048) : '',
         content: type === 'text' ? content : '',
@@ -2896,16 +2931,26 @@ app.post('/api/admin/subtitles', checkAdmin, async (req, res) => {
         }
     }
     await store.subtitleAdd(sub);
-    res.json({ code: 0, msg: localizeWarn ? '字幕已添加（' + localizeWarn + '）' : '字幕已添加', data: sub, warning: localizeWarn || null });
+    /* 关联到视频（视频→字幕 管理模式） */
+    let linked = false;
+    if (vid) {
+        const subsMap = await store.videoSubsAll();
+        if (!Array.isArray(subsMap[vid])) subsMap[vid] = [];
+        if (!subsMap[vid].includes(sub.id)) subsMap[vid].push(sub.id);
+        await store.videoSubsWrite(subsMap);
+        linked = true;
+    }
+    res.json({ code: 0, msg: localizeWarn ? '字幕已添加（' + localizeWarn + '）' : '字幕已添加', data: sub, linked, warning: localizeWarn || null });
 });
 
-/* 上传字幕文件（存入 data/subtitles/，动态按配置校验大小） */
+/* 上传字幕文件（存入 data/subtitles/，动态按配置校验大小）；可选 vid 直接关联视频 */
 app.post('/api/admin/subtitles/upload', checkAdmin, upload.array('files'), async (req, res) => {
     if (!req.files || !req.files.length) return res.status(400).json({ code: 1, msg: '未选择文件' });
     const maxMB = getUploadLimits().maxMB;
     const tooBig = req.files.find(f => f.size > maxMB * 1024 * 1024);
     if (tooBig) return res.status(413).json({ code: 1, msg: '文件超过上传上限 ' + maxMB + 'MB: ' + path.basename(tooBig.originalname) });
     if (!fs.existsSync(SUB_DIR)) fs.mkdirSync(SUB_DIR, { recursive: true });
+    const vid = String(req.body.vid || '');
     const subs = [];
     for (const f of req.files) {
         const name = path.basename(f.originalname);
@@ -2914,10 +2959,12 @@ app.post('/api/admin/subtitles/upload', checkAdmin, upload.array('files'), async
         const savePath = path.join(SUB_DIR, saveName);
         fs.writeFileSync(savePath, f.buffer);
         const langPart = name.replace(/\.[^.]+$/, '').split('.').pop();
+        const lang = SUB_EXT_RE.test(langPart) ? '' : langPart.toLowerCase();
         subs.push({
             id: await genSubId(),
             name: name,
-            lang: SUB_EXT_RE.test(langPart) ? '' : langPart.toLowerCase(),
+            lang,
+            langs: lang ? [lang] : [],
             langName: subLangName(langPart),
             type: 'local',
             url: '',
@@ -2929,7 +2976,14 @@ app.post('/api/admin/subtitles/upload', checkAdmin, upload.array('files'), async
     }
     if (!subs.length) return res.status(400).json({ code: 1, msg: '没有有效的字幕文件（支持 srt/vtt/ass/ssa/webvtt）' });
     for (const s of subs) await store.subtitleAdd(s);
-    res.json({ code: 0, msg: '已上传 ' + subs.length + ' 个字幕', data: subs });
+    /* 关联到视频 */
+    if (vid) {
+        const subsMap = await store.videoSubsAll();
+        if (!Array.isArray(subsMap[vid])) subsMap[vid] = [];
+        for (const s of subs) if (!subsMap[vid].includes(s.id)) subsMap[vid].push(s.id);
+        await store.videoSubsWrite(subsMap);
+    }
+    res.json({ code: 0, msg: '已上传 ' + subs.length + ' 个字幕' + (vid ? ' 并关联到视频' : ''), data: subs });
 });
 
 /* 本地化：把 url 类型字幕下载到本地存储（限 5MB + 内网防护） */
@@ -2964,20 +3018,28 @@ app.post('/api/admin/subtitles/localize', checkAdmin, async (req, res) => {
 });
 
 app.delete('/api/admin/subtitles', checkAdmin, async (req, res) => {
-    const { id } = req.body || {};
+    const { id, vid, deleteLibrary } = req.body || {};
     if (!id) return res.status(400).json({ code: 1, msg: '参数不完整' });
+    const subsMap = await store.videoSubsAll();
+    if (vid) {
+        /* 仅移除该视频的字幕关联 */
+        if (Array.isArray(subsMap[vid])) {
+            subsMap[vid] = subsMap[vid].filter(x => x !== id);
+            await store.videoSubsWrite(subsMap);
+        }
+        if (!deleteLibrary) return res.json({ code: 0, msg: '已从该视频移除' });
+    }
+    /* 删除字幕库记录（并从所有视频移除关联） */
     const ok = await store.subtitleDelete(id);
     if (!ok) return res.status(404).json({ code: 1, msg: '字幕不存在' });
-    /* 清理视频映射中的关联 */
-    const subs = await store.videoSubsAll();
     let changed = false;
-    for (const [vid, ids] of Object.entries(subs)) {
+    for (const [v, ids] of Object.entries(subsMap)) {
         if (Array.isArray(ids) && ids.includes(id)) {
-            subs[vid] = ids.filter(x => x !== id);
+            subsMap[v] = ids.filter(x => x !== id);
             changed = true;
         }
     }
-    if (changed) await store.videoSubsWrite(subs);
+    if (changed) await store.videoSubsWrite(subsMap);
     res.json({ code: 0, msg: '已删除' });
 });
 
@@ -3051,7 +3113,7 @@ app.get('/api/subtitle/detect', async (req, res) => {
                     if (seen.has(id)) continue;
                     seen.add(id);
                     const s = all.find(x => x.id === id);
-                    if (s) applied.push({ id: s.id, title: s.langName || s.name, lang: s.lang, url: 'subtitle:' + s.id, library: true });
+                    if (s) applied.push({ id: s.id, title: s.langName || s.name, lang: (s.langs && s.langs[0]) || s.lang || '', langs: s.langs || [], url: 'subtitle:' + s.id, library: true });
                 }
             }
         }

@@ -1,7 +1,7 @@
 {
   "name": "artplayer-web-api",
-  "version": "26.8.7",
-  "description": "ArtPlayer danmaku video player with web admin panel - PoW firewall, rate limiting, multi-theme, subtitle support",
+  "version": "26.8.8",
+  "description": "ArtPlayer danmaku video player with web admin panel - PoW firewall, rate limiting, multi-theme, subtitle support, multi-database storage",
   "main": "server.js",
   "bin": {
     "artplayer-web-api": "server.js"
@@ -13,6 +13,7 @@
   },
   "files": [
     "server.js",
+    "lib/",
     "public/",
     "theme/",
     "gen_perf_danmu.js",
@@ -34,7 +35,11 @@
     "video",
     "player",
     "express",
-    "admin"
+    "admin",
+    "sqlite",
+    "mysql",
+    "postgresql",
+    "database"
   ],
   "author": "yangyang8002",
   "license": "MIT",
@@ -42,11 +47,18 @@
   "dependencies": {
     "7zip-bin": "^5.2.0",
     "adm-zip": "^0.6.0",
+    "basic-ftp": "^6.2.0",
+    "better-sqlite3": "^11.10.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
     "ip2region": "^2.3.0",
     "ip2region.js": "^3.1.8",
-    "multer": "^2.2.0"
+    "mongodb": "^6.21.0",
+    "multer": "^2.2.0",
+    "mysql2": "^3.11.5",
+    "pg": "^8.13.1",
+    "ssh2-sftp-client": "^12.1.1",
+    "webdav": "^5.10.0"
   }
 }

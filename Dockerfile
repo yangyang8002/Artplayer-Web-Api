@@ -1,6 +1,6 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache git wget
+RUN apk add --no-cache git wget python3 make g++
 
 WORKDIR /app
 
@@ -8,6 +8,7 @@ COPY package*.json ./
 RUN npm install --production
 
 COPY server.js ./
+COPY lib ./lib/
 COPY public ./public/
 
 RUN mkdir -p data

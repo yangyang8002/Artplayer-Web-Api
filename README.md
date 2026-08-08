@@ -4,11 +4,19 @@
 
 **ArtPlayer 弹幕视频播放器 + Web 管理后台**
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/yangyang8002/Artplayer-Web-Api/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/Artplayer-Web-Api.svg?color=62d5ff&label=version" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-green.svg" alt="Node.js"></a>
+  <a href="Dockerfile"><img src="https://img.shields.io/badge/Docker-Ready-blue.svg" alt="Docker"></a>
+  <a href="README_CN.md#数据库支持"><img src="https://img.shields.io/badge/Databases-JSON%20%7C%20SQLite%20%7C%20MySQL%20%7C%20PostgreSQL%20%7C%20MongoDB-ff85a2.svg" alt="Databases"></a>
+  <a href="https://www.npmjs.com/package/artplayer-web-api"><img src="https://img.shields.io/npm/v/artplayer-web-api?label=npm&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
+</p>
 
-Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理。
+Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理、多数据库存储。
 
-**v26.8.7**
+**v26.8.8**
 
 📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md)
 
@@ -79,10 +87,9 @@ npm start
 - 多字幕自动检测（简/繁/日/英/韩…）与一键切换
 - API 独立开关 / RPS 限速 / 带宽控制，1 秒精度实时曲线（跨度 5 分钟 ~ 3 个月）
 - PoW 工作量证明防火墙、全局速率限制、登录限流
-- **六语言界面**：简体中文 / 繁體中文 / 文言 / English / 日本語 / Français（自动检测 + 手动切换）
-- **安全中心**：IP 地理定位（ip2region 地址库自动更新）、世界地图分布、异常流量/IP 检测、封禁与白名单
 - 播放器 + 后台双主题系统（各 10 套，支持自定义导入）
-- 管理后台：弹幕 / 视频 / 屏蔽词 / 文件 / 日志 / API 统计
+- 管理后台：弹幕 / 视频 / 屏蔽词 / 文件 / 日志 / API 统计 / 数据库管理
+- **多数据库存储**：JSON 文件（默认）/ SQLite / MySQL / MariaDB / PostgreSQL，任意互转、热切换自动迁移（弹幕、视频映射、屏蔽词、账号、IP 封禁白名单、登录记录、统计）
 
 ## Documentation
 

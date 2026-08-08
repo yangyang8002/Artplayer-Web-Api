@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 版本清单：更新进程依据此文件校验与执行更新（data/ 目录不参与更新） -->
+<update>
+  <version>26.8.8</version>
+  <date>2026-08-08</date>
+  <message>例行更新</message>
+  <files>
+  <file path=".dockerignore" sha256="92b725988b57a03160cb825d470f929fbecbf4ee25b4dbc28a7fdb3a8c41a781" size="78"/>
+  <file path=".github/social-preview.png" sha256="0949997a033350b2096a95f68c4a3eaabe2e3952913e91a0bec59807bbfdb246" size="21642"/>
+  <file path=".github/workflows/docker-image.yml" sha256="1868c7f0ef7b3d224e9e3b9786f3639389fa549ff0446289989f26683806065d" size="1449"/>
+  <file path=".github/workflows/npm-publish-github-packages.yml" sha256="e7b7ac761eaa5af1c6b59f2f79bdbf1c48a32cd8db949b7bf3fc3e92f72f7286" size="570"/>
+  <file path=".gitignore" sha256="a7eb71a4bb93a4e18c12dbf9192c2c53bc938615112c977e258c30b492526a64" size="69"/>
+  <file path=".npmignore" sha256="408a2ab327b75ed60f56173f106c02754a75a569a02648a633c243c34cd935e8" size="130"/>
+  <file path="DOCKER.md" sha256="12db655b4937c658107defb612e4a350bcd8da413c45ba0ae578abd26e63a0b1" size="3570"/>
+  <file path="Dockerfile" sha256="c844310f89d85988e9d6073f5a205015a486e8f632ef91fb7fbef3a7248f02a6" size="439"/>
+  <file path="LICENSE" sha256="d5f812f2f7d23c443ffaff5391be83cd3fcca32c68b8f792cb03937d5a1fc027" size="1090"/>
+  <file path="README.md" sha256="cfe311dd9c30355e22a545d67f0715ab507bbbb5bc57becfcde43246328cd21b" size="4632"/>
+  <file path="README_CN.md" sha256="8904b313eb541f5dd68589f6c8ab16df1d35562da51a7f3a157590f988ae9c17" size="23752"/>
+  <file path="README_EN.md" sha256="c354d3fb7361b3f19e3f746d78db29e1c47197ae7109b503fa26b8e0576202f5" size="21097"/>
+  <file path="docker-compose.yml" sha256="bea2a4570ceedeab63ba86f85c879f804b8b08f9b60400c07893f339e8493be6" size="422"/>
+  <file path="gen_perf_danmu.js" sha256="3902ae3de3e80c90089ee646a273922da4447dfdd9b86dab15d9c4ecba126b3e" size="2249"/>
+  <file path="nginx.conf.example" sha256="bb58a87dbb447065a8c3b1c9a3550df91090b4a77779f277310b5215348fb217" size="2124"/>
+  <file path="package-lock.json" sha256="c226e7b6ee5e73dcd8df34817505c39fed210d8c90c0729bacc408a750ff5329" size="41177"/>
+  <file path="package.json" sha256="788f8a3a7fffbac8509a09cb37bd739d7807e76e98b150de4fd1e08bf2bb3e0b" size="1489"/>
+  <file path="public/CUSTOM_THEME.md" sha256="a4394eb9fd4e0d7b68d0273fd957ec17cadfa2a0481aa28f5f55298c006008c0" size="3271"/>
+  <file path="public/admin.html" sha256="30988b6d4238b0b2f10ece2350fb490d3d40e3e0a58392f21c936b3ed1dc6eaf" size="130697"/>
+  <file path="public/favicon-128.png" sha256="de8371137f6c9648f8728550e71de67fb5460771062ec1b45970909a1e5dd3dc" size="2034"/>
+  <file path="public/favicon.svg" sha256="ca0f3061d459fc5636914978579613a6a8b626dc69123909eceee07d2f3c8d9f" size="555"/>
+  <file path="public/i18n.js" sha256="f5e3e2e374d84a133a090c931a9c3de7fd6e989f165f2d8a51bfc49592a30f22" size="97600"/>
+  <file path="public/player.html" sha256="518ece8ce0b15fabd519ae07061e4c74e2a53e6e19ffd2248598949b1fe0e7e8" size="72418"/>
+  <file path="public/test_video1.en.vtt" sha256="2854f0cb4a81a3f7c02842ab8a6fac8fabe7d33384182be3653c663e131c4a1d" size="182"/>
+  <file path="public/test_video1.mp4" sha256="0d55da42748dca33b1e175f0ad6855c060d4587dfc0a6b525c2c731a64e94f9f" size="6962589"/>
+  <file path="public/test_video1.sc.vtt" sha256="ac7927afad7ac27fb5ae515526afc07ef6436bc0d98c8941c095838fcbff798f" size="175"/>
+  <file path="public/test_video1.tc.vtt" sha256="51a41a4b4d9aef9bd0944e0560b87ee62c0fee4ee06f178f69c044814305b602" size="175"/>
+  <file path="public/test_video1.vtt" sha256="65bf5090bbb808e9825b4205eff66e8f3799b9ef482070ae54a460b6ac18eb0d" size="115"/>
+  <file path="public/test_video2.mp4" sha256="f192304389dbc213c8dde5dc6f6b77cdd09f1785dbef6255a9857b108757eb8e" size="330061"/>
+  <file path="public/test_video3.mp4" sha256="5520e9715ab6371aaf5532877a3dff6010ce57793cd6cc89752aa4116d4b9d50" size="108190"/>
+  <file path="server.js" sha256="44b7dd09c5209567f1a430d7ce0fc7ee153f3162a2b22e9984041bd007a2c125" size="158141"/>
+  <file path="theme/README.md" sha256="d3f4cc2fbc639f7eb6cbd98b210dd6642a840ecbbbda1b86944d574ec348746e" size="4676"/>
+  <file path="theme/admin.css" sha256="2748ab4434965280b2993b3e9c565c2684bd389414fa873459c630060bd825f7" size="10177"/>
+  <file path="theme/admin/bilibili/style.css" sha256="1bf60cf612a5a20cecf5f0bf8676c9831af78b54d30314bf5d27e3cc3bdec703" size="132"/>
+  <file path="theme/admin/bilibili/theme.json" sha256="7b2be2918cd00b97b9a304fa6e9cb9bd55ce22c6f5b432d0d7901d357f9d775b" size="504"/>
+  <file path="theme/admin/cyber/style.css" sha256="0287b8a449ff982ed581dda48da56058b6ca08532cbe0960ffc48615453709a5" size="896"/>
+  <file path="theme/admin/cyber/theme.json" sha256="f1f6e4f568ca97c602adb79845b2710696fa385fcae691ed419b4e496115df40" size="643"/>
+  <file path="theme/admin/forest/style.css" sha256="6599dba6c8e34d21ae4b679921fe3882db856c0f1b2806d0348dd6488254f0c9" size="162"/>
+  <file path="theme/admin/forest/theme.json" sha256="a6a94454f32f2d8a8272a300efb524fa40cfe19d94a44444fcc3d295ebe72626" size="499"/>
+  <file path="theme/admin/jrpg/style.css" sha256="0890a66fef28288c9a6a605a71ab54290977dfffc4bb4a9296a8382709f501a9" size="1073"/>
+  <file path="theme/admin/jrpg/theme.json" sha256="1b8aa419e8a3bccc6e2f537dd0b95cc82537486eba3e503abad26d37f1295a48" size="643"/>
+  <file path="theme/admin/mono/style.css" sha256="e6516f98cd74e1cb872461416b8ae7718d514330cc95ff38f79ac72c85f7325f" size="128"/>
+  <file path="theme/admin/mono/theme.json" sha256="28d209ee04ed00b1d7d1903a1790bd10dd46f3cf79627d37420210de5f619209" size="472"/>
+  <file path="theme/admin/neon/style.css" sha256="230e4d6921c8ddb87083a80f5d23135ff00946f9b5241c54a3136b41fb3e52e4" size="906"/>
+  <file path="theme/admin/neon/theme.json" sha256="1e4d3424af3be22936e4c91cc19f70f072b68e108e730e69d8f3a191c30559fb" size="640"/>
+  <file path="theme/admin/ocean/style.css" sha256="bba7133f220855a339e3e27a26d0d903733ad23ae580c583510fd342f65d8766" size="161"/>
+  <file path="theme/admin/ocean/theme.json" sha256="b3af0e20a73e56c0f67736fd9595af772de43d72efc69b3f082e3be782638fc3" size="496"/>
+  <file path="theme/admin/sakura/style.css" sha256="2800f82516138bb2012b3c03c65edcb00888dad1a4cad6af30b006e008a7446e" size="236"/>
+  <file path="theme/admin/sakura/theme.json" sha256="92940bbfdb8a0bea0a0995ebeb071021a34fd7e2198ffa697ad7367d57d54d66" size="500"/>
+  <file path="theme/admin/shoujo/style.css" sha256="a7112081d98a819ccc6bf0b85e00ef97bd874633aa9e7a17c0878299a63fc894" size="1009"/>
+  <file path="theme/admin/shoujo/theme.json" sha256="fecf31bd80805e3538644041e6d3a1552c9b8c403ff97e27bc20fb886e50a728" size="649"/>
+  <file path="theme/admin/sunset/style.css" sha256="97a2ca83bc54bc3864f0bfffc80c91d1baaa2c2f8c2e154b9ef8ed36bf38b17d" size="137"/>
+  <file path="theme/admin/sunset/theme.json" sha256="7369464772582ec2cb0ad9632949b9ddaa6efa6763db7bede5cd4d881be86da2" size="499"/>
+  <file path="theme/build.js" sha256="33aa2636e92bbecd2815cf670c9b75137854481924f57768ff49e2b0fa5fc0d0" size="4163"/>
+  <file path="theme/player.css" sha256="0a0a16271adf32ca0b3c03e4284d33c2a5235a378ce15dc4f5b128c66e12e8ce" size="2324"/>
+  <file path="theme/player/bilibili/theme.json" sha256="a7030ca29197e11ba1f6cd2d5c2e530a6a8b049adc6ca9e17000c95ce5ff7edf" size="379"/>
+  <file path="theme/player/cyber/theme.json" sha256="97a26d95fc637198bec02afdd8bcca34832be5dbf1629ea859d2dc424ee89769" size="366"/>
+  <file path="theme/player/forest/theme.json" sha256="45c2bc836808d317e196eee4f2194e023d66ee781089bc379105947504438987" size="357"/>
+  <file path="theme/player/jrpg/theme.json" sha256="77e211ca3cb4bf99dc689d032cb723413fdafe6aa17073143f022fbcdc93dc5c" size="364"/>
+  <file path="theme/player/mono/theme.json" sha256="5003b0edfcb79619dc8187e21df02d0698b296fbaafd0d319687bb66c82892f4" size="332"/>
+  <file path="theme/player/neon/theme.json" sha256="50794a7e3555c9dd56bf224c2469e1538066abccd651a8252a11a78bd61bc7c7" size="364"/>
+  <file path="theme/player/ocean/theme.json" sha256="ef352e4252cf224f4aa05543e5276dabda3611962228f40e2b388f133028a90a" size="355"/>
+  <file path="theme/player/sakura/theme.json" sha256="4eb46b6751b167ed8a784c5718226123cbba0024e146ec6516a2739bd873561a" size="357"/>
+  <file path="theme/player/shoujo/theme.json" sha256="8abbc9f0c7448c24693f8dff8a1e59920bcb0ee98f25e059988c5f13a114242b" size="368"/>
+  <file path="theme/player/sunset/theme.json" sha256="3637327532157dfb1bfefbb4d3a894428955701428d0d7977cc76732995b7789" size="354"/>
+  </files>
+</update>

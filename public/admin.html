@@ -555,7 +555,31 @@
         /* ===== mono: flat minimal ===== */
         [data-theme="mono"] .card, [data-theme="mono"] .cfg-card { border-radius: 4px; border-color: rgba(255,255,255,.05); }
         [data-theme="mono"] .btn { border-radius: 4px; }
-    </style>
+    
+        /* 控制台统计卡片 */
+        .dash-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+        @media (max-width:900px){ .dash-grid{ grid-template-columns:repeat(2,1fr); } }
+        .dash-card { background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); border:1px solid var(--border); border-radius:14px; padding:16px; position:relative; overflow:hidden; }
+        .dash-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--primary)); opacity:.5; }
+        .dash-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:10px; }
+        .dash-val { font-size:22px; font-weight:700; color:var(--text); font-family:monospace; }
+        .dash-label { font-size:11px; color:var(--text3); margin-top:2px; }
+        /* 初始化向导步骤指示 */
+        .init-step { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0; font-size:12px; color:var(--text3); border-radius:8px; background:rgba(255,255,255,.03); transition:all .2s; }
+        .init-step span { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:var(--surface2); border:1px solid var(--border); }
+        .init-step.active { color:var(--text); background:rgba(124,92,252,.12); }
+        .init-step.active span { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .init-step.done { color:var(--success); }
+        .init-step.done span { background:rgba(52,211,153,.15); border-color:rgba(52,211,153,.4); color:var(--success); }
+        /* 配置弹窗标签页 */
+        .bk-cfg-tab { padding:10px 20px; border:none; background:transparent; color:var(--text3); font-size:13px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; }
+        .bk-cfg-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+        .bk-cfg-tab:hover { color:var(--text); }
+        /* 卡片悬浮微动效 */
+        .card { transition:transform .2s ease, box-shadow .2s ease; }
+        .card:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,0,0,.18); }
+
+</style>
 </head>
 <body>
     <div id="loginPage">
@@ -569,12 +593,92 @@
         </div>
     </div>
 
+    <!-- 首次启动初始化向导 -->
+    <div id="initPage" style="display:none;min-height:100vh;align-items:center;justify-content:center">
+        <div class="login-card" style="width:min(460px,92vw)">
+            <div class="logo"><svg width="52" height="52" viewBox="0 0 80 80"><defs><linearGradient id="init-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--warn)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><path d="M40 8 12 22v18c0 12 11 22 28 32 17-10 28-20 28-32V22L40 8z" fill="url(#init-grad)" opacity=".18"/><path d="M40 14 18 25v15c0 9.5 8.7 18.5 22 27 13.3-8.5 22-17.5 22-27V25L40 14z" fill="none" stroke="url(#init-grad)" stroke-width="2.5"/><rect x="32" y="34" width="16" height="16" rx="4" fill="url(#init-grad)" opacity=".9"/></svg></div>
+            <h1 style="font-size:20px">首次启动初始化</h1>
+            <p class="sub" style="line-height:1.7">配置语言、时区与数据库，并设置管理员密码与入口</p>
+            <div id="initSteps" style="display:flex;gap:4px;margin:14px 0 16px">
+                <div class="init-step active" data-step="1"><span>1</span>语言</div>
+                <div class="init-step" data-step="2"><span>2</span>时区</div>
+                <div class="init-step" data-step="3"><span>3</span>数据库</div>
+                <div class="init-step" data-step="4"><span>4</span>密码</div>
+            </div>
+            <div id="initMsg" style="font-size:12px;color:var(--danger);min-height:18px;margin-bottom:4px"></div>
+            <div class="init-step-body" id="initStep1">
+                <div class="cfg-row"><span>界面语言</span>
+                    <select id="initLang" onchange="initLangChange()" style="flex:1">
+                        <option value="zh">中文</option>
+                        <option value="zhHant">繁體中文</option>
+                        <option value="wyw">文言</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
+            </div>
+            <div class="init-step-body" id="initStep2" style="display:none">
+                <div class="cfg-row"><span>时区</span>
+                    <select id="initTz" style="flex:1">
+                        <option value="Asia/Shanghai">Asia/Shanghai (UTC+8) 中国</option>
+                        <option value="Asia/Hong_Kong">Asia/Hong_Kong (UTC+8)</option>
+                        <option value="Asia/Taipei">Asia/Taipei (UTC+8)</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo (UTC+9) 日本</option>
+                        <option value="Asia/Seoul">Asia/Seoul (UTC+9) 韩国</option>
+                        <option value="Asia/Singapore">Asia/Singapore (UTC+8)</option>
+                        <option value="Asia/Kolkata">Asia/Kolkata (UTC+5:30)</option>
+                        <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
+                        <option value="Europe/London">Europe/London (UTC+0)</option>
+                        <option value="Europe/Paris">Europe/Paris (UTC+1)</option>
+                        <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
+                        <option value="America/New_York">America/New_York (UTC-5)</option>
+                        <option value="America/Chicago">America/Chicago (UTC-6)</option>
+                        <option value="America/Los_Angeles">America/Los_Angeles (UTC-8)</option>
+                        <option value="America/Sao_Paulo">America/Sao_Paulo (UTC-3)</option>
+                        <option value="Australia/Sydney">Australia/Sydney (UTC+10)</option>
+                        <option value="Pacific/Auckland">Pacific/Auckland (UTC+12)</option>
+                        <option value="UTC">UTC</option>
+                    </select>
+                </div>
+                <div id="initTzPreview" style="font-size:11px;color:var(--text3);margin-top:6px"></div>
+            </div>
+            <div class="init-step-body" id="initStep3" style="display:none">
+                <div class="cfg-row"><span>存储类型</span>
+                    <select id="initDbType" onchange="initDbTypeChange()" style="flex:1">
+                        <option value="json">JSON 文件（默认，零依赖）</option>
+                        <option value="sqlite">SQLite（本地文件，零配置）</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="mariadb">MariaDB</option>
+                        <option value="postgres">PostgreSQL</option>
+                        <option value="mongodb">MongoDB（文档数据库）</option>
+                    </select>
+                </div>
+                <div id="initDbFields"></div>
+                <button class="btn btn-sm" style="margin-top:10px" onclick="testInitDbConn()">测试连接</button>
+            </div>
+            <div class="init-step-body" id="initStep4" style="display:none">
+                <input type="password" id="initNewPwd" placeholder="新密码（至少4位）">
+                <input type="password" id="initNewPwd2" placeholder="确认新密码">
+                <input type="text" id="initAdminPath" placeholder="管理入口路径（默认 admin，如填 secret 则入口为 /secret/）">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px">
+                <button id="initPrevBtn" class="btn" style="display:none" onclick="initStep(-1)">上一步</button>
+                <button id="initNextBtn" class="btn btn-primary" style="flex:1" onclick="initStep(1)">下一步</button>
+            </div>
+        </div>
+    </div>
+
     <aside id="sidebar">
         <div class="side-brand"><div class="mark"><svg width="34" height="34" viewBox="0 0 80 80"><defs><linearGradient id="side-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><polygon points="28,26 28,54 47,40" fill="url(#side-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#side-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#side-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/></svg></div><h1>ArtPlayer</h1></div>
         <nav class="side-nav">
-            <button class="nav-item active" data-tab="words" onclick="switchTab('words')"><span class="icon">&#9881;</span><span>屏蔽词管理</span></button>
+            <button class="nav-item active" data-tab="console" onclick="switchTab('console')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 9l3 3-3 3"/><path d="M13 15h3"/></svg></span><span>控制台</span></button>
+            <button class="nav-item" data-tab="words" onclick="switchTab('words')"><span class="icon">&#9881;</span><span>屏蔽词管理</span></button>
             <button class="nav-item" data-tab="danmu" onclick="switchTab('danmu')"><span class="icon">&#9733;</span><span>弹幕列表</span></button>
             <button class="nav-item" data-tab="videos" onclick="switchTab('videos')"><span class="icon">&#9654;</span><span>视频管理</span></button>
+            <button class="nav-item" data-tab="subs" onclick="switchTab('subs')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 1.5 17V7A2.5 2.5 0 0 1 4 4.5h16A2.5 2.5 0 0 1 22.5 7v10a2.5 2.5 0 0 1-2.5 2.5H4z"/><path d="m8 16 2.5-4 2 3 2.5-5 5 6"/></svg></span><span>字幕管理</span></button>
+            <button class="nav-item" data-tab="plugins" onclick="switchTab('plugins')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9l-1-2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><circle cx="17" cy="12" r="2.5"/></svg></span><span>插件管理</span></button>
+            <button class="nav-item" data-tab="deps" onclick="switchTab('deps')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16"/><path d="M6 6h12"/><path d="M8 14h8"/><path d="M10 18h4"/></svg></span><span>依赖与更新</span></button>
             <button class="nav-item" data-tab="config" onclick="switchTab('config')"><span class="icon">&#9776;</span><span>服务器配置</span></button>
             <button class="nav-item" data-tab="files" onclick="switchTab('files')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span>文件管理</span></button>
             <button class="nav-item" data-tab="logs" onclick="switchTab('logs')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span>日志</span></button>
@@ -589,6 +693,70 @@
     </aside>
 
     <main id="mainPage">
+        <!-- Console -->
+        <div class="panel active" id="consolePanel">
+            <div class="dash-grid">
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(98,213,255,.14);color:var(--accent)">&#128200;</div>
+                    <div class="dash-val" id="dashCalls">—</div>
+                    <div class="dash-label">总请求数</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(124,92,252,.14);color:var(--primary)">&#128190;</div>
+                    <div class="dash-val" id="dashBytes">—</div>
+                    <div class="dash-label">总流量</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(52,211,153,.14);color:var(--success)">&#127760;</div>
+                    <div class="dash-val" id="dashIps">—</div>
+                    <div class="dash-label">访问 IP 数</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(255,138,101,.14);color:#ff8a65">&#127916;</div>
+                    <div class="dash-val" id="dashDanmu">—</div>
+                    <div class="dash-label">弹幕总数</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(100,221,23,.14);color:#64dd17">&#127909;</div>
+                    <div class="dash-val" id="dashVideos">—</div>
+                    <div class="dash-label">视频映射</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(167,139,250,.14);color:#a78bfa">&#128172;</div>
+                    <div class="dash-val" id="dashSubs">—</div>
+                    <div class="dash-label">字幕数</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(255,77,106,.14);color:var(--danger)">&#128737;</div>
+                    <div class="dash-val" id="dashBanned">—</div>
+                    <div class="dash-label">屏蔽词</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(245,158,11,.14);color:var(--warn)">&#128187;</div>
+                    <div class="dash-val" id="dashUptime">—</div>
+                    <div class="dash-label">运行时间</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>性能监控
+                    <span style="font-size:11px;color:var(--text3);margin-left:8px" id="dashPerfInfo"></span>
+                    <button class="btn btn-sm" style="margin-left:8px" onclick="loadDashboard(true)">刷新</button>
+                </h3>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px">
+                    <div><span style="font-size:11px;color:var(--text3)">内存 (RSS)</span><div id="dashMem" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">堆内存</span><div id="dashHeap" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">CPU 使用率</span><div id="dashCpu" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">最近 1 分钟请求</span><div id="dashLastMin" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">Node.js</span><div id="dashNode" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">进程 PID</span><div id="dashPid" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                </div>
+                <canvas id="dashChart" style="width:100%;height:200px;display:block"></canvas>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--text3)">
+                    <span><span style="color:var(--accent)">—</span> 内存 RSS (MB)</span>
+                    <span><span style="color:var(--primary)">—</span> CPU 使用率 (%)</span>
+                </div>
+            </div>
+        </div>
         <!-- Words -->
         <div class="panel active" id="wordsPanel">
             <div class="card">
@@ -652,14 +820,100 @@
                     <input type="text" id="newVidUrl" placeholder="视频链接 (URL)">
                     <button class="btn btn-primary" onclick="addVideo()">保存</button>
                 </div>
+                <div class="row" style="margin-top:10px">
+                    <select id="newVidSubs" multiple style="flex:1;min-height:60px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none" title="可选：为新视频关联字幕（Ctrl 多选）"></select>
+                </div>
             </div>
             <div class="card">
-                <h3><span class="dot" style="background:var(--accent)"></span>视频列表 <span id="videoCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <h3><span class="dot" style="background:var(--accent)"></span>视频列表 <span id="videoCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span>
+                    <span style="font-weight:400;font-size:12px;color:var(--text3);margin-left:8px"><label style="cursor:pointer"><input type="checkbox" id="videoSelectAll" onchange="videoToggleSelectAll()"> 全选</label></span>
+                    <button class="btn btn-sm" style="margin-left:6px" onclick="videoBatchDelete()">删除所选</button>
+                    <button class="btn btn-sm" onclick="videoCopyCodes('html')">复制 HTML</button>
+                    <button class="btn btn-sm" onclick="videoCopyCodes('md')">复制 MD</button>
+                    <button class="btn btn-sm" onclick="videoCopyCodes('js')">复制 JS</button>
+                    <button class="btn btn-sm" onclick="videoCopyCodes('direct')">复制直链</button>
+                </h3>
                 <div id="videoTable" class="empty-state">加载中...</div>
+            </div>
+            <div id="codeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closeCodeModal()">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:min(720px,92vw);max-height:84vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
+                    <h3 style="margin-bottom:12px">快捷代码 <span id="codeModalTitle" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                    <pre id="codeModalContent" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;overflow:auto;max-height:50vh;color:var(--text);white-space:pre-wrap;word-break:break-all"></pre>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+                        <button class="btn btn-sm" onclick="copyCodeModal()">复制代码</button>
+                        <button class="btn btn-sm" onclick="closeCodeModal()">关闭</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Config -->
+        <!-- Subtitles -->
+        <div class="panel" id="subsPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>添加字幕</h3>
+                <div class="cfg-row"><span>名称</span><input type="text" id="subNewName" placeholder="如：动画第一话"></div>
+                <div class="cfg-row"><span>语言</span><input type="text" id="subNewLang" placeholder="如：zh / en / ja（留空自动识别）"></div>
+                <div class="cfg-row"><span>类型</span>
+                    <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="url" checked onchange="subNewTypeChange()"> 链接</label>
+                    <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewType" value="text" onchange="subNewTypeChange()"> 文本内容</label>
+                    <label class="btn btn-sm" style="cursor:pointer">上传文件<input type="file" id="subNewFile" multiple accept=".srt,.vtt,.ass,.ssa,.webvtt" style="display:none" onchange="uploadSubtitleFiles()"></label>
+                </div>
+                <div id="subNewUrlRow"><div class="cfg-row"><span>链接</span><input type="text" id="subNewUrl" placeholder="https://..."></div>
+                    <div class="cfg-row"><span>保存方式</span>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="0" checked> 直接保存链接（播放时远程加载）</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="subNewLocalize" value="1"> 立即下载到本地（本地化）</label>
+                    </div>
+                </div>
+                <div id="subNewTextRow" style="display:none"><textarea id="subNewText" rows="6" placeholder="WEBVTT / SRT 字幕内容..." style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;outline:none"></textarea></div>
+                <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-sm btn-primary" onclick="addSubtitle()">保存字幕</button></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>字幕列表 <span id="subCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span>
+                    <input type="text" id="subSearch" placeholder="搜索..." style="margin-left:10px;width:160px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')loadSubtitles()">
+                    <button class="btn btn-sm" style="margin-left:6px" onclick="loadSubtitles()">搜索</button>
+                </h3>
+                <div id="subTable" class="empty-state">加载中...</div>
+                <div class="pager" id="subPager"></div>
+            </div>
+        </div>
+
+        <!-- Plugins -->
+        <div class="panel" id="pluginsPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>安装插件</h3>
+                <div class="cfg-row"><span>方式</span>
+                    <select id="plInstallType" onchange="plInstallTypeChange()" style="flex:1">
+                        <option value="file">上传 .js 文件</option>
+                        <option value="url">GitHub / URL 下载</option>
+                        <option value="npm">npm 包</option>
+                    </select>
+                </div>
+                <div id="plFileRow"><label class="btn btn-sm" style="cursor:pointer;margin-top:8px">选择插件文件（.js）<input type="file" id="plFile" accept=".js" style="display:none"></label></div>
+                <div id="plUrlRow" style="display:none"><input type="text" id="plUrl" placeholder="https://github.com/xxx/plugin.js 或 https://example.com/a.js" style="flex:1;margin-top:8px"></div>
+                <div id="plNpmRow" style="display:none"><input type="text" id="plNpm" placeholder="npm 包名，如 my-artplayer-plugin" style="flex:1;margin-top:8px"></div>
+                <div style="margin-top:12px"><button class="btn btn-sm btn-primary" onclick="installPlugin()">安装</button><button class="btn btn-sm" onclick="loadPlugins()">刷新</button></div>
+                <div class="cfg-hint">插件采用 Koishi 风格：模块导出 apply(ctx, config)；ctx 提供 router（Express）/ store / log / on('dispose')；安装后需启用。⚠ 插件可执行任意代码，仅安装可信来源</div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>插件列表 <span id="plCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <div id="plList" style="font-size:12px">加载中...</div>
+            </div>
+        </div>
+
+        <!-- Deps -->
+        <div class="panel" id="depsPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>依赖与更新
+                    <button class="btn btn-sm" style="margin-left:10px" onclick="loadDeps(true)">检查更新</button>
+                    <button class="btn btn-sm btn-primary" onclick="updateAllDeps()">更新全部</button>
+                    <span id="depsChecked" style="font-weight:400;font-size:11px;color:var(--text3);margin-left:8px"></span>
+                </h3>
+                <div class="cfg-hint">npm 依赖版本检查（缓存 30 分钟）；更新在后台执行 npm install，完成后需重启服务生效</div>
+                <div style="overflow-x:auto"><table><thead><tr><th>依赖</th><th>当前版本</th><th>最新版本</th><th>状态</th><th>操作</th></tr></thead><tbody id="depsTbody"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- Config -->        <!-- Config -->
         <div class="panel" id="configPanel">
             <div class="cfg-grid">
                 <div class="cfg-card">
@@ -955,6 +1209,136 @@
             </div>
         </div>
 
+
+        <!-- Database -->
+        <div class="panel" id="dbPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>当前存储 <span id="dbCurLabel" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px">
+                    <div><div style="font-size:11px;color:var(--text3)">存储类型</div><div id="dbCurType" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><div style="font-size:11px;color:var(--text3)">连接信息</div><div id="dbCurConn" style="font-size:13px;color:var(--text2);word-break:break-all">—</div></div>
+                </div>
+                <div id="dbTables" style="font-size:12px">加载中...</div>
+                <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-sm" onclick="loadDbInfo()">刷新</button><button class="btn btn-sm" onclick="exportDb()">导出备份</button></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>切换存储 / 迁移数据</h3>
+                <div class="cfg-row"><span>存储类型</span>
+                    <select id="dbType" onchange="dbTypeChange()" style="flex:1">
+                        <option value="json">JSON 文件（默认，零依赖）</option>
+                        <option value="sqlite">SQLite（本地文件，零配置）</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="mariadb">MariaDB</option>
+                        <option value="postgres">PostgreSQL</option>
+                        <option value="mongodb">MongoDB（文档数据库）</option>
+                    </select>
+                </div>
+                <div id="dbConnFields"></div>
+                <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-sm" onclick="testDbConn()">测试连接</button><button class="btn btn-sm btn-primary" onclick="switchDbStorage()">切换并迁移</button></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>数据浏览</h3>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+                    <select id="dbBrowseTable" onchange="loadDbBrowse()" style="font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 8px;outline:none;cursor:pointer">
+                        <option value="danmu">danmu（弹幕）</option>
+                        <option value="videos">videos（视频映射）</option>
+                        <option value="banned_words">banned_words（屏蔽词）</option>
+                        <option value="accounts">accounts（账号）</option>
+                        <option value="security">security（封禁 / 白名单）</option>
+                        <option value="login_logs">login_logs（登录记录）</option>
+                        <option value="login_fails">login_fails（登录失败锁定）</option>
+                        <option value="subtitles">subtitles（字幕库）</option>
+                        <option value="kv">kv（配置 / 统计）</option>
+                    </select>
+                    <input type="text" id="dbBrowseSearch" placeholder="搜索..." style="flex:1;min-width:140px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')loadDbBrowse()">
+                    <button class="btn btn-sm" onclick="loadDbBrowse()">查询</button>
+                </div>
+                <div style="overflow-x:auto"><table><thead id="dbBrowseHead"></thead><tbody id="dbBrowseBody"></tbody></table><div class="empty-state" id="dbBrowseEmpty" style="display:none">暂无数据</div></div>
+                <div class="pager" id="dbBrowsePager"></div>
+            </div>
+        </div>
+
+        <!-- Backup -->
+        <div class="panel" id="backupPanel">
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>备份中心</h3>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">
+                    <div><span style="color:var(--text3)">定时备份</span><span id="bkStatus" style="margin-left:6px;color:var(--text2)">—</span></div>
+                    <div><span style="color:var(--text3)">云端同步</span><span id="clStatus" style="margin-left:6px;color:var(--text2)">—</span></div>
+                </div>
+                <div style="display:flex;gap:8px"><button class="btn btn-sm btn-primary" onclick="openBackupModal()">添加备份</button><button class="btn btn-sm" onclick="openBkConfigModal()">管理配置</button></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>备份列表
+                    <span style="font-weight:400;font-size:12px;color:var(--text3);margin-left:8px"><label style="cursor:pointer"><input type="checkbox" id="bkSelectAll" onchange="bkToggleSelectAll()"> 全选</label></span>
+                    <button class="btn btn-sm" style="margin-left:6px" onclick="restoreSelectedBackups()">恢复所选</button>
+                </h3>
+                <div id="backupList" style="font-size:12px">加载中...</div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>云端备份列表
+                    <button class="btn btn-sm" style="margin-left:8px" onclick="loadCloudList()">刷新</button>
+                </h3>
+                <div id="cloudList" style="font-size:12px">加载中...</div>
+            </div>
+
+            <div id="backupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closeBackupModal()">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:min(430px,92vw);max-height:82vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
+                    <h3 style="margin-bottom:14px">添加备份</h3>
+                    <div class="cfg-row"><span>备份内容</span>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="bmContentData" checked> 数据库数据</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="bmContentConfig" checked> 服务器配置</label>
+                    </div>
+                    <div class="cfg-row"><span>备份目标</span>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="bmTarget" value="local" checked onchange="bmTargetChange()"> 本地</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="bmTarget" value="cloud" onchange="bmTargetChange()"> 云端</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="bmTarget" value="both" onchange="bmTargetChange()"> 本地 + 云端</label>
+                    </div>
+                    <div id="bmCloudHint" style="font-size:11px;color:var(--warn);margin-top:4px;display:none"></div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px"><button class="btn btn-sm" onclick="closeBackupModal()">取消</button><button class="btn btn-sm btn-primary" onclick="createBackupFlow()">开始备份</button></div>
+                </div>
+            </div>
+            <div id="bkConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closeBkConfigModal()">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:min(480px,92vw);max-height:84vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
+                    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)">
+                        <button class="bk-cfg-tab active" data-tab="bk" onclick="bkCfgSwitch('bk')">定时备份</button>
+                        <button class="bk-cfg-tab" data-tab="cl" onclick="bkCfgSwitch('cl')">云端同步</button>
+                    </div>
+                    <div id="bkCfgTabBk">
+                        <div class="cfg-row"><span>启用</span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="cfgBkEnabled"> 自动定时备份</label></div>
+                        <div class="cfg-row"><span>间隔（小时）</span><input type="number" id="cfgBkInterval" min="1" max="720"></div>
+                        <div class="cfg-row"><span>保留份数</span><input type="number" id="cfgBkMaxKeep" min="1" max="100"></div>
+                        <div class="cfg-row"><span>备份内容</span>
+                            <label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="cfgBkContentData" checked> 数据库数据</label>
+                            <label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="cfgBkContentConfig" checked> 服务器配置</label>
+                        </div>
+                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn btn-sm" onclick="closeBkConfigModal()">取消</button><button class="btn btn-sm btn-primary" onclick="saveBkCfgFromModal()">保存定时备份配置</button></div>
+                    </div>
+                    <div id="bkCfgTabCl" style="display:none">
+                        <div id="cloudCfgList"></div>
+                        <div id="cloudCfgForm" style="display:none">
+                            <div class="cfg-row"><span>启用</span><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="cfgClEnabled"> 本地备份后自动同步到云端</label></div>
+                            <div class="cfg-row"><span>类型</span>
+                                <select id="cfgClType" onchange="cfgCloudTypeChange()" style="flex:1">
+                                    <option value="ftp">FTP / FTPS</option>
+                                    <option value="sftp">SFTP (SSH)</option>
+                                    <option value="webdav">WebDAV</option>
+                                    <option value="openlist">OpenList (AList 兼容)</option>
+                                </select>
+                            </div>
+                            <div id="cfgClFields"></div>
+                            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+                                <button class="btn btn-sm" onclick="testCloudCfgConn()">测试连接</button>
+                                <button class="btn btn-sm" onclick="cancelCloudCfgEdit()">取消</button>
+                                <button class="btn btn-sm btn-primary" onclick="saveCloudCfgFromModal()">保存云端配置</button>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px"><button class="btn btn-sm btn-primary" onclick="addCloudCfg()">添加云端配置</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- About -->
         <div class="panel" id="aboutPanel">
             <div style="text-align:center;padding:20px 0">
@@ -984,7 +1368,26 @@
                     <a href="https://github.com/yangyang8002" target="_blank" style="color:var(--accent);font-size:13px;font-weight:500">yangyang8002</a>
                 </div>
             </div>
-            <div class="card" style="max-width:520px;margin:0 auto">
+            <div class="card" style="max-width:520px;margin:0 auto 18px">
+                    <h3 style="text-align:center"><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>版本更新</h3>
+                    <div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:10px">
+                        当前版本 <span id="upCurrent" style="font-family:monospace;color:var(--accent)">—</span>
+                        <span id="upLatestWrap" style="display:none">→ 最新 <span id="upLatest" style="font-family:monospace;color:var(--success)">—</span></span>
+                        <span id="upDeploy" style="margin-left:8px;font-size:11px;color:var(--text3)"></span>
+                    </div>
+                    <div id="upNotes" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;max-height:160px;overflow:auto;white-space:pre-wrap;text-align:left"></div>
+                    <div id="upSourceRow" style="display:none;justify-content:center;gap:12px;font-size:12px;color:var(--text2);margin-bottom:10px">
+                        <span>更新来源</span>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="upSource" value="auto" checked> 自动</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="upSource" value="git"> Git</label>
+                        <label style="display:flex;align-items:center;gap:4px"><input type="radio" name="upSource" value="npm"> npm</label>
+                    </div>
+                    <div style="display:flex;justify-content:center;gap:8px">
+                        <button class="btn btn-sm" onclick="checkUpdate(true)">检查更新</button>
+                        <button class="btn btn-sm btn-primary" id="upRunBtn" style="display:none" onclick="runUpdate()">更新到最新版</button>
+                    </div>
+                </div>
+<div class="card" style="max-width:520px;margin:0 auto">
                 <h3 style="text-align:center"><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>功能一览</h3>
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;padding:10px 4px;font-size:12px;color:var(--text2)">
                     <div>· 自研 Canvas 弹幕引擎（轨道/堆叠/密度）</div>

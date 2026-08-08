@@ -2,11 +2,21 @@
 
 <p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/Artplayer-Web-Api@master/public/favicon.svg" width="96" height="96" alt="ArtPlayer Web API"></p>
 
+<p align="center">
+  <a href="https://github.com/yangyang8002/Artplayer-Web-Api/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/Artplayer-Web-Api.svg?color=62d5ff&label=version" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-green.svg" alt="Node.js"></a>
+  <a href="Dockerfile"><img src="https://img.shields.io/badge/Docker-Ready-blue.svg" alt="Docker"></a>
+  <a href="#database-support"><img src="https://img.shields.io/badge/Databases-JSON%20%7C%20SQLite%20%7C%20MySQL%20%7C%20PostgreSQL%20%7C%20MongoDB-ff85a2.svg" alt="Databases"></a>
+  <a href="https://www.npmjs.com/package/artplayer-web-api"><img src="https://img.shields.io/npm/v/artplayer-web-api?label=npm&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
+</p>
+
 > 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md)
 
-A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, and a full file manager.
+A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, a full file manager, and multi-database storage.
 
-**v26.8.7** · MIT License
+**v26.8.8** · MIT License
 
 ## Table of Contents
 
@@ -14,6 +24,7 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 - [Quick Start](#quick-start)
 - [China Acceleration](#china-acceleration)
 - [Project Structure](#project-structure)
+- [Database Support](#database-support)
 - [Player Usage](#player-usage)
 - [Admin Panel](#admin-panel)
 - [Server Configuration](#server-configuration)
@@ -28,14 +39,15 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 - **Custom Canvas danmaku engine**: lane scheduling, top/bottom stacking, density / speed / opacity controls, pause freezing, seek support
 - **DPlayer-compatible API**: `/api/danmu/v3/?id=` works with existing DPlayer danmaku clients
 - **Server-assigned video IDs**: `/api/video/resolve` issues unique 8-character alphanumeric IDs and automatically inherits legacy hash IDs (no danmaku loss on upgrade)
-- **Multi-subtitle detection**: auto-detects `.srt/.vtt/.ass` files next to the video, grouped by language (SC/TC/EN/JA/KO...), switchable in the player
+- **Multi-subtitle detection**: auto-detects `.srt/.vtt/.ass` files next to the video, grouped by language (SC/TC/EN/JA/KO...), switchable in the player`n- **Subtitle library**: a dedicated Subtitles tab with its own IDs — add subtitles from URL (one-click localize), pasted text, or uploaded files; apply one or more subtitles to any video (videos still get same-directory auto-detection merged in); OpenList/AList cloud videos get same-folder subtitle detection via the configured instance API; player supports `subtitle=id:xxxx`
 - **6-language UI**: Simplified Chinese / Traditional Chinese / Classical Chinese / English / 日本語 / Français, auto-detected from the browser with manual override
 - **Security Center**: IP geolocation (auto-updating ip2region DB, city-level with ISP), world map distribution, request/traffic anomaly detection, IP ban & whitelist
 - **Dual theme system**: independent player & admin themes, 10 themes each (incl. StyleKit anime/manga styles), custom themes supported
-- **Admin panel**: danmaku / videos / banned words / files / logs / API stats in one place
+- **Admin panel**: danmaku / videos / banned words / files / logs / API stats / database in one place
 - **API management**: per-API enable switch, RPS limit, bandwidth stats; live chart at 1s precision, selectable span (5 min ~ 3 months)
 - **Security**: PoW proof-of-work firewall (Anubis-style), session tokens, login rate limit, global API rate limit
 - **File manager**: online preview, batch delete/copy, archive (zip/7z/tar/tar.gz), extract (multi-format), multi-file upload
+- **Multi-database storage**: JSON files (default) / SQLite / MySQL / MariaDB / PostgreSQL / MongoDB, freely convertible with hot-swap auto migration
 
 ## Quick Start
 
@@ -79,7 +91,7 @@ PORT=8080 node server.js
 | Admin | http://localhost:1919/admin/ |
 | Default account | `admin` / `admin123` |
 
-> The `data/` directory and default data files are created on first run. **Change the default password before going live.**
+> The `data/` directory and default data files are created on first run. **A first-run wizard forces you to configure: UI language, timezone, storage type (JSON/SQLite/MySQL/MariaDB/PostgreSQL/MongoDB), a new admin password and a custom admin entry path** before the panel can be used.
 
 ## China Acceleration
 
@@ -108,6 +120,9 @@ PORT=8080 node server.js
 ```
 Artplayer-Web-Api/
 ├── server.js               # Express backend (all APIs)
+├── lib/                    # Unified storage layer
+│   ├── store.js            # Storage abstraction (JSON/SQLite/MySQL/PostgreSQL) + migration
+│   └── backends/           # Database backends
 ├── public/                 # Frontend static assets
 │   ├── player.html         # Player page (custom DanmakuEngine)
 │   ├── admin.html          # Admin panel
@@ -119,14 +134,55 @@ Artplayer-Web-Api/
 │   ├── admin.css
 │   ├── player/<id>/        # Player themes (theme.json + style.css)
 │   └── admin/<id>/         # Admin themes
-└── data/                   # Runtime data (JSON persistence)
-    ├── danmu.json          # Danmaku data
+└── data/                   # Runtime data
+    ├── danmu.json          # Danmaku data (JSON storage mode)
     ├── banned_words.json   # Banned words
     ├── videos.json         # Video ID map (vid → url)
     ├── accounts.json       # Accounts (salted sha256)
-    ├── config.json         # Server configuration
-    └── api-stats.json      # API stats (auto-saved)
+    ├── config.json         # Server configuration (incl. DB connection)
+    ├── api-stats.json      # API stats (auto-saved)
+    └── app.db              # SQLite database file (optional)
 ```
+
+## Database Support
+
+Six storage backends are built in: **JSON files (default) / SQLite / MySQL / MariaDB / PostgreSQL / MongoDB**, manageable from the "Database" tab in the admin panel.
+
+### Data stored
+
+| Data | Description |
+|---|---|
+| Danmaku | all danmaku (author, color, position, timestamp) |
+| Video map | vid → url mappings |`n| Subtitle library | subtitle database (ID/name/lang/content/localized) + video-subtitle links |
+| Banned words | keyword list (incl. subscribed lexicons) |
+| Accounts | admin accounts (scrypt salted hash) |
+| IP data | bans / whitelist, login records, login fail locks, per-IP request stats |
+| Stats | API / IP access stats (1s time buckets) |
+
+### Switching & migration
+
+- Admin → Database → pick the target type (SQLite only needs a file path; MySQL/MariaDB/PostgreSQL need connection params) → "Switch & Migrate"
+- All data is migrated automatically to the target storage (**any-to-any** between JSON ↔ SQLite ↔ MySQL ↔ MariaDB ↔ PostgreSQL ↔ MongoDB), no restart needed; writes pause briefly during migration
+- Leave the password empty to reuse the saved one; use "Test Connection" first
+- **Auto-migration**: set `db.type` in `config.json` and restart — if the target DB is empty and JSON files contain data, it syncs automatically once (zero-touch upgrade)
+- Table browsing: inspect every table (danmaku / videos / banned words / accounts / bans & whitelist / login records / stats)
+- Export backup: one-click download of all data as a JSON file
+
+### Config example (config.json)
+
+```json
+{
+  "db": {
+    "type": "mysql",
+    "sqlite": { "file": "data/app.db" },
+    "mysql": { "host": "126.8.8.1", "port": 3306, "user": "root", "password": "", "database": "artplayer" },
+    "postgres": { "host": "126.8.8.1", "port": 5432, "user": "postgres", "password": "", "database": "artplayer" },
+    "mongodb": { "host": "126.8.8.1", "port": 27017, "user": "", "password": "", "database": "artplayer" }
+  }
+}
+```
+
+> `type` is one of `json` (default) / `sqlite` / `mysql` / `mariadb` / `postgres` / `mongodb`. MongoDB user/password may be empty (unauthenticated). Connection params can also be filled in and saved from the admin panel.
 
 ## Player Usage
 
@@ -227,10 +283,16 @@ The admin theme (`adminTheme`) is independent of the player theme (`theme`).
 | `pow.enabled` | Require a SHA-256 PoW challenge before entering the player (anti-bot) |
 | `rateLimit` | Global API rate limit (sliding window) |
 | `danmakuLimit` | Max danmaku sends per IP per minute |
+| `danmaku.maxLength` | Max danmaku text length (default 500, 1-2000) |
+| `danmaku.authorMaxLength` | Max danmaku author name length (default 50, 1-200) |
+| `upload.maxMB` | Max file upload size (default 200MB, 1-2048) |
+| `upload.previewKB` | File manager text preview limit (default 200KB) |
 | `render.maxPerSecond` | Max danmaku spawned per second |
 | `api.apis` | Per-API enable / RPS / bandwidth cap (KB/s); over-limit returns 429 |
 | `api.retentionDays` | API stats retention in days (1-90) |
 | `security.adminPath` | Custom admin path (e.g. `"panel"` → `/panel/`) |
+| `timezone` | Site timezone (IANA name, e.g. Asia/Shanghai); affects server times like backup filenames |
+| `language` | Default UI language (zh/zhHant/wyw/en/ja/fr) |
 | `cdn` | Prepends CDN base URL to relative video paths in the player |
 
 ## API Reference
@@ -301,7 +363,9 @@ Data is persisted via the `./data:/app/data` volume. See [DOCKER.md](DOCKER.md) 
 
 ## Data & Backup
 
-- All data lives as JSON files under `data/` — copy the directory to back up
+- **JSON mode**: all data lives as JSON files under `data/` — copy the directory to back up
+- **SQL mode**: data lives in database tables (SQLite file defaults to `data/app.db`, inside the `./data` volume); back up MySQL/PostgreSQL the usual way
+- One-click **export backup** in the Database tab (all data → JSON file download)`n- **Scheduled auto-backup** (Database tab → Scheduled backup): configurable interval (hours), max backups kept, and contents (database data / server config); backups are stored in `data/backups/`; manual backup, download, delete and **restore from backup** are supported (restore overwrites the current storage; config restore keeps the current DB connection and backup settings)
 - API stats auto-persist every minute and on graceful shutdown; history survives restarts
 
 ## FAQ
@@ -312,11 +376,33 @@ Make sure the video ID matches (same URL resolves to the same ID); check the ban
 **Lost historical danmaku?**
 No. `resolve` auto-detects legacy hash IDs and inherits them, so old danmaku remains visible after upgrading.
 
+**How do I switch databases?**
+Admin → Database → pick target storage → Test Connection → Switch & Migrate, no restart needed. You can also set the `db` field in `config.json` and restart (first boot syncs JSON data automatically).
+
+**Can switching lose data?**
+No. Migration is all-or-nothing: data is fully exported from the current storage, written to the target, and only then the switch takes effect; on failure it rolls back and the original storage is untouched.
+
+**Duplicate danmaku IDs in legacy JSON data?**
+JSON storage has no primary-key constraint, so historical duplicates may exist. They are deduplicated by id (one kept) automatically when migrating into SQL databases — the only cleanup migration performs.
+
 **How to change the default password?**
-Via the admin panel, or edit `data/accounts.json` directly (salt + sha256).
+Via the admin panel, or edit `data/accounts.json` directly (salt + sha256); if accounts are stored in a database, use the admin panel instead.
 
 **Theme CSS changes not taking effect?**
 `theme/player.css` / `theme/admin.css` are build outputs — edit `theme/<type>/<id>/theme.json` and run `node theme/build.js`.
+
+## Update
+
+- **Check for updates** in About → Update: compares GitHub Releases / npm / the remote `update.xml` manifest, showing the latest version and release notes
+- **Running an update** is handled by a standalone process (`update.js`), started from the panel:
+  1. **Backs up `data/`** first (data is never part of the update; `.gitignore` excludes it, and a backup is still made to `data/backup_update_<ts>/`)
+  2. `git fetch` + `git pull --ff-only`
+  3. **Verifies the `update.xml` manifest** (SHA-256 of every file; aborts if any mismatch, preventing partial updates)
+  4. `npm install --production --package-lock=false`
+  5. Verifies the version, then **restarts the service automatically** (stop old process, wait for the port, spawn the new one; `--no-restart` updates without restarting)
+- `update.xml` is the version manifest (version + per-file SHA-256); regenerate it with `node tools/gen-update-xml.js "message"` before releasing
+- On failure it rolls back safely: the data backup is kept, the old service keeps running, logs go to `data/update.log`, and code can be restored with `git checkout -- .`
+- Docker deployments do not self-update; pull the new image manually
 
 ## License
 

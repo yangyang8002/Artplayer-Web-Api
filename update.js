@@ -133,11 +133,17 @@ function startServer() {
 
 /* 从 npm 更新：下载当前 npm 包并覆盖项目文件（排除 data/ node_modules/ .git/ 与更新自身） */
 const NPM_PKG_NAME = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name || 'open-video-api';
+/* npm 镜像源：环境变量 > data/config.json 的 plugin.npmRegistry > 官方源 */
+let npmRegistry = process.env.OPENVIDEO_NPM_REGISTRY || '';
+if (!npmRegistry) {
+    try { npmRegistry = ((JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'config.json'), 'utf8')).plugin || {}).npmRegistry || '').replace(/\/+$/, ''); } catch (e) {}
+}
+const NPM_REG_ARG = npmRegistry ? '--registry="' + npmRegistry + '" ' : '';
 function npmUpdate() {
     const tmp = path.join(ROOT, '.update_npm_' + Date.now());
     fs.mkdirSync(tmp, { recursive: true });
     try {
-    let r = sh('npm pack ' + NPM_PKG_NAME + '@latest --pack-destination ' + tmp);
+    let r = sh('npm pack ' + NPM_PKG_NAME + '@latest --pack-destination ' + tmp + ' ' + NPM_REG_ARG);
         if (!r.ok) throw new Error('npm pack 失败: ' + r.out.slice(-300));
         const tgz = fs.readdirSync(tmp).find(f => f.endsWith('.tgz'));
         if (!tgz) throw new Error('未找到下载的 npm 包');
@@ -180,7 +186,7 @@ function npmUpdate() {
         }
         log('文件已覆盖（版本 ' + version + '）');
         /* 安装依赖 */
-        r = sh('npm install --production --no-audit --no-fund --package-lock=false');
+        r = sh('npm install --production --no-audit --no-fund --package-lock=false ' + NPM_REG_ARG);
         if (!r.ok) throw new Error('npm install 失败: ' + r.out.slice(-300));
         return { ok: true, version };
     } catch (e) {
@@ -225,7 +231,7 @@ function npmUpdate() {
             manifest = verifyManifest();
             if (!manifest.ok && !force) { log('清单校验未通过，已中止: ' + manifest.reason); process.exit(1); }
             /* 依赖安装（--package-lock=false 避免改动 lockfile 导致清单失配） */
-            r = sh('npm install --production --no-audit --no-fund --package-lock=false');
+            r = sh('npm install --production --no-audit --no-fund --package-lock=false ' + NPM_REG_ARG);
             if (!r.ok) { log('npm install 失败: ' + r.out.slice(-300)); process.exit(1); }
         } else if (useSource === 'npm') {
             /* npm 包更新：下载解压覆盖 */
@@ -233,7 +239,7 @@ function npmUpdate() {
             if (!res.ok) { log('npm 更新失败: ' + res.reason); process.exit(1); }
         } else if (useSource === 'npm-global') {
             /* npm 全局安装更新 */
-            const r = sh('npm install -g ' + NPM_PKG_NAME + '@latest --no-audit --no-fund');
+            const r = sh('npm install -g ' + NPM_PKG_NAME + '@latest --no-audit --no-fund ' + NPM_REG_ARG);
             if (!r.ok) { log('npm 全局更新失败: ' + r.out.slice(-300)); process.exit(1); }
         } else {
             log('未知更新来源: ' + useSource);

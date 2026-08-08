@@ -3,7 +3,7 @@
 <update>
   <version>26.8.11</version>
   <date>2026-08-08</date>
-  <message>v26.8.11: upgrade button always visible (disabled when up-to-date) + force reinstall current version (force=true bypasses version check)</message>
+  <message>v26.8.11: configurable npm mirror for updates/plugin install/deps (config.plugin.npmRegistry + env), UI card in deps tab</message>
   <files>
   <file path=".dockerignore" sha256="92b725988b57a03160cb825d470f929fbecbf4ee25b4dbc28a7fdb3a8c41a781" size="78"/>
   <file path=".github/social-preview.png" sha256="0949997a033350b2096a95f68c4a3eaabe2e3952913e91a0bec59807bbfdb246" size="21642"/>
@@ -25,7 +25,7 @@
   <file path="lib/backends/sqlite.js" sha256="625b1d8600c2a0f25a243e4f42d3d929e57a44e11e11e03f9f2f9d003b667735" size="2453"/>
   <file path="lib/cloud.js" sha256="5b48ed67112b97f27dae7b853d16c96675a48591024c7a74bc5f5642d67d7653" size="10133"/>
   <file path="lib/model.js" sha256="bec025ba75882a022ca57de8ff4e8d7ec69dde319a6a885aebbd2b9eff54efcb" size="5401"/>
-  <file path="lib/plugin.js" sha256="19c182138318b4dca5aade283eef97b8fa0bbba42b5c4b3be653c963dc488734" size="23802"/>
+  <file path="lib/plugin.js" sha256="36b996be030917929f5811aba664e5048a986128594c8dad9063fe3d34693386" size="24138"/>
   <file path="lib/store.js" sha256="b22858dd1341049fea7edd547d32cfd15ae8ab97f5d866fb9cfdea3a2d612440" size="29637"/>
   <file path="nginx.conf.example" sha256="bfbc0c107882def10bcecfd008c10bfdd54115c0fe50538c9be3615167469e78" size="2119"/>
   <file path="package-lock.json" sha256="07753dd82aec66a96b4c7c50a880bb2a0b5415cb4839d9d05f03a6e2834d8301" size="41173"/>
@@ -36,10 +36,10 @@
   <file path="plugins/openvideo-plugin-demo/lib/index.js" sha256="ba732d8c18dfb4abe7c729eec1e427ecf4c67f0b3248fbacbd6205ab4c89b0eb" size="3838"/>
   <file path="plugins/openvideo-plugin-demo/package.json" sha256="8ee40affefa20d00eff1dd1ebf6004985df58e3f4f6b692b22d5046cb74e17d8" size="1257"/>
   <file path="public/CUSTOM_THEME.md" sha256="a4394eb9fd4e0d7b68d0273fd957ec17cadfa2a0481aa28f5f55298c006008c0" size="3271"/>
-  <file path="public/admin.html" sha256="127d611f37cf1b4baa18ecd07d1e326a6b8c3d72f1fbf7d4d2044bf7656dc168" size="266897"/>
+  <file path="public/admin.html" sha256="fd96dd49cf3da1f8d03aa991bfcd5a5136060e7a707a5906fb73021c30b11b01" size="269436"/>
   <file path="public/favicon-128.png" sha256="de8371137f6c9648f8728550e71de67fb5460771062ec1b45970909a1e5dd3dc" size="2034"/>
   <file path="public/favicon.svg" sha256="ca0f3061d459fc5636914978579613a6a8b626dc69123909eceee07d2f3c8d9f" size="555"/>
-  <file path="public/i18n.js" sha256="7dae341a4d6b63fb114914886d98b232103d424f77e43ef251e24e6e59b1f457" size="105845"/>
+  <file path="public/i18n.js" sha256="cde80d9cd028498a277f50502ed36c3ddbf195246ece08e18fc10afaad33de4d" size="106092"/>
   <file path="public/player.html" sha256="0319bab8ee5dc1cfb7c2b70f9d6e17cd10e4512f04ab803bd1385624ff41950a" size="76936"/>
   <file path="public/test_video1.en.vtt" sha256="2854f0cb4a81a3f7c02842ab8a6fac8fabe7d33384182be3653c663e131c4a1d" size="182"/>
   <file path="public/test_video1.mp4" sha256="0d55da42748dca33b1e175f0ad6855c060d4587dfc0a6b525c2c731a64e94f9f" size="6962589"/>
@@ -48,7 +48,7 @@
   <file path="public/test_video1.vtt" sha256="65bf5090bbb808e9825b4205eff66e8f3799b9ef482070ae54a460b6ac18eb0d" size="115"/>
   <file path="public/test_video2.mp4" sha256="f192304389dbc213c8dde5dc6f6b77cdd09f1785dbef6255a9857b108757eb8e" size="330061"/>
   <file path="public/test_video3.mp4" sha256="5520e9715ab6371aaf5532877a3dff6010ce57793cd6cc89752aa4116d4b9d50" size="108190"/>
-  <file path="server.js" sha256="9bed0afd1665d404103cad1d03c783cdab4cb2336ebf3d7d18d69221ae7e4ab8" size="181002"/>
+  <file path="server.js" sha256="0a4b3258adedd7efb5000a73bc7af6fd1fd1f432dded4865123c6b7393ac83b2" size="182528"/>
   <file path="theme/README.md" sha256="d3f4cc2fbc639f7eb6cbd98b210dd6642a840ecbbbda1b86944d574ec348746e" size="4676"/>
   <file path="theme/admin.css" sha256="2748ab4434965280b2993b3e9c565c2684bd389414fa873459c630060bd825f7" size="10177"/>
   <file path="theme/admin/bilibili/style.css" sha256="1bf60cf612a5a20cecf5f0bf8676c9831af78b54d30314bf5d27e3cc3bdec703" size="132"/>
@@ -83,6 +83,6 @@
   <file path="theme/player/sakura/theme.json" sha256="4eb46b6751b167ed8a784c5718226123cbba0024e146ec6516a2739bd873561a" size="357"/>
   <file path="theme/player/shoujo/theme.json" sha256="8abbc9f0c7448c24693f8dff8a1e59920bcb0ee98f25e059988c5f13a114242b" size="368"/>
   <file path="theme/player/sunset/theme.json" sha256="3637327532157dfb1bfefbb4d3a894428955701428d0d7977cc76732995b7789" size="354"/>
-  <file path="update.js" sha256="f1874b7753fb100ef6fe0c7e60942ba60fa8011bf8e838e73b4a450ffa6384f4" size="13097"/>
+  <file path="update.js" sha256="7eaea0aa2e1d2ae369be76f708ab9c8e79b7522db4235ee3a21b79f173eddc5f" size="13576"/>
   </files>
 </update>

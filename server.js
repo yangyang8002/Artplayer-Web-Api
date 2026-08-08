@@ -3275,8 +3275,7 @@ app.post('/api/admin/deps/update', checkAdmin, (req, res) => {
     const { names } = req.body || {};
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
     const deps = names && names.length ? names : Object.keys(pkg.dependencies || {});
-    const args = deps.map(n => (n.startsWith('@') ? n : n) + '@latest').join(' ');
-    const child = require('child_process').spawn('npm', ['install', '--no-audit', '--no-fund', '--package-lock=false', ...deps.map(n => n + '@latest')], {
+    const child = require('child_process').spawn('npm', ['install', '--no-audit', '--no-fund', '--package-lock=false', ...deps.map(n => n + '@latest'), ...(npmRegistryArg() ? [npmRegistryArg()] : [])], {
         cwd: __dirname,
         detached: true,
         stdio: 'ignore'
@@ -3306,13 +3305,46 @@ app.post('/api/admin/restart', checkAdmin, async (req, res) => {
     }
 });
 
+/* npm 镜像源（更新 / 插件安装 / 依赖更新共用；环境变量 > config.plugin.npmRegistry > 官方源） */
+function getNpmRegistry() {
+    const c = readConfig().plugin || {};
+    return (process.env.OPENVIDEO_NPM_REGISTRY || c.npmRegistry || 'https://registry.npmjs.org').replace(/\/+$/, '');
+}
+function npmRegistryArg() {
+    const reg = getNpmRegistry();
+    return reg ? '--registry="' + reg + '"' : '';
+}
+
 function getPluginConfig() {
     const c = readConfig().plugin || {};
     return {
         registry: process.env.OPENVIDEO_PLUGIN_REGISTRY || c.registry || 'https://raw.githubusercontent.com/yangyang8002/OpenVideoAPI/master/plugin-registry.json',
-        npmRegistry: process.env.OPENVIDEO_NPM_REGISTRY || c.npmRegistry || 'https://registry.npmjs.org'
+        npmRegistry: getNpmRegistry()
     };
 }
+
+/* 保存更新/安装配置（npm 镜像源 + 插件市场源），立即生效无需重启 */
+app.post('/api/admin/update/config', checkAdmin, (req, res) => {
+    try {
+        const { npmRegistry, pluginRegistry } = req.body || {};
+        const config = readConfig();
+        if (!config.plugin) config.plugin = {};
+        if (npmRegistry !== undefined) {
+            const r = String(npmRegistry).trim().replace(/\/+$/, '');
+            config.plugin.npmRegistry = r && /^https?:\/\//i.test(r) ? r : '';
+        }
+        if (pluginRegistry !== undefined) {
+            const r2 = String(pluginRegistry).trim();
+            config.plugin.registry = r2 && /^https?:\/\//i.test(r2) ? r2 : '';
+        }
+        writeConfig(config);
+        marketCache = null; /* 源变化后清除市场缓存 */
+        depsCache = null;   /* 依赖版本检查也基于 registry，一并失效 */
+        res.json({ code: 0, msg: '更新/安装配置已保存', data: { npmRegistry: getNpmRegistry(), registry: getPluginConfig().registry } });
+    } catch (e) {
+        res.status(500).json({ code: 1, msg: safeErrMsg(e) });
+    }
+});
 
 app.get('/api/admin/plugins', checkAdmin, (req, res) => {
     res.json({ code: 0, data: { list: pluginManager.list(), services: Array.from(pluginManager.services.keys()), dir: 'plugins/' } });
@@ -3782,6 +3814,7 @@ async function initStore() {
             readConfig,
             saveConfig: async (patch) => { await appService.saveConfig(patch); },
             restartServer: async (opts) => { await restartServer(opts); },
+            npmRegistry: getNpmRegistry,
             version: APP_VERSION,
             log: (m) => { console.log('[插件] ' + m); pluginLogPush('info', 'plugin', m); }
         });

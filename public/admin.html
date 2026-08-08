@@ -1035,6 +1035,16 @@
                 <div id="depsNotes" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;max-height:140px;overflow:auto;white-space:pre-wrap"></div>
             </div>
             <div class="card">
+                <h3><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>更新与安装配置
+                    <button class="btn btn-sm" style="margin-left:10px" onclick="loadUpdateCfg()">读取当前</button>
+                    <button class="btn btn-sm btn-primary" style="margin-left:6px" onclick="saveUpdateCfg()">保存</button>
+                    <span id="updCfgMsg" style="font-weight:400;font-size:11px;color:var(--text3);margin-left:8px"></span>
+                </h3>
+                <div class="cfg-row"><span>npm 镜像源</span><input type="text" id="cfgNpmRegistry" placeholder="https://registry.npmjs.org 或 https://registry.npmmirror.com（国内加速）" style="flex:1"></div>
+                <div class="cfg-row"><span>插件市场源</span><input type="text" id="cfgPluginRegistry" placeholder="https://raw.githubusercontent.com/yangyang8002/OpenVideoAPI/master/plugin-registry.json" style="flex:1"></div>
+                <div class="cfg-hint">npm 镜像源作用于：程序更新（update.js）、插件安装/更新、依赖更新；插件市场源为市场清单地址。保存后立即生效，无需重启。也可用环境变量 OPENVIDEO_NPM_REGISTRY / OPENVIDEO_PLUGIN_REGISTRY 覆盖。</div>
+            </div>
+            <div class="card">
                 <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>npm 依赖
                     <button class="btn btn-sm btn-primary" style="margin-left:10px" onclick="updateAllDeps()">更新全部</button>
                 </h3>
@@ -2907,6 +2917,26 @@
         }
 
         /* ===== 依赖与更新 ===== */
+        function loadUpdateCfg() {
+            fetch('/api/admin/config', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0 || !d.data.plugin) return;
+                document.getElementById('cfgNpmRegistry').value = d.data.plugin.npmRegistry || '';
+                document.getElementById('cfgPluginRegistry').value = d.data.plugin.registry || '';
+                document.getElementById('updCfgMsg').textContent = '已读取';
+            });
+        }
+        function saveUpdateCfg() {
+            const body = {
+                npmRegistry: document.getElementById('cfgNpmRegistry').value.trim(),
+                pluginRegistry: document.getElementById('cfgPluginRegistry').value.trim()
+            };
+            fetch('/api/admin/update/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => {
+                    document.getElementById('updCfgMsg').textContent = d.code === 0 ? '已保存：' + d.data.npmRegistry : d.msg;
+                    if (d.code === 0) toast('已保存', true);
+                    else toast(d.msg, false);
+                });
+        }
         function loadDeps(force) {
             fetch('/api/admin/deps' + (force ? '?force=1' : ''), { headers: authHeaders() })
                 .then(r => r.json()).then(d => {

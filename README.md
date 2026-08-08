@@ -18,7 +18,7 @@ Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播�
 
 **v26.8.11**
 
-📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🌐 [Online Docs](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
+📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🌐 [Online Docs](https://doc.mbps.top/)
 
 ## Quick Start
 
@@ -95,7 +95,7 @@ npm start
 
 ## Documentation
 
-- 🌐 [**Online Docs Site**](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/) — VitePress 官方文档（中英双语）：指南 / 管理后台 / API 参考 / 插件开发
+- 🌐 [**Online Docs Site**](https://doc.mbps.top/) — VitePress 官方文档（中英双语）：指南 / 管理后台 / API 参考 / 插件开发
 - [README_CN.md](README_CN.md) — 完整中文文档（配置、API 参考、常见问题）
 - [README_EN.md](README_EN.md) — Full English documentation
 - [DOCKER.md](DOCKER.md) — Docker / docker-compose / Nginx 部署

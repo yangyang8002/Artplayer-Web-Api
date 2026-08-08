@@ -12,7 +12,7 @@
   <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
 </p>
 
-> 📖 [English](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🎨 [主题系统](theme/README.md) · 🌐 [在线文档](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
+> 📖 [English](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🎨 [主题系统](theme/README.md) · 🌐 [在线文档](https://doc.mbps.top/)
 
 基于 [ArtPlayer](https://artplayer.org) 的弹幕视频播放器 + Web 管理后台。自带自研 Canvas 弹幕引擎、多主题系统、PoW 防爬虫、API 限流与统计、文件管理、多字幕支持、多数据库存储。
 
@@ -439,7 +439,7 @@ JSON 存储无主键约束，历史上可能产生重复 id 的记录。迁入 S
 
 ## 插件系统
 
-详见 [插件指南](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/plugins/guide.html)。
+详见 [插件指南](https://doc.mbps.top/plugins/guide.html)。
 
 - **写法（Koishi 风格）**：插件 = 函数 / 类 / 带 `apply(ctx, config)` 的对象；`ctx` 注入 `router`（Express）/ `store`（数据存储）/ `http` / `log` / `on` / `emit` / `plugin`（嵌套）/ `version`
 - **内置事件**：`danmu:send`（弹幕发送成功时触发）

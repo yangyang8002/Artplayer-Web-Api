@@ -12,7 +12,7 @@
   <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
 </p>
 
-> 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md) · 🌐 [Online Docs](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
+> 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md) · 🌐 [Online Docs](https://doc.mbps.top/)
 
 A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, a full file manager, and multi-database storage.
 
@@ -417,7 +417,7 @@ Via the admin panel, or edit `data/accounts.json` directly (salt + sha256); if a
 
 ## Plugins
 
-See the [Plugin Guide](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/plugins/guide.html).
+See the [Plugin Guide](https://doc.mbps.top/plugins/guide.html).
 
 - **Writing (Koishi-style)**: plugin = function / class / object with `apply(ctx, config)`; ctx injects `router` (Express) / `store` / `http` / `log` / `on` / `emit` / `plugin` (nested) / `version`
 - **Built-in events**: `danmaku:send` (fired when a danmaku is sent)

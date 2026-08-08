@@ -558,12 +558,33 @@
     
         /* 控制台统计卡片 */
         .dash-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+        @media (max-width:1200px){ .dash-grid{ grid-template-columns:repeat(3,1fr); } }
         @media (max-width:900px){ .dash-grid{ grid-template-columns:repeat(2,1fr); } }
-        .dash-card { background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); border:1px solid var(--border); border-radius:14px; padding:16px; position:relative; overflow:hidden; }
-        .dash-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--primary)); opacity:.5; }
-        .dash-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:10px; }
-        .dash-val { font-size:22px; font-weight:700; color:var(--text); font-family:monospace; }
-        .dash-label { font-size:11px; color:var(--text3); margin-top:2px; }
+        .dash-card {
+            position:relative; border-radius:16px; padding:16px 18px 14px;
+            background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+            border:1px solid var(--border);
+            overflow:hidden;
+            transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+        .dash-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--g1,var(--accent)),var(--g2,var(--primary))); opacity:.55; }
+        .dash-card:hover { transform:translateY(-2px); border-color:rgba(124,92,252,.35); box-shadow:0 8px 30px rgba(0,0,0,.25); }
+        .dash-card.big { padding:18px 20px 16px; border-radius:18px; }
+        .dash-icon { position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+        .dash-val {
+            font-size:24px; font-weight:800; letter-spacing:-.5px; line-height:1.25;
+            font-variant-numeric:tabular-nums;
+            background:linear-gradient(135deg,var(--text),var(--text2));
+            -webkit-background-clip:text; background-clip:text; color:transparent;
+        }
+        .dash-card.big .dash-val { font-size:30px; background:linear-gradient(135deg,var(--g1,var(--accent)),var(--g2,var(--primary))); -webkit-background-clip:text; background-clip:text; }
+        .dash-label { font-size:11px; color:var(--text3); margin-top:4px; letter-spacing:.4px; }
+        /* 性能监控指标格 */
+        .perf-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:14px; }
+        .perf-metric { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:12px; padding:10px 14px; transition:border-color .2s; }
+        .perf-metric:hover { border-color:rgba(124,92,252,.35); }
+        .perf-metric .k { font-size:11px; color:var(--text3); letter-spacing:.3px; }
+        .perf-metric .v { font-size:19px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; color:var(--text); }
         /* 初始化向导步骤指示 */
         .init-step { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0; font-size:12px; color:var(--text3); border-radius:8px; background:rgba(255,255,255,.03); transition:all .2s; }
         .init-step span { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:var(--surface2); border:1px solid var(--border); }
@@ -596,8 +617,6 @@
         .dot { flex-shrink:0; }
         /* 插件卡片芯片 */
         .pl-chip { display:inline-flex; align-items:center; padding:1px 8px; border-radius:20px; font-size:11px; color:var(--text2); background:rgba(255,255,255,.06); border:1px solid var(--border); }
-        /* 仪表盘数值渐变 */
-        .dash-val { background:linear-gradient(135deg,var(--text),var(--text2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
         /* 滚动条美化 */
         ::-webkit-scrollbar { width:8px; height:8px; }
         ::-webkit-scrollbar-track { background:transparent; }
@@ -730,65 +749,65 @@
         <!-- Console -->
         <div class="panel active" id="consolePanel">
             <div class="dash-grid">
-                <div class="dash-card">
+                <div class="dash-card big" style="--g1:var(--accent);--g2:#62d5ff">
                     <div class="dash-icon" style="background:rgba(98,213,255,.14);color:var(--accent)">&#128200;</div>
-                    <div class="dash-val" id="dashCalls">—</div>
                     <div class="dash-label">总请求数</div>
+                    <div class="dash-val" id="dashCalls">—</div>
+                </div>
+                <div class="dash-card big" style="--g1:var(--warn);--g2:#f59e0b">
+                    <div class="dash-icon" style="background:rgba(245,158,11,.14);color:var(--warn)">&#128337;</div>
+                    <div class="dash-label">今日请求</div>
+                    <div class="dash-val" id="dashToday">—</div>
+                </div>
+                <div class="dash-card big" style="--g1:var(--success);--g2:#34d399">
+                    <div class="dash-icon" style="background:rgba(52,211,153,.14);color:var(--success)">&#128101;</div>
+                    <div class="dash-label">24h 在线 IP</div>
+                    <div class="dash-val" id="dashActiveIps">—</div>
+                </div>
+                <div class="dash-card big" style="--g1:#ff8a65;--g2:#ff8a65">
+                    <div class="dash-icon" style="background:rgba(255,138,101,.14);color:#ff8a65">&#127916;</div>
+                    <div class="dash-label">弹幕总数</div>
+                    <div class="dash-val" id="dashDanmu">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(124,92,252,.14);color:var(--primary)">&#128190;</div>
-                    <div class="dash-val" id="dashBytes">—</div>
                     <div class="dash-label">总流量</div>
+                    <div class="dash-val" id="dashBytes">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(52,211,153,.14);color:var(--success)">&#127760;</div>
-                    <div class="dash-val" id="dashIps">—</div>
                     <div class="dash-label">访问 IP 数</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-icon" style="background:rgba(255,138,101,.14);color:#ff8a65">&#127916;</div>
-                    <div class="dash-val" id="dashDanmu">—</div>
-                    <div class="dash-label">弹幕总数</div>
+                    <div class="dash-val" id="dashIps">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(100,221,23,.14);color:#64dd17">&#127909;</div>
-                    <div class="dash-val" id="dashVideos">—</div>
                     <div class="dash-label">视频映射</div>
+                    <div class="dash-val" id="dashVideos">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(167,139,250,.14);color:#a78bfa">&#128172;</div>
-                    <div class="dash-val" id="dashSubs">—</div>
                     <div class="dash-label">字幕数</div>
+                    <div class="dash-val" id="dashSubs">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(255,77,106,.14);color:var(--danger)">&#128737;</div>
-                    <div class="dash-val" id="dashBanned">—</div>
                     <div class="dash-label">屏蔽词</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-icon" style="background:rgba(245,158,11,.14);color:var(--warn)">&#128187;</div>
-                    <div class="dash-val" id="dashUptime">—</div>
-                    <div class="dash-label">运行时间</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-icon" style="background:rgba(98,213,255,.14);color:var(--accent)">&#128337;</div>
-                    <div class="dash-val" id="dashToday">—</div>
-                    <div class="dash-label">今日请求</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-icon" style="background:rgba(52,211,153,.14);color:var(--success)">&#128101;</div>
-                    <div class="dash-val" id="dashActiveIps">—</div>
-                    <div class="dash-label">24h 在线 IP</div>
+                    <div class="dash-val" id="dashBanned">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(255,138,101,.14);color:#ff8a65">&#128293;</div>
-                    <div class="dash-val" id="dashDanmuToday">—</div>
                     <div class="dash-label">今日弹幕</div>
+                    <div class="dash-val" id="dashDanmuToday">—</div>
                 </div>
                 <div class="dash-card">
                     <div class="dash-icon" style="background:rgba(124,92,252,.14);color:var(--primary)">&#127909;</div>
-                    <div class="dash-val" id="dashVideoToday">—</div>
                     <div class="dash-label">今日新视频</div>
+                    <div class="dash-val" id="dashVideoToday">—</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(245,158,11,.14);color:var(--warn)">&#128187;</div>
+                    <div class="dash-label">运行时间</div>
+                    <div class="dash-val" id="dashUptime">—</div>
                 </div>
             </div>
             <div class="card">
@@ -796,14 +815,14 @@
                     <span style="font-size:11px;color:var(--text3);margin-left:8px" id="dashPerfInfo"></span>
                     <button class="btn btn-sm" style="margin-left:8px" onclick="loadDashboard(true)">刷新</button>
                 </h3>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px">
-                    <div><span style="font-size:11px;color:var(--text3)">内存 (RSS)</span><div id="dashMem" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">堆内存</span><div id="dashHeap" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">CPU 使用率</span><div id="dashCpu" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">最近 1 分钟请求</span><div id="dashLastMin" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">Node.js</span><div id="dashNode" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">进程 PID</span><div id="dashPid" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
-                    <div><span style="font-size:11px;color:var(--text3)">系统 / 磁盘</span><div id="dashDisk" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                <div class="perf-grid">
+                    <div class="perf-metric"><div class="k">内存 (RSS)</div><div class="v" id="dashMem">—</div></div>
+                    <div class="perf-metric"><div class="k">堆内存</div><div class="v" id="dashHeap">—</div></div>
+                    <div class="perf-metric"><div class="k">CPU 使用率</div><div class="v" id="dashCpu">—</div></div>
+                    <div class="perf-metric"><div class="k">最近 1 分钟请求</div><div class="v" id="dashLastMin">—</div></div>
+                    <div class="perf-metric"><div class="k">Node.js</div><div class="v" id="dashNode">—</div></div>
+                    <div class="perf-metric"><div class="k">进程 PID</div><div class="v" id="dashPid">—</div></div>
+                    <div class="perf-metric"><div class="k">系统 / 磁盘</div><div class="v" id="dashDisk">—</div></div>
                 </div>
                 <canvas id="dashChart" style="width:100%;height:200px;display:block"></canvas>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--text3)">
@@ -2639,8 +2658,8 @@
             stopDashPanel();
             loadDashboard(true);
             loadDashReq();
-            dashTimer = setInterval(loadDashboard, 5000);
-            dashReqTimer = setInterval(loadDashReq, 10000);
+            dashTimer = setInterval(loadDashboard, 2000);
+            dashReqTimer = setInterval(loadDashReq, 3000);
         }
         function stopDashPanel() {
             if (dashTimer) { clearInterval(dashTimer); dashTimer = null; }

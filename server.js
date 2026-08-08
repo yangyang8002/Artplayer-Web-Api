@@ -3088,9 +3088,9 @@ function samplePerf() {
     const mem = process.memoryUsage();
     const totalCalls = Object.values(apiTotals.calls).reduce((a, b) => a + b, 0);
     perfHistory.push({ t: now, mem: Math.round(mem.rss / 1048576 * 10) / 10, cpu: Math.round(cpuPct * 10) / 10, req: totalCalls });
-    if (perfHistory.length > 120) perfHistory.shift();
+    if (perfHistory.length > 240) perfHistory.shift(); /* 5s 采样 → 保留 20 分钟 */
 }
-setInterval(samplePerf, 10000);
+setInterval(samplePerf, 5000);
 
 app.get('/api/admin/dashboard', checkAdmin, async (req, res) => {
     try {

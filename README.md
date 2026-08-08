@@ -16,9 +16,9 @@
 
 Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理、多数据库存储。
 
-**v26.8.8**
+**v26.8.11**
 
-📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md)
+📖 [中文文档](README_CN.md) · 📖 [English Documentation](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🌐 [Online Docs](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
 
 ## Quick Start
 
@@ -88,11 +88,14 @@ npm start
 - API 独立开关 / RPS 限速 / 带宽控制，1 秒精度实时曲线（跨度 5 分钟 ~ 3 个月）
 - PoW 工作量证明防火墙、全局速率限制、登录限流
 - 播放器 + 后台双主题系统（各 10 套，支持自定义导入）
-- 管理后台：弹幕 / 视频 / 屏蔽词 / 文件 / 日志 / API 统计 / 数据库管理
+- 管理后台：控制台监控 / 弹幕 / 视频 / 屏蔽词 / 文件 / 日志 / API 统计 / 数据库 / 备份 / 安全中心
+- **插件系统（Koishi 风格）**：ctx 注入路由 / 存储 / 事件总线，支持上传、GitHub-URL、npm 安装，配置 Schema 自动生成表单，官方插件市场
+- **依赖与更新**：程序版本一键更新（自动备份 + 重启）、npm 依赖逐个更新、插件更新
 - **多数据库存储**：JSON 文件（默认）/ SQLite / MySQL / MariaDB / PostgreSQL，任意互转、热切换自动迁移（弹幕、视频映射、屏蔽词、账号、IP 封禁白名单、登录记录、统计）
 
 ## Documentation
 
+- 🌐 [**Online Docs Site**](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/) — VitePress 官方文档（中英双语）：指南 / 管理后台 / API 参考 / 插件开发
 - [README_CN.md](README_CN.md) — 完整中文文档（配置、API 参考、常见问题）
 - [README_EN.md](README_EN.md) — Full English documentation
 - [DOCKER.md](DOCKER.md) — Docker / docker-compose / Nginx 部署

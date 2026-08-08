@@ -1,0 +1,14 @@
+{
+  "updated": "2026-08-08",
+  "plugins": [
+    {
+      "name": "hello-world",
+      "version": "1.0.0",
+      "description": "示例插件：启动时打印欢迎信息，监听弹幕发送事件并记录到日志",
+      "author": "yangyang8002",
+      "homepage": "https://github.com/yangyang8002/Artplayer-Web-Api",
+      "tags": ["demo", "示例"],
+      "url": "https://raw.githubusercontent.com/yangyang8002/Artplayer-Web-Api/master/plugins/hello-world.js"
+    }
+  ]
+}

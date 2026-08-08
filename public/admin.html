@@ -579,6 +579,38 @@
         .card { transition:transform .2s ease, box-shadow .2s ease; }
         .card:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,0,0,.18); }
 
+        /* ===== 界面美化增强 ===== */
+        /* 面板淡入 */
+        .panel { animation: panelIn .28s ease; }
+        @keyframes panelIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+        /* 侧边栏导航微交互 */
+        .side-nav .nav-item { transition:all .18s ease; }
+        .side-nav .nav-item:hover { background:rgba(124,92,252,.08); transform:translateX(2px); }
+        .side-nav .nav-item.active { box-shadow:inset 0 0 0 1px rgba(124,92,252,.2), 0 2px 12px rgba(124,92,252,.12); }
+        /* 品牌区渐变标题 */
+        .side-brand h1 { background:linear-gradient(90deg,var(--accent),var(--primary)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+        /* 表格行悬浮 */
+        table tbody tr:hover { background:rgba(255,255,255,.03); }
+        /* 卡片内标题渐变点 */
+        .card h3, .cfg-card h4 { display:flex; align-items:center; }
+        .dot { flex-shrink:0; }
+        /* 插件卡片芯片 */
+        .pl-chip { display:inline-flex; align-items:center; padding:1px 8px; border-radius:20px; font-size:11px; color:var(--text2); background:rgba(255,255,255,.06); border:1px solid var(--border); }
+        /* 仪表盘数值渐变 */
+        .dash-val { background:linear-gradient(135deg,var(--text),var(--text2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width:8px; height:8px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(124,92,252,.3); border-radius:8px; }
+        ::-webkit-scrollbar-thumb:hover { background:rgba(124,92,252,.5); }
+        /* 按钮统一微动效 */
+        .btn { transition:all .15s ease; }
+        .btn:active { transform:scale(.96); }
+        /* 登录卡片光晕 */
+        .login-card::before { content:''; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:linear-gradient(135deg,var(--accent),var(--primary2)); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:.5; pointer-events:none; }
+        /* 主内容区背景装饰 */
+        #mainPage { background-image:radial-gradient(ellipse at 85% 10%,rgba(124,92,252,.06),transparent 50%),radial-gradient(ellipse at 10% 90%,rgba(98,213,255,.05),transparent 50%); }
+
 </style>
 </head>
 <body>
@@ -683,6 +715,8 @@
             <button class="nav-item" data-tab="files" onclick="switchTab('files')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><span>文件管理</span></button>
             <button class="nav-item" data-tab="logs" onclick="switchTab('logs')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span><span>日志</span></button>
             <button class="nav-item" data-tab="api" onclick="switchTab('api')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span>API管理</span></button>
+            <button class="nav-item" data-tab="db" onclick="switchTab('db')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span>数据库管理</span></button>
+            <button class="nav-item" data-tab="backup" onclick="switchTab('backup')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span>备份中心</span></button>
             <button class="nav-item" data-tab="security" onclick="switchTab('security')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span>安全中心</span></button>
             <button class="nav-item" data-tab="about" onclick="switchTab('about')"><span class="icon">&#9432;</span><span>关于</span></button>
         </nav>
@@ -736,6 +770,26 @@
                     <div class="dash-val" id="dashUptime">—</div>
                     <div class="dash-label">运行时间</div>
                 </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(98,213,255,.14);color:var(--accent)">&#128337;</div>
+                    <div class="dash-val" id="dashToday">—</div>
+                    <div class="dash-label">今日请求</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(52,211,153,.14);color:var(--success)">&#128101;</div>
+                    <div class="dash-val" id="dashActiveIps">—</div>
+                    <div class="dash-label">24h 在线 IP</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(255,138,101,.14);color:#ff8a65">&#128293;</div>
+                    <div class="dash-val" id="dashDanmuToday">—</div>
+                    <div class="dash-label">今日弹幕</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-icon" style="background:rgba(124,92,252,.14);color:var(--primary)">&#127909;</div>
+                    <div class="dash-val" id="dashVideoToday">—</div>
+                    <div class="dash-label">今日新视频</div>
+                </div>
             </div>
             <div class="card">
                 <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>性能监控
@@ -749,12 +803,19 @@
                     <div><span style="font-size:11px;color:var(--text3)">最近 1 分钟请求</span><div id="dashLastMin" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
                     <div><span style="font-size:11px;color:var(--text3)">Node.js</span><div id="dashNode" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
                     <div><span style="font-size:11px;color:var(--text3)">进程 PID</span><div id="dashPid" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">系统 / 磁盘</span><div id="dashDisk" style="font-size:18px;font-weight:700;color:var(--text)">—</div></div>
                 </div>
                 <canvas id="dashChart" style="width:100%;height:200px;display:block"></canvas>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--text3)">
                     <span><span style="color:var(--accent)">—</span> 内存 RSS (MB)</span>
                     <span><span style="color:var(--primary)">—</span> CPU 使用率 (%)</span>
                 </div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>请求趋势（实时）
+                    <span style="font-size:11px;color:var(--text3);margin-left:8px" id="dashReqInfo"></span>
+                </h3>
+                <canvas id="dashReqChart" style="width:100%;height:150px;display:block"></canvas>
             </div>
         </div>
         <!-- Words -->
@@ -892,24 +953,59 @@
                 <div id="plUrlRow" style="display:none"><input type="text" id="plUrl" placeholder="https://github.com/xxx/plugin.js 或 https://example.com/a.js" style="flex:1;margin-top:8px"></div>
                 <div id="plNpmRow" style="display:none"><input type="text" id="plNpm" placeholder="npm 包名，如 my-artplayer-plugin" style="flex:1;margin-top:8px"></div>
                 <div style="margin-top:12px"><button class="btn btn-sm btn-primary" onclick="installPlugin()">安装</button><button class="btn btn-sm" onclick="loadPlugins()">刷新</button></div>
-                <div class="cfg-hint">插件采用 Koishi 风格：模块导出 apply(ctx, config)；ctx 提供 router（Express）/ store / log / on('dispose')；安装后需启用。⚠ 插件可执行任意代码，仅安装可信来源</div>
+                <div class="cfg-hint">插件采用 Koishi 风格：模块导出 apply(ctx, config)；ctx 提供 router（Express）/ store / log / on('dispose') / emit；安装后需启用。⚠ 插件可执行任意代码，仅安装可信来源</div>
             </div>
             <div class="card">
                 <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>插件列表 <span id="plCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
                 <div id="plList" style="font-size:12px">加载中...</div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--warn);box-shadow:0 0 6px var(--warn)"></span>插件市场
+                    <button class="btn btn-sm" style="margin-left:10px" onclick="loadMarket(true)">刷新</button>
+                    <span id="marketChecked" style="font-weight:400;font-size:11px;color:var(--text3);margin-left:8px"></span>
+                </h3>
+                <div id="marketList" class="empty-state">点击刷新加载官方插件市场</div>
+            </div>
+            <div id="plConfigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)closePlConfig()">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:min(460px,92vw);max-height:84vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.45)">
+                    <h3 style="margin-bottom:14px">插件配置 <span id="plConfigTitle" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
+                    <div id="plConfigFields"></div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+                        <button class="btn btn-sm" onclick="closePlConfig()">取消</button>
+                        <button class="btn btn-sm btn-primary" onclick="savePluginConfig()">保存并热重载</button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Deps -->
         <div class="panel" id="depsPanel">
             <div class="card">
-                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>依赖与更新
+                <h3><span class="dot" style="background:var(--success);box-shadow:0 0 6px var(--success)"></span>程序版本
                     <button class="btn btn-sm" style="margin-left:10px" onclick="loadDeps(true)">检查更新</button>
-                    <button class="btn btn-sm btn-primary" onclick="updateAllDeps()">更新全部</button>
                     <span id="depsChecked" style="font-weight:400;font-size:11px;color:var(--text3);margin-left:8px"></span>
+                </h3>
+                <div id="depsVersionRow" style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;font-size:13px">
+                    <div><span style="font-size:11px;color:var(--text3)">当前版本</span><div id="depsCurVer" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">最新版本</span><div id="depsLatestVer" style="font-size:20px;font-weight:700;color:var(--text)">—</div></div>
+                    <div><span style="font-size:11px;color:var(--text3)">部署方式</span><div id="depsDeploy" style="font-size:14px;font-weight:600;color:var(--text2)">—</div></div>
+                    <div style="margin-left:auto"><button class="btn btn-sm btn-primary" id="depsUpBtn" style="display:none" onclick="runUpdate()">更新到最新版</button></div>
+                </div>
+                <div id="depsNotes" style="display:none;font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;max-height:140px;overflow:auto;white-space:pre-wrap"></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>npm 依赖
+                    <button class="btn btn-sm btn-primary" style="margin-left:10px" onclick="updateAllDeps()">更新全部</button>
                 </h3>
                 <div class="cfg-hint">npm 依赖版本检查（缓存 30 分钟）；更新在后台执行 npm install，完成后需重启服务生效</div>
                 <div style="overflow-x:auto"><table><thead><tr><th>依赖</th><th>当前版本</th><th>最新版本</th><th>状态</th><th>操作</th></tr></thead><tbody id="depsTbody"></tbody></table></div>
+            </div>
+            <div class="card">
+                <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>插件更新
+                    <button class="btn btn-sm" style="margin-left:10px" onclick="loadDeps(true)">刷新</button>
+                </h3>
+                <div class="cfg-hint">npm / URL 来源插件可一键按原来源更新；文件型插件请手动上传新版</div>
+                <div style="overflow-x:auto"><table><thead><tr><th>插件</th><th>版本</th><th>来源</th><th>状态</th><th>操作</th></tr></thead><tbody id="depsPluginsTbody"></tbody></table></div>
             </div>
         </div>
 
@@ -1358,10 +1454,10 @@
                     自研 Canvas 弹幕引擎 · API 限流与实时统计 · PoW 防火墙 · 双主题系统 · 多字幕 · 文件管理
                 </p>
                 <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-                    <span class="ab-badge">v26.8.1</span>
+                    <span class="ab-badge" id="aboutVersion">v26.8.11</span>
                     <span class="ab-badge b2" style="cursor:pointer" onclick="window.open('https://github.com/yangyang8002/Artplayer-Web-Api')">GitHub</span>
-                    <span class="ab-badge b3">MIT License</span>
-                    <span class="ab-badge b4">2026</span>
+                    <span class="ab-badge b3" style="cursor:pointer" onclick="window.open('https://github.com/yangyang8002/Artplayer-Web-Api-Docs')">Docs</span>
+                    <span class="ab-badge b4">MIT License</span>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px">
                     <img src="https://github.com/yangyang8002.png" width="36" height="36" style="border-radius:50%;border:2px solid var(--accent)" alt="avatar">
@@ -1421,7 +1517,7 @@
             </div>
             <div style="text-align:center;padding:16px">
                 <p style="font-size:12px;color:var(--text3)">Made with ♥ by yangyang8002</p>
-                <p style="font-size:11px;color:var(--text3);margin-top:4px">MIT License &copy; 2024-2026 · v26.8.1</p>
+                <p style="font-size:11px;color:var(--text3);margin-top:4px">MIT License &copy; 2024-2026 · <span id="aboutFooterVer">v26.8.11</span></p>
             </div>
         </div>
 
@@ -1475,21 +1571,45 @@
                 .then(r => r.json()).then(d => {
                     if (d.code === 0) {
                         adminToken = d.data.token; adminUser = d.data.username;
+                        if (d.data.firstRun) {
+                            document.getElementById('loginPage').style.display = 'none';
+                            document.getElementById('initPage').style.display = 'flex';
+                            initCur = 1;
+                            document.getElementById('initLang').value = I18N.lang;
+                            initDbTypeChange();
+                            initStep(0);
+                            return;
+                        }
                         document.getElementById('loginPage').style.display = 'none';
                         document.getElementById('mainPage').style.display = 'block';
                         document.getElementById('sideUser').textContent = adminUser;
                         loadBannedWords(); loadDanmu(); loadVids(); loadVideos(); loadSubscriptions(); loadConfig(); populateThemeSelects(); loadFiles(); loadLogs();
+                        startDashPanel();
+                        loadDashboard(true);
+                        checkUpdate(false);
+                        loadAboutVersion();
                     } else toast(d.code === 429 ? '登录过频' : (d.msg || '失败'), false);
                 }).catch(() => toast('连接失败', false));
         }
 
         function logout() {
             adminToken = ''; adminUser = '';
+            stopDashPanel();
             document.getElementById('mainPage').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('usernameInput').value = '';
             document.getElementById('passwordInput').value = '';
             document.getElementById('sideUser').textContent = '未登录';
+        }
+        /* 关于页版本号（从服务端动态获取） */
+        function loadAboutVersion() {
+            fetch('/api/admin/dashboard', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0 || !d.data || !d.data.perf) return;
+                    const v = 'v' + d.data.perf.version;
+                    document.getElementById('aboutVersion').textContent = v;
+                    document.getElementById('aboutFooterVer').textContent = v;
+                }).catch(() => {});
         }
 
         function switchTab(name) {
@@ -1500,6 +1620,13 @@
             else stopApiChart();
             if (name === 'security') startSecPanel();
             else stopSecPanel();
+            if (name === 'console') startDashPanel();
+            else stopDashPanel();
+            if (name === 'plugins' && !window._plLoaded) { window._plLoaded = true; loadPlugins(); }
+            if (name === 'deps' && !window._depsLoaded) { window._depsLoaded = true; loadDeps(false); }
+            if (name === 'db' && !window._dbLoaded) { window._dbLoaded = true; loadDbInfo(); loadDbBrowse(); }
+            if (name === 'backup' && !window._bkLoaded) { window._bkLoaded = true; loadBackups(); loadCloudList(); }
+            if (name === 'subs' && !window._subsLoaded) { window._subsLoaded = true; loadSubtitles(); }
         }
 
         function loadBannedWords(page) {
@@ -1694,7 +1821,7 @@
             document.getElementById('videoCount').textContent = `共 ${list.length} 条`;
             const c = document.getElementById('videoTable');
             if (!list.length) { c.innerHTML = '<div class="empty-state">暂无映射，播放视频时会自动记录</div>'; return; }
-            c.innerHTML = `<table><thead><tr><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td data-i18n-skip style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td data-i18n-skip style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
+            c.innerHTML = `<table><thead><tr><th style="width:32px"><input type="checkbox" id="videoSelectAllTop" onclick="videoToggleSelectAll()" style="accent-color:var(--primary)"></th><th>视频码</th><th>链接</th><th>操作</th></tr></thead><tbody>${list.map(v=>`<tr><td><input type="checkbox" class="video-cb" value="${esc(v.vid)}" style="accent-color:var(--primary)"></td><td data-i18n-skip style="font-size:12px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.vid)}">${esc(v.vid)}</td><td data-i18n-skip style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${esc(v.url)}" target="_blank" style="color:var(--accent);font-size:12px">${esc(v.url)}</a></td><td><button class="btn btn-danger" onclick="deleteVideo('${esc(v.vid)}')">删除</button></td></tr>`).join('')}</tbody></table>`;
         }
         function addVideo() {
             const vid = document.getElementById('newVid').value.trim();
@@ -2266,6 +2393,974 @@
             secMapTimer = setInterval(() => { loadSecurity(); loadSecIps(); loadLoginLogs(); }, 10000);
         }
         function stopSecPanel() { if (secMapTimer) { clearInterval(secMapTimer); secMapTimer = null; } }
+
+        /* ===== 控制台（统计与性能监控） ===== */
+        let dashTimer = null, dashReqTimer = null;
+        let lastCpuPct = 0, dashPerfPrev = null;
+        function loadDashboard(force) {
+            fetch('/api/admin/dashboard', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const dt = d.data, tot = dt.totals, cnt = dt.counts, pf = dt.perf;
+                    document.getElementById('dashCalls').textContent = tot.calls.toLocaleString();
+                    document.getElementById('dashBytes').textContent = fmtSize(tot.bytes);
+                    document.getElementById('dashIps').textContent = tot.ips.toLocaleString();
+                    document.getElementById('dashDanmu').textContent = cnt.danmu.toLocaleString();
+                    document.getElementById('dashVideos').textContent = cnt.videos.toLocaleString();
+                    document.getElementById('dashSubs').textContent = cnt.subtitles.toLocaleString();
+                    document.getElementById('dashBanned').textContent = cnt.bannedWords.toLocaleString();
+                    document.getElementById('dashUptime').textContent = fmtUptime(pf.uptimeSec);
+                    document.getElementById('dashToday').textContent = (tot.todayCalls || 0).toLocaleString();
+                    document.getElementById('dashActiveIps').textContent = (tot.activeIps24h || 0).toLocaleString();
+                    document.getElementById('dashDanmuToday').textContent = (cnt.danmuToday || 0).toLocaleString();
+                    document.getElementById('dashVideoToday').textContent = (cnt.videoToday || 0).toLocaleString();
+                    document.getElementById('dashMem').textContent = pf.memRss + ' MB';
+                    document.getElementById('dashHeap').textContent = pf.memHeap + ' MB';
+                    document.getElementById('dashLastMin').textContent = tot.lastMinuteCalls;
+                    document.getElementById('dashNode').textContent = pf.node;
+                    document.getElementById('dashPid').textContent = pf.pid;
+                    document.getElementById('dashPerfInfo').textContent = 'v' + pf.version + ' · ' + (pf.platform || '');
+                    if (dt.disk) {
+                        const used = Math.max(0, dt.disk.total - dt.disk.free);
+                        document.getElementById('dashDisk').textContent = fmtSize(used) + ' / ' + fmtSize(dt.disk.total);
+                    } else {
+                        document.getElementById('dashDisk').textContent = '—';
+                    }
+                    /* CPU 百分比：由两次采样差计算 */
+                    if (dashPerfPrev) {
+                        const dcpu = pf.cpuMs - dashPerfPrev.cpuMs, dt2 = pf.uptimeSec - dashPerfPrev.uptimeSec;
+                        lastCpuPct = dt2 > 0 ? Math.max(0, Math.min(100, (dcpu / 1000) / dt2 * 100)) : lastCpuPct;
+                    }
+                    dashPerfPrev = { cpuMs: pf.cpuMs, uptimeSec: pf.uptimeSec };
+                    document.getElementById('dashCpu').textContent = lastCpuPct.toFixed(1) + '%';
+                    drawDashChart(dt.history || []);
+                }).catch(() => {});
+        }
+        function drawDashChart(history) {
+            const canvas = document.getElementById('dashChart');
+            const rect = canvas.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const W = rect.width, H = rect.height;
+            ctx.clearRect(0, 0, W, H);
+            if (!history || history.length < 2) {
+                ctx.fillStyle = 'rgba(255,255,255,.3)';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('采样中...', W / 2, H / 2);
+                return;
+            }
+            const padL = 34, padB = 22, padT = 10;
+            const cw = W - padL - 10, ch = H - padB - padT;
+            const maxMem = Math.max(...history.map(p => p.mem)) * 1.2 || 1;
+            const maxCpu = 100;
+            ctx.font = '9px sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,.4)';
+            for (let g = 0; g <= 4; g++) {
+                const y = padT + ch - ch * g / 4;
+                ctx.strokeStyle = 'rgba(255,255,255,.06)';
+                ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W, y); ctx.stroke();
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(maxMem * g / 4) + 'M', padL - 4, y + 3);
+            }
+            /* 绘制两条折线 */
+            const pts = (key, max) => history.map((p, i) => {
+                const x = padL + (history.length === 1 ? 0 : i / (history.length - 1) * cw);
+                const y = padT + ch - Math.min(1, (p[key] || 0) / max) * ch;
+                return [x, y];
+            });
+            const drawLine = (arr, color) => {
+                if (!arr.length) return;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                arr.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+                ctx.stroke();
+                ctx.lineTo(arr[arr.length - 1][0], padT + ch);
+                ctx.lineTo(arr[0][0], padT + ch);
+                ctx.closePath();
+                ctx.globalAlpha = .08;
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            };
+            drawLine(pts('mem', maxMem), '#62d5ff');
+            drawLine(pts('cpu', maxCpu), '#a78bfa');
+            /* 时间轴标签 */
+            ctx.fillStyle = 'rgba(255,255,255,.35)';
+            ctx.textAlign = 'center';
+            const step = Math.max(1, Math.floor(history.length / 6));
+            for (let i = 0; i < history.length; i += step) {
+                const t = new Date(history[i].t);
+                ctx.fillText(t.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }), padL + i / (history.length - 1) * cw, H - 6);
+            }
+        }
+        /* 请求趋势图（复用 API 统计秒桶） */
+        function loadDashReq() {
+            fetch('/api/admin/api/stats?span=1800', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const data = d.data;
+                    const buckets = data.buckets || [];
+                    document.getElementById('dashReqInfo').textContent = '总请求 ' + data.totalCalls.toLocaleString() + ' · 运行 ' + fmtUptime(data.uptimeSec);
+                    const canvas = document.getElementById('dashReqChart');
+                    const rect = canvas.getBoundingClientRect();
+                    if (!rect.width || !rect.height) return;
+                    const dpr = window.devicePixelRatio || 1;
+                    canvas.width = rect.width * dpr;
+                    canvas.height = rect.height * dpr;
+                    const ctx = canvas.getContext('2d');
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    const W = rect.width, H = rect.height;
+                    ctx.clearRect(0, 0, W, H);
+                    if (!buckets.length) {
+                        ctx.fillStyle = 'rgba(255,255,255,.3)';
+                        ctx.font = '12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('暂无数据', W / 2, H / 2);
+                        return;
+                    }
+                    const padL = 34, padB = 20, padT = 8;
+                    const cw = W - padL - 10, ch = H - padB - padT;
+                    const vals = buckets.map(b => Object.values(b.calls).reduce((a, c) => a + c, 0));
+                    const max = Math.max(1, ...vals);
+                    /* 填充面积 */
+                    ctx.beginPath();
+                    vals.forEach((v, i) => {
+                        const x = padL + i / (vals.length - 1) * cw;
+                        const y = padT + ch - v / max * ch;
+                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    });
+                    ctx.lineTo(padL + cw, padT + ch);
+                    ctx.lineTo(padL, padT + ch);
+                    ctx.closePath();
+                    const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
+                    grad.addColorStop(0, 'rgba(124,92,252,.45)');
+                    grad.addColorStop(1, 'rgba(124,92,252,.02)');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    /* 折线 */
+                    ctx.strokeStyle = '#a78bfa';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    vals.forEach((v, i) => {
+                        const x = padL + i / (vals.length - 1) * cw;
+                        const y = padT + ch - v / max * ch;
+                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    });
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255,255,255,.35)';
+                    ctx.font = '9px sans-serif';
+                    ctx.textAlign = 'center';
+                    const step = Math.max(1, Math.floor(vals.length / 6));
+                    for (let i = 0; i < vals.length; i += step) {
+                        ctx.fillText(new Date(buckets[i].t).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }), padL + i / (vals.length - 1) * cw, H - 5);
+                    }
+                }).catch(() => {});
+        }
+        function startDashPanel() {
+            stopDashPanel();
+            loadDashboard(true);
+            loadDashReq();
+            dashTimer = setInterval(loadDashboard, 5000);
+            dashReqTimer = setInterval(loadDashReq, 10000);
+        }
+        function stopDashPanel() {
+            if (dashTimer) { clearInterval(dashTimer); dashTimer = null; }
+            if (dashReqTimer) { clearInterval(dashReqTimer); dashReqTimer = null; }
+        }
+
+        /* ===== 插件管理 ===== */
+        function plInstallTypeChange() {
+            const v = document.getElementById('plInstallType').value;
+            document.getElementById('plFileRow').style.display = v === 'file' ? '' : 'none';
+            document.getElementById('plUrlRow').style.display = v === 'url' ? '' : 'none';
+            document.getElementById('plNpmRow').style.display = v === 'npm' ? '' : 'none';
+        }
+        function installPlugin() {
+            const v = document.getElementById('plInstallType').value;
+            if (v === 'file') {
+                const f = document.getElementById('plFile').files[0];
+                if (!f) return toast('请选择插件文件', false);
+                if (!/\.js$/i.test(f.name)) return toast('仅支持 .js 文件', false);
+                if (f.size > 1024 * 1024) return toast('插件文件超过 1MB 上限', false);
+                const fd = new FormData();
+                fd.append('source', 'file');
+                fd.append('files', f);
+                fetch('/api/admin/plugins/install', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd })
+                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plFile').value = ''; loadPlugins(); } })
+                    .catch(() => toast('请求失败', false));
+            } else if (v === 'url') {
+                const url = document.getElementById('plUrl').value.trim();
+                if (!/^https?:\/\//i.test(url)) return toast('请输入有效的下载链接', false);
+                fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'url', url }) })
+                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plUrl').value = ''; loadPlugins(); } })
+                    .catch(() => toast('请求失败', false));
+            } else {
+                const pkg = document.getElementById('plNpm').value.trim();
+                if (!pkg) return toast('请输入 npm 包名', false);
+                toast('npm 安装中（可能需要几分钟）...', true);
+                fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'npm', pkg }) })
+                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plNpm').value = ''; loadPlugins(); } })
+                    .catch(() => toast('请求失败', false));
+            }
+        }
+        function loadPlugins() {
+            fetch('/api/admin/plugins', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    renderPlugins(d.data.list || []);
+                    loadMarket(false);
+                }).catch(() => {});
+        }
+        function renderPlugins(list) {
+            document.getElementById('plCount').textContent = '共 ' + list.length + ' 个';
+            const c = document.getElementById('plList');
+            if (!list.length) { c.innerHTML = '<div class="empty-state">暂无插件，请先安装</div>'; return; }
+            c.innerHTML = list.map(p => {
+                const info = p.info || {};
+                const st = p.status === 'running' ? '<span style="color:var(--success)">运行中</span>'
+                    : p.status === 'error' ? `<span style="color:var(--danger)" title="${esc(p.error || '')}">加载失败</span>`
+                    : '<span style="color:var(--text3)">已停止</span>';
+                const metaHtml = (info.version ? `<span class="pl-chip">v${esc(info.version)}</span>` : '')
+                    + (info.author ? `<span class="pl-chip">${esc(info.author)}</span>` : '')
+                    + `<span class="pl-chip">${esc(p.source.type)}</span>`;
+                return `<div class="pl-card ${p.enabled ? 'on' : ''}" style="border:1px solid ${p.enabled ? 'rgba(52,211,153,.4)' : 'var(--border)'};background:${p.enabled ? 'linear-gradient(135deg,rgba(52,211,153,.06),rgba(255,255,255,.01))' : 'rgba(255,255,255,.02)'};border-radius:10px;padding:12px 14px;margin-bottom:10px">
+                    <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                <span style="font-weight:700;font-size:14px">${esc(p.name)}</span>
+                                ${metaHtml}
+                                ${st}
+                            </div>
+                            <div style="font-size:12px;color:var(--text2);margin-top:4px">${esc(info.description || '（无描述）')}</div>
+                            ${info.homepage ? `<div style="font-size:11px;margin-top:3px"><a href="${esc(info.homepage)}" target="_blank" style="color:var(--accent)">${esc(info.homepage)}</a></div>` : ''}
+                            <div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(info.schema && info.schema.length ? '含配置表单（' + info.schema.length + ' 项）' : '无配置项')}</div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                            <button class="btn btn-sm ${p.enabled ? '' : 'btn-primary'}" onclick="togglePlugin('${esc(p.name)}', ${!p.enabled})">${p.enabled ? '停用' : '启用'}</button>
+                            ${info.schema && info.schema.length ? `<button class="btn btn-sm" onclick="openPlConfig('${esc(p.name)}')">配置</button>` : ''}
+                            <button class="btn btn-sm" onclick="updatePlugin('${esc(p.name)}')">更新</button>
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="uninstallPlugin('${esc(p.name)}')">卸载</button>
+                        </div>
+                    </div>
+                    ${p.error ? `<div style="font-size:11px;color:var(--danger);margin-top:6px">${esc(p.error)}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+        function togglePlugin(name, enabled) {
+            fetch('/api/admin/plugins/toggle', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name, enabled }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
+        }
+        function updatePlugin(name) {
+            if (!confirm('确认更新插件 ' + name + '？（保留配置与启用状态）')) return;
+            fetch('/api/admin/plugins/update', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
+        }
+        function uninstallPlugin(name) {
+            if (!confirm('确认卸载插件 ' + name + '？（将删除插件文件）')) return;
+            fetch('/api/admin/plugins/uninstall', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
+        }
+        /* 配置表单（由插件 schema 驱动） */
+        let plConfigName = '', plConfigSchema = [], plConfigValues = {};
+        function openPlConfig(name) {
+            fetch('/api/admin/plugins', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                const p = (d.data.list || []).find(x => x.name === name);
+                if (!p) return;
+                plConfigName = name;
+                plConfigSchema = (p.info && p.info.schema) || [];
+                plConfigValues = Object.assign({}, p.config || {});
+                document.getElementById('plConfigTitle').textContent = name;
+                const c = document.getElementById('plConfigFields');
+                c.innerHTML = plConfigSchema.map((f, i) => {
+                    const cur = plConfigValues[f.key] != null ? plConfigValues[f.key] : f.default;
+                    let input = '';
+                    if (f.type === 'boolean') {
+                        input = `<input type="checkbox" id="plcf_${i}" ${cur ? 'checked' : ''}>`;
+                    } else if (f.type === 'select') {
+                        input = `<select id="plcf_${i}" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none">${(f.options || []).map(o => `<option value="${esc(o.value)}" ${String(cur) === String(o.value) ? 'selected' : ''}>${esc(o.label || o.value)}</option>`).join('')}</select>`;
+                    } else if (f.type === 'textarea') {
+                        input = `<textarea id="plcf_${i}" rows="3" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none">${esc(cur != null ? cur : '')}</textarea>`;
+                    } else {
+                        input = `<input type="text" id="plcf_${i}" value="${esc(cur != null ? cur : '')}" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none">`;
+                    }
+                    return `<div class="cfg-row" style="align-items:flex-start"><span style="min-width:110px;padding-top:6px">${esc(f.label || f.key)}</span><div style="flex:1">${input}${f.hint ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(f.hint)}</div>` : ''}</div></div>`;
+                }).join('');
+                document.getElementById('plConfigModal').style.display = 'flex';
+            });
+        }
+        function closePlConfig() { document.getElementById('plConfigModal').style.display = 'none'; }
+        function savePluginConfig() {
+            const cfg = {};
+            plConfigSchema.forEach((f, i) => {
+                const el = document.getElementById('plcf_' + i);
+                if (!el) return;
+                if (f.type === 'boolean') cfg[f.key] = el.checked;
+                else if (f.type === 'number') cfg[f.key] = parseFloat(el.value) || 0;
+                else if (f.type === 'select') cfg[f.key] = el.value;
+                else cfg[f.key] = el.value;
+            });
+            fetch('/api/admin/plugins/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name: plConfigName, config: cfg }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { closePlConfig(); loadPlugins(); } });
+        }
+        /* 插件市场 */
+        function loadMarket(force) {
+            fetch('/api/admin/plugins/market' + (force ? '?force=1' : ''), { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) { document.getElementById('marketList').innerHTML = '<div class="empty-state">' + esc(d.msg || '插件市场获取失败') + '</div>'; return; }
+                    const list = d.data.list || [];
+                    document.getElementById('marketChecked').textContent = d.data.updated ? '更新于 ' + d.data.updated : '';
+                    const c = document.getElementById('marketList');
+                    if (!list.length) { c.innerHTML = '<div class="empty-state">暂无可用插件</div>'; return; }
+                    fetch('/api/admin/plugins', { headers: authHeaders() }).then(r2 => r2.json()).then(d2 => {
+                        const installed = {};
+                        (d2.data.list || []).forEach(p => { installed[p.name] = p; });
+                        c.innerHTML = list.map(m => {
+                            const isInstalled = !!installed[m.name];
+                            return `<div class="pl-card" style="border:1px solid var(--border);background:rgba(255,255,255,.02);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+                                <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+                                    <div style="flex:1;min-width:200px">
+                                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                            <span style="font-weight:700;font-size:14px">${esc(m.name)}</span>
+                                            ${m.version ? `<span class="pl-chip">v${esc(m.version)}</span>` : ''}
+                                            ${(m.tags || []).map(x => `<span class="pl-chip">${esc(x)}</span>`).join('')}
+                                        </div>
+                                        <div style="font-size:12px;color:var(--text2);margin-top:4px">${esc(m.description || '')}</div>
+                                        <div style="font-size:11px;color:var(--text3);margin-top:4px">作者：${esc(m.author || '—')}</div>
+                                    </div>
+                                    <div style="display:flex;gap:6px;align-items:center">
+                                        ${isInstalled ? '<span style="font-size:11px;color:var(--success)">已安装</span>' : `<button class="btn btn-sm btn-primary" onclick="installMarketPlugin('${esc(m.url)}', '${esc(m.name)}')">安装</button>`}
+                                        ${m.homepage ? `<button class="btn btn-sm" onclick="window.open('${esc(m.homepage)}','_blank')">主页</button>` : ''}
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }).catch(() => { c.innerHTML = '<div class="empty-state">列表加载失败</div>'; });
+                }).catch(() => { document.getElementById('marketList').innerHTML = '<div class="empty-state">插件市场获取失败（网络不可达）</div>'; });
+        }
+        function installMarketPlugin(url, name) {
+            fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'url', url }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
+        }
+
+        /* ===== 依赖与更新 ===== */
+        function loadDeps(force) {
+            fetch('/api/admin/deps' + (force ? '?force=1' : ''), { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const data = d.data;
+                    document.getElementById('depsChecked').textContent = '检查于 ' + new Date(data.checkedAt).toLocaleTimeString('zh-CN');
+                    /* 版本卡片 */
+                    const v = data.version;
+                    if (v) {
+                        document.getElementById('depsCurVer').textContent = v.current;
+                        document.getElementById('depsLatestVer').textContent = v.latest;
+                        document.getElementById('depsDeploy').textContent = v.deploy;
+                        const btn = document.getElementById('depsUpBtn');
+                        btn.style.display = v.hasUpdate ? '' : 'none';
+                        const notes = document.getElementById('depsNotes');
+                        if (v.hasUpdate && v.releaseNotes) {
+                            notes.style.display = 'block';
+                            notes.textContent = v.releaseNotes;
+                        } else notes.style.display = 'none';
+                    }
+                    /* 依赖表 */
+                    const tb = document.getElementById('depsTbody');
+                    const deps = data.list || [];
+                    if (!deps.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty-state">暂无依赖</div></td></tr>'; }
+                    else {
+                        tb.innerHTML = deps.map(x => {
+                            const outdated = x.latest && x.current !== x.latest;
+                            return `<tr>
+                                <td style="font-family:monospace;font-size:12px">${esc(x.name)}</td>
+                                <td>${esc(x.current)}</td>
+                                <td style="color:${outdated ? 'var(--success)' : 'var(--text3)'}">${esc(x.latest || '—')}</td>
+                                <td>${outdated ? '<span style="color:var(--warn)">可更新</span>' : '<span style="color:var(--success)">最新</span>'}</td>
+                                <td><button class="btn btn-sm btn-primary" ${outdated ? '' : 'disabled'} onclick="updateDep('${esc(x.name)}')">更新</button></td>
+                            </tr>`;
+                        }).join('');
+                    }
+                    /* 插件更新表 */
+                    const ptb = document.getElementById('depsPluginsTbody');
+                    const pls = data.plugins || [];
+                    if (!pls.length) { ptb.innerHTML = '<tr><td colspan="5"><div class="empty-state">暂无插件</div></td></tr>'; }
+                    else {
+                        ptb.innerHTML = pls.map(p => `<tr>
+                            <td style="font-weight:600">${esc(p.name)}</td>
+                            <td>${esc(p.version || '—')}</td>
+                            <td style="font-size:12px;color:var(--text3)">${esc(p.source)}</td>
+                            <td>${p.status === 'running' ? '<span style="color:var(--success)">运行中</span>' : '<span style="color:var(--text3)">已停止</span>'}</td>
+                            <td>${p.updatable ? `<button class="btn btn-sm btn-primary" onclick="updatePlugin('${esc(p.name)}')">更新</button>` : '<span style="font-size:11px;color:var(--text3)">文件型</span>'}</td>
+                        </tr>`).join('');
+                    }
+                }).catch(() => {});
+        }
+        function updateDep(name) {
+            fetch('/api/admin/deps/update', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ names: [name] }) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function updateAllDeps() {
+            if (!confirm('确认更新全部依赖？更新在后台执行，完成后需重启服务生效')) return;
+            fetch('/api/admin/deps/update', { method: 'POST', headers: authHeaders(), body: JSON.stringify({}) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+
+        /* ===== 版本更新（关于页 + 依赖页共用） ===== */
+        function checkUpdate(force) {
+            fetch('/api/admin/update/check' + (force ? '?force=1' : ''), { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) { toast(d.msg || '检查更新失败', false); return; }
+                    const u = d.data;
+                    document.getElementById('upCurrent').textContent = u.current;
+                    document.getElementById('upDeploy').textContent = '部署: ' + u.deploy;
+                    const wrap = document.getElementById('upLatestWrap');
+                    const notes = document.getElementById('upNotes');
+                    const btn = document.getElementById('upRunBtn');
+                    if (u.hasUpdate) {
+                        wrap.style.display = '';
+                        document.getElementById('upLatest').textContent = u.latest;
+                        if (u.releaseNotes) { notes.style.display = 'block'; notes.textContent = u.releaseNotes; }
+                        btn.style.display = '';
+                        document.getElementById('upSourceRow').style.display = 'flex';
+                    } else {
+                        wrap.style.display = '';
+                        document.getElementById('upLatest').textContent = u.latest || u.current;
+                        notes.style.display = 'none';
+                        btn.style.display = 'none';
+                        document.getElementById('upSourceRow').style.display = 'none';
+                    }
+                }).catch(() => toast('检查更新失败（网络不可达）', false));
+        }
+        function runUpdate() {
+            const sel = document.querySelector('input[name="upSource"]:checked');
+            const source = sel ? sel.value : 'auto';
+            if (!confirm('确认更新到最新版？将自动备份数据并重启服务，期间服务不可用')) return;
+            const btn = document.getElementById('upRunBtn');
+            btn.disabled = true; btn.textContent = '更新中...';
+            fetch('/api/admin/update/run', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source, restart: true }) })
+                .then(r => r.json()).then(d => {
+                    toast(d.msg, d.code === 0);
+                    if (d.code === 0) { btn.textContent = '更新已启动，服务即将重启...'; setTimeout(() => location.reload(), 8000); }
+                    else { btn.disabled = false; btn.textContent = '更新到最新版'; }
+                }).catch(() => { btn.disabled = false; btn.textContent = '更新到最新版'; toast('更新请求失败', false); });
+        }
+
+        /* ===== 数据库管理 ===== */
+        let dbBrowsePage = 1, dbBrowseTotal = 0;
+        const DB_TYPES_UI = ['json', 'sqlite', 'mysql', 'mariadb', 'postgres', 'mongodb'];
+        function loadDbInfo() {
+            fetch('/api/admin/db/info', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const info = d.data;
+                    document.getElementById('dbCurLabel').textContent = info.migrating ? '（迁移中）' : '';
+                    document.getElementById('dbCurType').textContent = info.label;
+                    document.getElementById('dbCurConn').textContent = info.type === 'json' ? 'JSON 文件 (data/*.json)' : JSON.stringify(info.config[info.type] || {});
+                    document.getElementById('dbType').value = info.type;
+                    dbTypeChange();
+                    /* 表概览 */
+                    const tb = document.getElementById('dbTables');
+                    tb.innerHTML = Object.entries(info.tables || {}).map(([k, v]) => `<span class="tag" style="margin:2px">${esc(k)}: ${v}</span>`).join('') || '<div class="empty-state">无数据</div>';
+                }).catch(() => {});
+        }
+        function dbTypeChange() {
+            const t = document.getElementById('dbType').value;
+            const f = document.getElementById('dbConnFields');
+            const mk = (id, ph, def) => `<input type="text" id="${id}" placeholder="${ph}" value="${def}" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none">`;
+            if (t === 'json') f.innerHTML = '<div class="cfg-hint">JSON 文件存储（data/*.json），零配置</div>';
+            else if (t === 'sqlite') f.innerHTML = `<div class="cfg-row"><span>文件路径</span>${mk('dbSqliteFile', '如 data/app.db', 'data/app.db')}</div>`;
+            else if (t === 'mongodb') f.innerHTML = `<div class="cfg-row"><span>主机</span>${mk('dbHost', '127.0.0.1', '127.0.0.1')}</div><div class="cfg-row"><span>端口</span>${mk('dbPort', '27017', '27017')}</div><div class="cfg-row"><span>用户</span>${mk('dbUser', '', '')}</div><div class="cfg-row"><span>密码</span><input type="password" id="dbPass" placeholder="password" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none"></div><div class="cfg-row"><span>数据库</span>${mk('dbName', 'artplayer', 'artplayer')}</div>`;
+            else f.innerHTML = `<div class="cfg-row"><span>主机</span>${mk('dbHost', '127.0.0.1', '127.0.0.1')}</div><div class="cfg-row"><span>端口</span>${mk('dbPort', t === 'postgres' ? '5432' : '3306', t === 'postgres' ? '5432' : '3306')}</div><div class="cfg-row"><span>用户</span>${mk('dbUser', 'root', 'root')}</div><div class="cfg-row"><span>密码</span><input type="password" id="dbPass" placeholder="password" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none"></div><div class="cfg-row"><span>数据库</span>${mk('dbName', 'artplayer', 'artplayer')}</div>`;
+        }
+        function dbConnBody(type) {
+            if (type === 'sqlite') return { type, sqlite: { file: document.getElementById('dbSqliteFile').value } };
+            if (type === 'mongodb') return { type, mongodb: { host: document.getElementById('dbHost').value, port: parseInt(document.getElementById('dbPort').value) || 27017, user: document.getElementById('dbUser').value, password: document.getElementById('dbPass').value, database: document.getElementById('dbName').value } };
+            const c = { host: document.getElementById('dbHost').value, port: parseInt(document.getElementById('dbPort').value) || 3306, user: document.getElementById('dbUser').value, password: document.getElementById('dbPass').value, database: document.getElementById('dbName').value };
+            return { type, mysql: c, postgres: c, mongodb: c };
+        }
+        function testDbConn() {
+            const body = dbConnBody(document.getElementById('dbType').value);
+            toast('测试中...', true);
+            fetch('/api/admin/db/test', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function switchDbStorage() {
+            const t = document.getElementById('dbType').value;
+            if (t === 'json') { if (!confirm('确认切换到 JSON 文件存储？现有数据将迁移到 data/*.json')) return; }
+            else if (!confirm('确认切换到 ' + t + '？现有数据将全部迁移')) return;
+            fetch('/api/admin/db/switch', { method: 'POST', headers: authHeaders(), body: JSON.stringify(dbConnBody(t)) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { loadDbInfo(); loadDashboard(); } });
+        }
+        function loadDbBrowse() {
+            const table = document.getElementById('dbBrowseTable').value;
+            const search = document.getElementById('dbBrowseSearch').value.trim();
+            fetch(`/api/admin/db/data?table=${table}&page=${dbBrowsePage}&limit=50&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    dbBrowseTotal = d.data.total;
+                    const rows = d.data.list || [];
+                    const head = document.getElementById('dbBrowseHead');
+                    const body = document.getElementById('dbBrowseBody');
+                    const empty = document.getElementById('dbBrowseEmpty');
+                    if (!rows.length) { head.innerHTML = ''; body.innerHTML = ''; empty.style.display = 'block'; document.getElementById('dbBrowsePager').innerHTML = ''; return; }
+                    empty.style.display = 'none';
+                    const cols = Object.keys(rows[0]);
+                    head.innerHTML = '<tr>' + cols.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>';
+                    body.innerHTML = rows.map(r => '<tr>' + cols.map(c => {
+                        let v = r[c];
+                        if (v == null) v = '';
+                        if (typeof v === 'object') v = JSON.stringify(v);
+                        v = String(v);
+                        return `<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v)}" data-i18n-skip>${esc(v.length > 120 ? v.slice(0, 120) + '…' : v)}</td>`;
+                    }).join('') + '</tr>').join('');
+                    renderDbBrowsePager();
+                }).catch(() => {});
+        }
+        function renderDbBrowsePager() {
+            const tp = Math.ceil(dbBrowseTotal / 50);
+            const p = document.getElementById('dbBrowsePager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${dbBrowsePage <= 1 ? 'disabled' : ''} onclick="dbBrowsePage=${dbBrowsePage - 1};loadDbBrowse()">上一页</button><span class="info">${dbBrowsePage}/${tp}</span><button ${dbBrowsePage >= tp ? 'disabled' : ''} onclick="dbBrowsePage=${dbBrowsePage + 1};loadDbBrowse()">下一页</button>`;
+        }
+        function exportDb() {
+            window.open('/api/admin/db/export', '_blank');
+        }
+
+        /* ===== 备份中心 ===== */
+        function loadBackups() {
+            fetch('/api/admin/backup/list', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const data = d.data;
+                    const cfg = data.config;
+                    document.getElementById('bkStatus').textContent = cfg.enabled ? `启用 · 每 ${cfg.intervalHours} 小时 · 保留 ${cfg.maxKeep} 份` : '未启用';
+                    const c = document.getElementById('backupList');
+                    const list = data.backups || [];
+                    if (!list.length) { c.innerHTML = '<div class="empty-state">暂无备份</div>'; return; }
+                    c.innerHTML = list.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
+                        <input type="checkbox" class="bk-cb" value="${esc(b.name)}" style="accent-color:var(--primary)">
+                        <span style="font-family:monospace;flex:1;min-width:160px">${esc(b.name)}</span>
+                        <span style="color:var(--text3)">${fmtSize(b.size)}</span>
+                        <span style="color:var(--text3)">${new Date(b.mtime).toLocaleString('zh-CN')}</span>
+                        <span style="display:flex;gap:6px">
+                            <button class="btn btn-sm" onclick="downloadBackup('${esc(b.name)}')">下载</button>
+                            <button class="btn btn-sm btn-primary" onclick="restoreBackup('${esc(b.name)}')">恢复</button>
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteBackup('${esc(b.name)}')">删除</button>
+                        </span>
+                    </div>`).join('');
+                }).catch(() => {});
+        }
+        function bkToggleSelectAll() {
+            const on = document.getElementById('bkSelectAll').checked;
+            document.querySelectorAll('.bk-cb').forEach(c => c.checked = on);
+        }
+        function restoreSelectedBackups() {
+            const sel = Array.from(document.querySelectorAll('.bk-cb:checked')).map(c => c.value);
+            if (!sel.length) return toast('请先选择备份', false);
+            if (!confirm('确认恢复所选 ' + sel.length + ' 个备份？（按时间从旧到新依次恢复）')) return;
+            fetch('/api/admin/backup/restore-batch', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ names: sel }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBackups(); });
+        }
+        function downloadBackup(name) { window.open('/api/admin/backup/download?name=' + encodeURIComponent(name), '_blank'); }
+        function restoreBackup(name) {
+            if (!confirm('确认从备份恢复 ' + name + '？当前数据将被覆盖')) return;
+            fetch('/api/admin/backup/restore', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBackups(); });
+        }
+        function deleteBackup(name) {
+            if (!confirm('确认删除备份 ' + name + '？')) return;
+            fetch('/api/admin/backup/delete', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBackups(); });
+        }
+        function openBackupModal() { document.getElementById('backupModal').style.display = 'flex'; bmTargetChange(); }
+        function closeBackupModal() { document.getElementById('backupModal').style.display = 'none'; }
+        function bmTargetChange() {
+            const v = document.querySelector('input[name="bmTarget"]:checked').value;
+            document.getElementById('bmCloudHint').style.display = v === 'local' ? 'none' : '';
+            if (v !== 'local') document.getElementById('bmCloudHint').textContent = '云端备份需要先在「管理配置 → 云端同步」中保存连接配置';
+        }
+        function createBackupFlow() {
+            const contents = [];
+            if (document.getElementById('bmContentData').checked) contents.push('data');
+            if (document.getElementById('bmContentConfig').checked) contents.push('config');
+            if (!contents.length) return toast('请至少选择一种备份内容', false);
+            const t = document.querySelector('input[name="bmTarget"]:checked').value;
+            const targets = t === 'both' ? ['local', 'cloud'] : [t];
+            fetch('/api/admin/backup/create', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ contents, targets }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { closeBackupModal(); loadBackups(); loadCloudList(); } });
+        }
+        function openBkConfigModal() { document.getElementById('bkConfigModal').style.display = 'flex'; loadBkCfg(); loadCloudConfigs(); }
+        function closeBkConfigModal() { document.getElementById('bkConfigModal').style.display = 'none'; }
+        function bkCfgSwitch(name) {
+            document.querySelectorAll('.bk-cfg-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.getElementById('bkCfgTabBk').style.display = name === 'bk' ? '' : 'none';
+            document.getElementById('bkCfgTabCl').style.display = name === 'cl' ? '' : 'none';
+        }
+        function loadBkCfg() {
+            fetch('/api/admin/backup/list', { headers: authHeaders() }).then(r => r.json()).then(d => {
+                if (d.code !== 0) return;
+                const cfg = d.data.config;
+                document.getElementById('cfgBkEnabled').checked = !!cfg.enabled;
+                document.getElementById('cfgBkInterval').value = cfg.intervalHours;
+                document.getElementById('cfgBkMaxKeep').value = cfg.maxKeep;
+                document.getElementById('cfgBkContentData').checked = cfg.contents.includes('data');
+                document.getElementById('cfgBkContentConfig').checked = cfg.contents.includes('config');
+            });
+        }
+        function saveBkCfgFromModal() {
+            const contents = [];
+            if (document.getElementById('cfgBkContentData').checked) contents.push('data');
+            if (document.getElementById('cfgBkContentConfig').checked) contents.push('config');
+            const body = {
+                enabled: document.getElementById('cfgBkEnabled').checked,
+                intervalHours: parseInt(document.getElementById('cfgBkInterval').value) || 24,
+                maxKeep: parseInt(document.getElementById('cfgBkMaxKeep').value) || 10,
+                contents
+            };
+            fetch('/api/admin/backup/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) loadBackups(); });
+        }
+        /* 云端配置 */
+        let cloudCfgs = [], cloudEditId = '';
+        function loadCloudConfigs() {
+            fetch('/api/admin/cloud/config', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    cloudCfgs = d.data;
+                    const c = document.getElementById('cloudCfgList');
+                    c.innerHTML = cloudCfgs.map(x => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
+                        <span style="font-weight:600">${esc(x.type)}</span>
+                        <span style="color:var(--text2);flex:1;min-width:140px">${esc(x.host || x.baseUrl || '')}${x.user ? ' · ' + esc(x.user) : ''}</span>
+                        <span style="color:var(--text3)">${x.enabled ? '<span style="color:var(--success)">启用</span>' : '停用'}</span>
+                        ${x.lastSyncAt ? `<span style="color:var(--text3);font-size:11px">${new Date(x.lastSyncAt).toLocaleString('zh-CN')}</span>` : ''}
+                        <span style="display:flex;gap:6px">
+                            <button class="btn btn-sm" onclick="editCloudCfg('${x.id}')">编辑</button>
+                            <button class="btn btn-sm" onclick="testCloudCfg('${x.id}')">测试</button>
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteCloudCfg('${x.id}')">删除</button>
+                        </span>
+                    </div>`).join('') || '<div class="empty-state">暂无云端配置</div>';
+                }).catch(() => {});
+        }
+        function addCloudCfg() { cloudEditId = ''; showCloudForm({ enabled: true, type: 'ftp', host: '', port: 21, user: '', password: '', path: '/backups', baseUrl: '', secure: false }); }
+        function editCloudCfg(id) {
+            const x = cloudCfgs.find(c => c.id === id);
+            if (!x) return;
+            cloudEditId = id;
+            showCloudForm({ enabled: x.enabled, type: x.type, host: x.host, port: x.port, user: x.user, password: x.password === '******' ? '' : x.password, path: x.path, baseUrl: x.baseUrl, secure: x.secure });
+        }
+        function showCloudForm(v) {
+            document.getElementById('cloudCfgList').style.display = 'none';
+            document.getElementById('cloudCfgForm').style.display = '';
+            document.getElementById('cfgClEnabled').checked = !!v.enabled;
+            document.getElementById('cfgClType').value = v.type;
+            document.getElementById('cfgClHost').value = v.host || '';
+            document.getElementById('cfgClPort').value = v.port || '';
+            document.getElementById('cfgClUser').value = v.user || '';
+            document.getElementById('cfgClPass').value = v.password || '';
+            document.getElementById('cfgClPath').value = v.path || '/backups';
+            document.getElementById('cfgClBaseUrl').value = v.baseUrl || '';
+            document.getElementById('cfgClSecure').checked = !!v.secure;
+            cfgCloudTypeChange();
+        }
+        function cancelCloudCfgEdit() {
+            cloudEditId = '';
+            document.getElementById('cloudCfgForm').style.display = 'none';
+            document.getElementById('cloudCfgList').style.display = '';
+            loadCloudConfigs();
+        }
+        function cfgCloudTypeChange() {
+            const t = document.getElementById('cfgClType').value;
+            document.getElementById('cfgClFields').innerHTML = t === 'openlist'
+                ? `<div class="cfg-row"><span>地址</span><input type="text" id="cfgClBaseUrl" placeholder="https://pan.example.com" style="flex:1"></div>
+                   <div class="cfg-row"><span>路径</span><input type="text" id="cfgClPath" placeholder="/backups" style="flex:1"></div>
+                   <div class="cfg-row"><span>账号</span><input type="text" id="cfgClUser" style="flex:1"></div>
+                   <div class="cfg-row"><span>密码</span><input type="password" id="cfgClPass" style="flex:1"></div>`
+                : `<div class="cfg-row"><span>主机</span><input type="text" id="cfgClHost" placeholder="ftp.example.com" style="flex:1"></div>
+                   <div class="cfg-row"><span>端口</span><input type="number" id="cfgClPort" style="flex:1"></div>
+                   <div class="cfg-row"><span>账号</span><input type="text" id="cfgClUser" style="flex:1"></div>
+                   <div class="cfg-row"><span>密码</span><input type="password" id="cfgClPass" style="flex:1"></div>
+                   <div class="cfg-row"><span>路径</span><input type="text" id="cfgClPath" placeholder="/backups" style="flex:1"></div>
+                   ${t === 'ftp' ? `<div class="cfg-row"><label><input type="checkbox" id="cfgClSecure"> FTPS 加密</label></div>` : ''}`;
+        }
+        function cloudCfgBody() {
+            const t = document.getElementById('cfgClType').value;
+            const base = { enabled: document.getElementById('cfgClEnabled').checked, type: t };
+            if (t === 'openlist') return { ...base, baseUrl: document.getElementById('cfgClBaseUrl').value.trim(), path: document.getElementById('cfgClPath').value.trim(), user: document.getElementById('cfgClUser').value.trim(), password: document.getElementById('cfgClPass').value };
+            return { ...base, host: document.getElementById('cfgClHost').value.trim(), port: parseInt(document.getElementById('cfgClPort').value) || 0, user: document.getElementById('cfgClUser').value.trim(), password: document.getElementById('cfgClPass').value, path: document.getElementById('cfgClPath').value.trim(), secure: document.getElementById('cfgClSecure') ? document.getElementById('cfgClSecure').checked : false };
+        }
+        function testCloudCfgConn() {
+            toast('测试中...', true);
+            fetch('/api/admin/cloud/test', { method: 'POST', headers: authHeaders(), body: JSON.stringify(cloudCfgBody()) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function saveCloudCfgFromModal() {
+            const body = cloudCfgBody();
+            if (cloudEditId) body.id = cloudEditId;
+            fetch('/api/admin/cloud/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { cancelCloudCfgEdit(); loadCloudConfigs(); loadCloudList(); } });
+        }
+        function deleteCloudCfg(id) {
+            if (!confirm('确认删除该云端配置？')) return;
+            fetch('/api/admin/cloud/delete', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadCloudConfigs(); });
+        }
+        function testCloudCfg(id) {
+            const x = cloudCfgs.find(c => c.id === id);
+            if (!x) return;
+            fetch('/api/admin/cloud/test', { method: 'POST', headers: authHeaders(), body: JSON.stringify(x) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function loadCloudList() {
+            fetch('/api/admin/cloud/list', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) { document.getElementById('cloudList').innerHTML = '<div class="empty-state">' + esc(d.msg || '云端未配置') + '</div>'; return; }
+                    const c = document.getElementById('cloudList');
+                    const list = d.data || [];
+                    if (!list.length) { c.innerHTML = '<div class="empty-state">云端无备份</div>'; return; }
+                    c.innerHTML = list.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
+                        <span style="font-family:monospace;flex:1;min-width:160px">${esc(b.name)}</span>
+                        <span style="color:var(--text3)">${fmtSize(b.size || 0)}</span>
+                        <span style="color:var(--text3)">${b.modified ? new Date(b.modified).toLocaleString('zh-CN') : ''}</span>
+                        <span style="display:flex;gap:6px">
+                            <button class="btn btn-sm" onclick="downloadCloudBackup('${esc(b.name)}')">下载到本地</button>
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteCloudBackup('${esc(b.name)}')">删除</button>
+                        </span>
+                    </div>`).join('');
+                }).catch(() => {});
+        }
+        function downloadCloudBackup(name) {
+            fetch('/api/admin/cloud/download', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadBackups(); });
+        }
+        function deleteCloudBackup(name) {
+            if (!confirm('确认删除云端备份 ' + name + '？')) return;
+            fetch('/api/admin/cloud/delete', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadCloudList(); });
+        }
+
+        /* ===== 字幕管理 ===== */
+        let subPage = 1, subTotal = 0;
+        const SUB_LIMIT = 50;
+        function subNewTypeChange() {
+            const t = document.querySelector('input[name="subNewType"]:checked').value;
+            document.getElementById('subNewUrlRow').style.display = t === 'url' ? '' : 'none';
+            document.getElementById('subNewTextRow').style.display = t === 'text' ? '' : 'none';
+        }
+        function loadSubtitles() {
+            const search = document.getElementById('subSearch').value.trim();
+            fetch(`/api/admin/subtitles?page=${subPage}&limit=${SUB_LIMIT}&search=${encodeURIComponent(search)}`, { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    subTotal = d.data.total;
+                    const c = document.getElementById('subTable');
+                    const list = d.data.list || [];
+                    document.getElementById('subCount').textContent = '共 ' + subTotal + ' 条';
+                    if (!list.length) { c.innerHTML = '<div class="empty-state">暂无字幕</div>'; document.getElementById('subPager').innerHTML = ''; return; }
+                    c.innerHTML = '<div style="overflow-x:auto"><table><thead><tr><th>名称</th><th>语言</th><th>类型</th><th>状态</th><th>操作</th></tr></thead><tbody>' + list.map(s => `<tr>
+                        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(s.name)}">${esc(s.name)}</td>
+                        <td style="font-size:12px;color:var(--text3)">${esc(s.langName || s.lang || '—')}</td>
+                        <td style="font-size:12px;color:var(--text3)">${esc(s.type)}</td>
+                        <td>${s.localized ? '<span style="color:var(--success)">本地</span>' : '<span style="color:var(--text3)">远程</span>'}</td>
+                        <td style="white-space:nowrap">
+                            <button class="btn btn-sm" onclick="applySubtitle('${s.id}')">应用</button>
+                            <button class="btn btn-sm" onclick="unapplySubtitle('${s.id}')">取消</button>
+                            ${s.type === 'url' && !s.localized ? `<button class="btn btn-sm" onclick="localizeSubtitle('${s.id}')">本地化</button>` : ''}
+                            <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteSubtitle('${s.id}')">删除</button>
+                        </td>
+                    </tr>`).join('') + '</tbody></table></div>';
+                    renderSubPager();
+                }).catch(() => {});
+        }
+        function renderSubPager() {
+            const tp = Math.ceil(subTotal / SUB_LIMIT);
+            const p = document.getElementById('subPager');
+            if (tp <= 1) { p.innerHTML = ''; return; }
+            p.innerHTML = `<button ${subPage <= 1 ? 'disabled' : ''} onclick="subPage=${subPage - 1};loadSubtitles()">上一页</button><span class="info">${subPage}/${tp}</span><button ${subPage >= tp ? 'disabled' : ''} onclick="subPage=${subPage + 1};loadSubtitles()">下一页</button>`;
+        }
+        function addSubtitle() {
+            const name = document.getElementById('subNewName').value.trim();
+            const lang = document.getElementById('subNewLang').value.trim();
+            const t = document.querySelector('input[name="subNewType"]:checked').value;
+            const body = { name, lang, type: t };
+            if (t === 'url') {
+                const url = document.getElementById('subNewUrl').value.trim();
+                if (!/^https?:\/\//i.test(url)) return toast('请输入有效的字幕链接', false);
+                body.url = url;
+                body.localize = document.querySelector('input[name="subNewLocalize"]:checked').value === '1';
+            } else {
+                const content = document.getElementById('subNewText').value;
+                if (!content) return toast('请输入字幕内容', false);
+                body.content = content;
+            }
+            fetch('/api/admin/subtitles', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => { toast(d.msg || '已添加', d.code === 0); if (d.code === 0) { document.getElementById('subNewName').value = ''; document.getElementById('subNewUrl').value = ''; document.getElementById('subNewText').value = ''; loadSubtitles(); } });
+        }
+        function uploadSubtitleFiles() {
+            const input = document.getElementById('subNewFile');
+            if (!input.files.length) return;
+            const fd = new FormData();
+            Array.from(input.files).forEach(f => fd.append('files', f));
+            fetch('/api/admin/subtitles/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); input.value = ''; if (d.code === 0) loadSubtitles(); });
+        }
+        function deleteSubtitle(id) {
+            if (!confirm('确认删除该字幕？')) return;
+            fetch('/api/admin/subtitles', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
+        }
+        function localizeSubtitle(id) {
+            fetch('/api/admin/subtitles/localize', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
+        }
+        function applySubtitle(id) {
+            fetch('/api/admin/subtitles/apply', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
+        }
+        function unapplySubtitle(id) {
+            fetch('/api/admin/subtitles/unapply', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadSubtitles(); });
+        }
+
+        /* ===== 视频批量操作 ===== */
+        function videoToggleSelectAll() {
+            const hdr = document.getElementById('videoSelectAll');
+            const top = document.getElementById('videoSelectAllTop');
+            const on = hdr ? hdr.checked : (top ? top.checked : false);
+            if (hdr) hdr.checked = on;
+            if (top) top.checked = on;
+            document.querySelectorAll('.video-cb').forEach(c => c.checked = on);
+        }
+        function getSelectedVideos() {
+            return Array.from(document.querySelectorAll('.video-cb:checked')).map(c => c.value);
+        }
+        function videoBatchDelete() {
+            const sel = getSelectedVideos();
+            if (!sel.length) return toast('请先选择视频', false);
+            if (!confirm('确认删除所选 ' + sel.length + ' 个视频映射？')) return;
+            fetch('/api/admin/videos/delete', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ vids: sel }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadVideos(); });
+        }
+        function openCodeModal(title, code) {
+            document.getElementById('codeModalTitle').textContent = title;
+            document.getElementById('codeModalContent').textContent = code;
+            document.getElementById('codeModal').style.display = 'flex';
+        }
+        function closeCodeModal() { document.getElementById('codeModal').style.display = 'none'; }
+        function copyCodeModal() {
+            const text = document.getElementById('codeModalContent').textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => toast('已复制', true)).catch(() => toast('复制失败', false));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); toast('已复制', true); } catch (e) { toast('复制失败', false); }
+                document.body.removeChild(ta);
+            }
+        }
+        function videoCopyCodes(type) {
+            fetch('/api/admin/videos', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const list = d.data || [];
+                    if (!list.length) return toast('暂无视频映射', false);
+                    const base = location.origin + '/player/?url=';
+                    let code = '';
+                    if (type === 'html') {
+                        code = list.map(v => `<a href="${base}${encodeURIComponent(v.url)}" target="_blank">播放视频</a>`).join('\n');
+                    } else if (type === 'md') {
+                        code = list.map(v => `[播放视频](${base}${encodeURIComponent(v.url)})`).join('\n');
+                    } else if (type === 'js') {
+                        code = list.map(v => `window.open('${base}${encodeURIComponent(v.url)}')`).join('\n');
+                    } else {
+                        code = list.map(v => base + encodeURIComponent(v.url)).join('\n');
+                    }
+                    openCodeModal('已生成 ' + list.length + ' 条', code);
+                });
+        }
+
+        /* ===== 首次启动初始化向导 ===== */
+        let initCur = 1;
+        function initLangChange() { I18N.setLang(document.getElementById('initLang').value); }
+        function initDbTypeChange() {
+            const t = document.getElementById('initDbType').value;
+            const f = document.getElementById('initDbFields');
+            const mk = (id, ph) => `<input type="text" id="${id}" placeholder="${ph}" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;margin-bottom:8px">`;
+            if (t === 'json') f.innerHTML = '<div class="cfg-hint">JSON 文件存储（data/*.json），零配置</div>';
+            else if (t === 'sqlite') f.innerHTML = mk('initSqliteFile', '文件路径（默认 data/app.db）');
+            else if (t === 'mongodb') f.innerHTML = mk('initDbHost', '主机 127.0.0.1') + mk('initDbPort', '端口 27017') + mk('initDbUser', '用户（可空）') + '<input type="password" id="initDbPass" placeholder="密码" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;margin-bottom:8px">' + mk('initDbName', '数据库 artplayer');
+            else f.innerHTML = mk('initDbHost', '主机 127.0.0.1') + mk('initDbPort', '端口 ' + (t === 'postgres' ? '5432' : '3306')) + mk('initDbUser', '用户 root') + '<input type="password" id="initDbPass" placeholder="密码" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;outline:none;margin-bottom:8px">' + mk('initDbName', '数据库 artplayer');
+        }
+        function initDbBody() {
+            const t = document.getElementById('initDbType').value;
+            if (t === 'json') return { type: 'json' };
+            if (t === 'sqlite') return { type: 'sqlite', sqlite: { file: document.getElementById('initSqliteFile').value || 'data/app.db' } };
+            if (t === 'mongodb') return { type: 'mongodb', mongodb: { host: document.getElementById('initDbHost').value, port: parseInt(document.getElementById('initDbPort').value) || 27017, user: document.getElementById('initDbUser').value, password: document.getElementById('initDbPass').value, database: document.getElementById('initDbName').value || 'artplayer' } };
+            const c = { host: document.getElementById('initDbHost').value, port: parseInt(document.getElementById('initDbPort').value) || 3306, user: document.getElementById('initDbUser').value, password: document.getElementById('initDbPass').value, database: document.getElementById('initDbName').value || 'artplayer' };
+            return { type: t, mysql: c, postgres: c, mongodb: c };
+        }
+        function testInitDbConn() {
+            toast('测试中...', true);
+            fetch('/api/admin/db/test', { method: 'POST', headers: authHeaders(), body: JSON.stringify(initDbBody()) })
+                .then(r => r.json()).then(d => toast(d.msg, d.code === 0));
+        }
+        function initStep(delta) {
+            const next = initCur + delta;
+            if (delta > 0 && next === 2) {
+                document.getElementById('initTzPreview').textContent = '当前时间: ' + new Date().toLocaleString('zh-CN', { timeZone: document.getElementById('initTz').value });
+            }
+            if (next < 1 || next > 4) {
+                if (next > 4) initFinish();
+                return;
+            }
+            if (next === 4) {
+                const db = initDbBody();
+                const n1 = document.getElementById('initNewPwd').value;
+                const n2 = document.getElementById('initNewPwd2').value;
+                if (n1 !== n2) { document.getElementById('initMsg').textContent = '两次输入的密码不一致'; return; }
+                if (n1.length < 4) { document.getElementById('initMsg').textContent = '密码至少 4 位'; return; }
+            }
+            initCur = next;
+            document.getElementById('initMsg').textContent = '';
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('initStep' + i).style.display = i === next ? '' : 'none';
+                const s = document.querySelector(`.init-step[data-step="${i}"]`);
+                s.classList.toggle('active', i === next);
+                s.classList.toggle('done', i < next);
+            }
+            document.getElementById('initPrevBtn').style.display = next === 1 ? 'none' : '';
+            const nb = document.getElementById('initNextBtn');
+            nb.textContent = next === 4 ? '完成初始化' : '下一步';
+        }
+        function initFinish() {
+            const body = {
+                newPassword: document.getElementById('initNewPwd').value,
+                adminPath: document.getElementById('initAdminPath').value.trim(),
+                timezone: document.getElementById('initTz').value,
+                language: document.getElementById('initLang').value,
+                db: initDbBody()
+            };
+            const btn = document.getElementById('initNextBtn');
+            btn.disabled = true; btn.textContent = '提交中...';
+            fetch('/api/admin/init', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) })
+                .then(r => r.json()).then(d => {
+                    if (d.code === 0) {
+                        toast('初始化完成', true);
+                        I18N.setLang(body.language);
+                        setTimeout(() => location.reload(), 1200);
+                    } else {
+                        document.getElementById('initMsg').textContent = d.msg || '初始化失败';
+                        btn.disabled = false; btn.textContent = '完成初始化';
+                    }
+                }).catch(() => { btn.disabled = false; btn.textContent = '完成初始化'; document.getElementById('initMsg').textContent = '请求失败'; });
+        }
 
         document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
         document.getElementById('newWordInput').addEventListener('keypress', e => { if (e.key === 'Enter') addBannedWord(); });

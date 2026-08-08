@@ -12,11 +12,11 @@
   <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
 </p>
 
-> 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md)
+> 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md) · 🌐 [Online Docs](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
 
 A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https://artplayer.org) and Express. Features a custom Canvas danmaku engine, dual theme system, PoW anti-bot protection, per-API rate limiting with 1-second-precision live stats, multi-subtitle support, a full file manager, and multi-database storage.
 
-**v26.8.8** · MIT License
+**v26.8.11** · MIT License
 
 ## Table of Contents
 
@@ -44,6 +44,9 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 - **Security Center**: IP geolocation (auto-updating ip2region DB, city-level with ISP), world map distribution, request/traffic anomaly detection, IP ban & whitelist
 - **Dual theme system**: independent player & admin themes, 10 themes each (incl. StyleKit anime/manga styles), custom themes supported
 - **Admin panel**: danmaku / videos / banned words / files / logs / API stats / database in one place
+- **Console dashboard**: total visits, today requests, active IPs (24h), danmaku/video/subtitle counts, performance monitor (memory / CPU / PID / disk), live request chart
+- **Plugin system (Koishi-style)**: plugin = function / class / object with `apply(ctx, config)`; ctx injects Express router, data store, event bus (`danmaku:send`), http client, nested plugins; install via upload / GitHub-URL / npm; metadata & config schema auto-render admin forms; official marketplace with one-click install; npm/URL plugins update from source
+- **Dependencies & updates**: one-click app update (auto backup + restart), per-dependency or bulk npm updates, plugin updates
 - **API management**: per-API enable switch, RPS limit, bandwidth stats; live chart at 1s precision, selectable span (5 min ~ 3 months)
 - **Security**: PoW proof-of-work firewall (Anubis-style), session tokens, login rate limit, global API rate limit
 - **File manager**: online preview, batch delete/copy, archive (zip/7z/tar/tar.gz), extract (multi-format), multi-file upload
@@ -242,14 +245,21 @@ You can also assign video IDs manually in the admin panel under "视频管理" (
 
 | Tab | Features |
 |---|---|
+| Console | Total requests/traffic, today requests, active IPs (24h), danmaku/video/subtitle/banned counts, uptime, performance monitor (memory/CPU/PID/disk), live request chart |
 | Banned Words | Add/remove/search (paged); subscribe to external word-list URLs (bundled GitHub lexicon), scheduled/manual refresh |
 | Danmaku List | Filter by video/keyword, pagination, single delete |
-| Videos | View/add/delete video ID mappings |
+| Videos | View/add/delete video ID mappings, batch delete, copy embed codes (HTML/MD/JS/direct) |
+| Subtitles | Subtitle library: URL (one-click localize) / text / file upload; apply to videos, language detection |
+| Plugins | Install (upload .js / GitHub-URL / npm), enable/disable, schema config forms, official marketplace, per-source update |
+| Dependencies | App version check & one-click update, per-dependency npm updates, plugin updates |
 | Server Config | PoW toggle & difficulty, rate limit, danmaku rate limit, render params, session duration, themes, CDN prefix |
 | Files | Browse, preview (≤200KB), batch delete/copy, archive (zip/7z/tar/tar.gz), extract (zip/7z/rar/gz/tar...), upload |
 | Logs | Last 500 requests (time/method/path/status/IP/latency) |
 | API Management | Per-API switch / RPS / bandwidth; live chart (1s precision, span 5 min ~ 3 months); uptime, total calls, total bandwidth |
-| About | Project info |
+| Database | Storage info & table counts, switch storage (JSON/SQLite/MySQL/MariaDB/PostgreSQL/MongoDB) with auto migration, data browser, export |
+| Backups | Manual/scheduled backups (data+config), cloud sync (FTP/FTPS/SFTP/WebDAV/OpenList), download/restore/batch restore |
+| Security | IP geolocation & map, anomaly detection, ban/whitelist, login records & fail lockout |
+| About | Project info, version check & one-click update |
 
 The admin theme (`adminTheme`) is independent of the player theme (`theme`).
 
@@ -393,16 +403,30 @@ Via the admin panel, or edit `data/accounts.json` directly (salt + sha256); if a
 
 ## Update
 
-- **Check for updates** in About → Update: compares GitHub Releases / npm / the remote `update.xml` manifest, showing the latest version and release notes
+- **Check for updates** in About → Update or Dependencies: compares GitHub Releases / npm / the remote `update.xml` manifest, showing the latest version and release notes
 - **Running an update** is handled by a standalone process (`update.js`), started from the panel:
   1. **Backs up `data/`** first (data is never part of the update; `.gitignore` excludes it, and a backup is still made to `data/backup_update_<ts>/`)
   2. `git fetch` + `git pull --ff-only`
   3. **Verifies the `update.xml` manifest** (SHA-256 of every file; aborts if any mismatch, preventing partial updates)
   4. `npm install --production --package-lock=false`
   5. Verifies the version, then **restarts the service automatically** (stop old process, wait for the port, spawn the new one; `--no-restart` updates without restarting)
+- The Dependencies tab also supports per-package npm updates (background `npm install <pkg>@latest`) and per-source plugin updates
 - `update.xml` is the version manifest (version + per-file SHA-256); regenerate it with `node tools/gen-update-xml.js "message"` before releasing
 - On failure it rolls back safely: the data backup is kept, the old service keeps running, logs go to `data/update.log`, and code can be restored with `git checkout -- .`
 - Docker deployments do not self-update; pull the new image manually
+
+## Plugins
+
+See the [Plugin Guide](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/plugins/guide.html).
+
+- **Writing (Koishi-style)**: plugin = function / class / object with `apply(ctx, config)`; ctx injects `router` (Express) / `store` / `http` / `log` / `on` / `emit` / `plugin` (nested) / `version`
+- **Built-in events**: `danmaku:send` (fired when a danmaku is sent)
+- **Metadata**: export `name / version / description / author / homepage` for the admin panel; npm plugins read package.json automatically
+- **Config schema**: export a `schema` array (`key/label/type/default/hint/options`) to auto-render admin config forms; saving hot-reloads
+- **Install**: upload .js / GitHub or any URL / npm package
+- **Marketplace**: official registry (`plugin-registry.json`) with one-click install; PRs welcome
+- **Update**: npm/URL plugins update from their original source (config & enabled state preserved)
+- Example plugin: `plugins/hello-world.js`
 
 ## License
 

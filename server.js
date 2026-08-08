@@ -1138,6 +1138,8 @@ app.post('/api/danmu/', writeRateLimit(60, 60000), async (req, res) => {
     await store.danmuAdd(newDanmu);
 
     console.log(`[弹幕API] 弹幕保存成功: ${text}`);
+    /* 广播给插件（可用于弹幕统计、机器人转发、审核等） */
+    if (pluginManager) pluginManager.emit('danmu:send', { vid, text, color: colorHex, type: danmuType, time: parseFloat(time) || 0, author: String(author || 'anonymous') });
     res.json({ code: 0, data: newDanmu });
 });
 
@@ -1191,6 +1193,8 @@ app.post('/api/danmu/v3/', writeRateLimit(60, 60000), async (req, res) => {
     await store.danmuAdd(newDanmu);
 
     console.log(`[弹幕API] 弹幕保存成功: ${text}`);
+    /* 广播给插件（可用于弹幕统计、机器人转发、审核等） */
+    if (pluginManager) pluginManager.emit('danmu:send', { vid, text, color: colorHex, type: danmuType, time: parseFloat(time) || 0, author: String(author || 'anonymous') });
     res.json({ code: 0, data: newDanmu });
 });
 
@@ -3096,19 +3100,43 @@ app.get('/api/admin/dashboard', checkAdmin, async (req, res) => {
         /* 最近 1 分钟请求（秒桶累计） */
         const now = Math.floor(Date.now() / 1000);
         const lastMin = apiLayers.s.buckets.filter(b => now - b.ts < 60).reduce((a, b) => a + Object.values(b.calls).reduce((x, y) => x + y, 0), 0);
+        /* 24h 活跃 IP（在线访客估计） */
+        let activeIps24h = 0;
+        for (const t of Object.values(ipTotals.last)) if (t > Date.now() - 86400000) activeIps24h++;
+        /* 今日请求（按本地时区零点切分秒桶） */
+        const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+        const dayTs0 = Math.floor(dayStart.getTime() / 1000);
+        const todayCalls = apiLayers.s.buckets.filter(b => b.ts >= dayTs0).reduce((a, b) => a + Object.values(b.calls).reduce((x, y) => x + y, 0), 0);
+        /* 今日弹幕 / 今日新视频 */
+        const todayIso = new Date().toISOString().slice(0, 10);
+        let danmuToday = 0, videoToday = 0;
+        try {
+            const all = await store.danmuAll();
+            for (const d of all) { if (String(d.date || '').slice(0, 10) === todayIso) danmuToday++; }
+            const vids = await store.videosAll();
+            for (const v of Object.values(vids)) { if (String(v.createdAt || '').slice(0, 10) === todayIso) videoToday++; }
+        } catch (e) {}
+        /* 磁盘占用（Node 18.15+ fs.statfs，失败则省略） */
+        let disk = null;
+        try {
+            const st = fs.statfsSync(__dirname);
+            disk = { total: st.blocks * st.bsize, free: st.bavail * st.bsize };
+        } catch (e) {}
         res.json({
             code: 0,
             data: {
-                totals: { calls: totalCalls, bytes: totalBytes, ips: ipCount, lastMinuteCalls: lastMin },
-                counts: { danmu: danmuCount, videos: videoCount, subtitles: subtitleCount, bannedWords: bannedCount, logins: loginLogCount, backups: backupCount },
+                totals: { calls: totalCalls, bytes: totalBytes, ips: ipCount, lastMinuteCalls: lastMin, activeIps24h, todayCalls },
+                counts: { danmu: danmuCount, videos: videoCount, subtitles: subtitleCount, bannedWords: bannedCount, logins: loginLogCount, backups: backupCount, danmuToday, videoToday },
                 perf: {
                     memRss: Math.round(mem.rss / 1048576), memHeap: Math.round(mem.heapUsed / 1048576),
                     cpuMs: cpu.user + cpu.system,
                     uptimeSec: Math.floor((Date.now() - API_START_TIME) / 1000),
                     pid: process.pid,
                     node: process.version,
-                    version: APP_VERSION
+                    version: APP_VERSION,
+                    platform: process.platform + ' ' + process.arch
                 },
+                disk,
                 history: perfHistory
             }
         });
@@ -3134,7 +3162,31 @@ async function getDeps(force) {
         } catch (e) {}
     }));
     const list = deps.map(d => ({ ...d, latest: latest[d.name] || '' }));
-    const result = { list, checkedAt: now };
+    /* 程序版本更新信息（复用版本检测，1h 缓存） */
+    let version = null;
+    try {
+        const info = await checkVersionUpdate(false);
+        version = {
+            current: info.current,
+            latest: info.latest || info.current,
+            hasUpdate: info.hasUpdate,
+            deploy: info.deploy,
+            releaseNotes: info.releaseNotes || '',
+            releaseUrl: info.releaseUrl || '',
+            changedFiles: info.changedFiles || []
+        };
+    } catch (e) {}
+    /* 插件更新信息：npm / url 来源支持按来源更新 */
+    const plugins = pluginManager ? pluginManager.list().map(p => ({
+        name: p.name,
+        enabled: p.enabled,
+        status: p.status,
+        source: p.source.type,
+        version: (p.info && p.info.version) || '',
+        description: (p.info && p.info.description) || '',
+        updatable: p.source.type === 'npm' || p.source.type === 'url'
+    })) : [];
+    const result = { list, checkedAt: now, version, plugins };
     depsCache = { at: now, data: result };
     return result;
 }
@@ -3221,6 +3273,36 @@ app.post('/api/admin/plugins/uninstall', checkAdmin, async (req, res) => {
         res.json({ code: 0, msg: '已卸载插件 ' + name });
     } catch (e) {
         res.status(400).json({ code: 1, msg: safeErrMsg(e) });
+    }
+});
+
+/* 更新插件（按原来源重新安装：npm → @latest，url → 重新下载；保留配置与启用状态） */
+app.post('/api/admin/plugins/update', checkAdmin, async (req, res) => {
+    try {
+        const { name } = req.body || {};
+        await pluginManager.update(name);
+        res.json({ code: 0, msg: '插件 ' + name + ' 已更新' });
+    } catch (e) {
+        res.status(400).json({ code: 1, msg: '更新失败: ' + safeErrMsg(e) });
+    }
+});
+
+/* 插件市场：读取官方 registry（插件注册表，仓库根目录 plugin-registry.json） */
+let marketCache = null;
+app.get('/api/admin/plugins/market', checkAdmin, async (req, res) => {
+    try {
+        const now = Date.now();
+        if (marketCache && now - marketCache.at < 10 * 60 * 1000) {
+            return res.json({ code: 0, data: marketCache.data });
+        }
+        const r = await fetch('https://raw.githubusercontent.com/yangyang8002/Artplayer-Web-Api/master/plugin-registry.json', { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'ArtPlayer-Web-Api' } });
+        if (!r.ok) return res.status(502).json({ code: 1, msg: '插件市场获取失败: HTTP ' + r.status });
+        const j = await r.json();
+        const data = { updated: j.updated || '', list: Array.isArray(j.plugins) ? j.plugins : [] };
+        marketCache = { at: now, data };
+        res.json({ code: 0, data });
+    } catch (e) {
+        res.status(502).json({ code: 1, msg: '插件市场获取失败: ' + safeErrMsg(e) });
     }
 });
 
@@ -3524,7 +3606,7 @@ async function initStore() {
 
     /* 插件系统初始化（加载已启用插件） */
     try {
-        pluginManager = new PluginManager({ app, store, readConfig, log: (m) => console.log('[插件] ' + m) });
+        pluginManager = new PluginManager({ app, store, readConfig, version: APP_VERSION, log: (m) => console.log('[插件] ' + m) });
         pluginManager.loadState();
         await pluginManager.loadEnabled();
     } catch (e) {

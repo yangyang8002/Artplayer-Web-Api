@@ -12,11 +12,11 @@
   <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
 </p>
 
-> 📖 [English](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🎨 [主题系统](theme/README.md)
+> 📖 [English](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🎨 [主题系统](theme/README.md) · 🌐 [在线文档](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/)
 
 基于 [ArtPlayer](https://artplayer.org) 的弹幕视频播放器 + Web 管理后台。自带自研 Canvas 弹幕引擎、多主题系统、PoW 防爬虫、API 限流与统计、文件管理、多字幕支持、多数据库存储。
 
-**v26.8.8** · MIT License
+**v26.8.11** · MIT License
 
 ## 目录
 
@@ -47,6 +47,8 @@
 - **API 管理**：每个 API 独立开关、RPS 限速、带宽统计；1 秒精度实时曲线，时间跨度可调（5 分钟 ~ 3 个月）
 - **安全防护**：PoW 工作量证明（Anubis 同款）、登录令牌、登录限流、全局速率限制
 - **文件管理**：在线预览、批量删除/复制、压缩（zip/7z/tar/tar.gz）、解压（多格式）、多文件上传
+- **插件系统（Koishi 风格）**：插件 = 函数/类/带 apply 的对象，ctx 注入 Express 路由 / 数据存储 / 事件总线（danmu:send）/ http / 嵌套插件；支持上传 .js、GitHub/URL、npm 三种安装方式；元数据（名称/版本/作者/主页）与配置 Schema 自动生成后台表单；官方插件市场一键安装；npm/URL 插件可一键更新
+- **依赖与更新**：程序版本一键更新（自动备份数据 + 重启）、npm 依赖逐个或全部更新、插件按来源更新
 - **多数据库存储**：JSON 文件（默认）/ SQLite / MySQL / MariaDB / PostgreSQL / MongoDB 六种存储后端，任意互转、热切换自动迁移
 
 ## 快速开始
@@ -265,17 +267,21 @@ GET /api/video/resolve?url=/test_video1.mp4
 
 | 标签页 | 功能 |
 |---|---|
+| 控制台 | 访问总量、今日请求、24h 在线 IP、弹幕/视频/字幕/屏蔽词计数、性能监控（内存/CPU/PID/磁盘）、实时请求趋势图 |
 | 屏蔽词管理 | 增删屏蔽词、搜索分页；订阅外部词库 URL（内置 GitHub 词库），定时/手动刷新 |
 | 弹幕列表 | 按视频/关键词过滤、分页、单条删除 |
 | 视频管理 | 视频 ID 映射增删、批量删除；关联字幕库字幕；一键生成并批量复制快捷代码（HTML iframe / Markdown / JS / 直链） |
 | 字幕管理 | 字幕数据库：链接（可本地化）/文本/上传文件三种来源，独立字幕 ID，应用到视频、语言识别、删除 |
+| 插件管理 | 插件安装（上传 .js / GitHub-URL / npm）、启停、Schema 配置表单、官方插件市场、按来源更新 |
+| 依赖与更新 | 程序版本一键更新（自动备份+重启）、npm 依赖逐个/全部更新、插件更新 |
 | 服务器配置 | PoW 开关与难度、速率限制、弹幕频率限制、渲染参数、会话时长、双主题、CDN 前缀 |
 | 文件管理 | 目录浏览、文本预览（≤200KB）、批量删除/复制、压缩（zip/7z/tar/tar.gz）、解压（zip/7z/rar/gz/tar 等）、上传 |
 | 日志 | 最近 500 条请求（时间/方法/路径/状态码/IP/耗时） |
 | API 管理 | 每个 API 的开关、RPS、带宽；实时调用曲线（1s 精度，跨度 5 分钟 ~ 3 个月）；站点运行时间、总调用次数、总带宽 |
 | 安全中心 | IP 归属地与地图分布、异常检测、封禁/白名单、登录记录与失败锁定 |
-| 数据库管理 | 查看当前存储与各表数据量、切换存储（JSON/SQLite/MySQL/MariaDB/PostgreSQL/MongoDB）并自动迁移、测试连接、数据浏览、导出备份、**定时备份** |
-| 关于 | 项目信息 |
+| 数据库管理 | 查看当前存储与各表数据量、切换存储（JSON/SQLite/MySQL/MariaDB/PostgreSQL/MongoDB）并自动迁移、测试连接、数据浏览、导出备份 |
+| 备份中心 | 手动/定时备份（数据+配置）、云端同步（FTP/FTPS/SFTP/WebDAV/OpenList）、下载/恢复/批量恢复 |
+| 关于 | 项目信息、版本检查与一键更新 |
 
 后台可换主题（`adminTheme`），与播放器主题（`theme`）互不影响。
 
@@ -419,16 +425,30 @@ JSON 存储无主键约束，历史上可能产生重复 id 的记录。迁入 S
 
 ## 版本更新
 
-- 后台「关于 → 版本更新」可**检测更新**：对比 GitHub Releases / npm / 远程 `update.xml` 清单，显示最新版本与变更说明
+- 后台「关于 → 版本更新」或「依赖与更新」可**检测更新**：对比 GitHub Releases / npm / 远程 `update.xml` 清单，显示最新版本与变更说明
 - **执行更新**由独立进程 `update.js` 完成（后台点击后自动启动），流程：
   1. **备份 `data/`**（数据不参与更新，`.gitignore` 已忽略；更新前仍自动备份到 `data/backup_update_<时间戳>/`）
   2. `git fetch` + `git pull --ff-only`
-  3. **校验 `update.xml` 清单**（65+ 个文件 SHA-256 哈希，与清单不符立即中止，防止部分更新）
+  3. **校验 `update.xml` 清单**（70+ 个文件 SHA-256 哈希，与清单不符立即中止，防止部分更新）
   4. `npm install --production --package-lock=false`
   5. 校验版本号一致后**自动重启服务**（先停旧进程、等待端口释放、拉起新进程；`--no-restart` 可只更新不重启）
+- 「依赖与更新」页支持 npm 依赖**逐个更新**（后台 `npm install <pkg>@latest`）与插件按来源更新
 - `update.xml` 为版本清单（版本号 + 每个文件的 SHA-256 哈希），发布前用 `node tools/gen-update-xml.js "更新说明"` 重新生成
 - 失败时安全回退：数据备份保留、旧服务继续运行、日志写入 `data/update.log`、可 `git checkout -- .` 还原代码
 - Docker 部署不执行自更新，请手动 `docker pull yangyang8002/artplayer-web-api:latest`
+
+## 插件系统
+
+详见 [插件指南](https://yangyang8002.github.io/Artplayer-Web-Api-Docs/plugins/guide.html)。
+
+- **写法（Koishi 风格）**：插件 = 函数 / 类 / 带 `apply(ctx, config)` 的对象；`ctx` 注入 `router`（Express）/ `store`（数据存储）/ `http` / `log` / `on` / `emit` / `plugin`（嵌套）/ `version`
+- **内置事件**：`danmu:send`（弹幕发送成功时触发）
+- **元数据**：导出 `name / version / description / author / homepage` 即可在后台展示；npm 插件自动读取包信息
+- **配置 Schema**：导出 `schema` 数组（`key/label/type/default/hint/options`）自动生成后台配置表单，保存即热重载
+- **安装**：上传 .js / GitHub 或任意 URL 下载 / npm 包（三种方式）
+- **插件市场**：官方 registry（`plugin-registry.json`）一键安装；欢迎提交插件到市场
+- **更新**：npm/URL 来源插件一键按原来源更新（保留配置与启用状态）
+- 示例插件：`plugins/hello-world.js`
 
 ## License
 

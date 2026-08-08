@@ -1,15 +1,15 @@
-# ArtPlayer Web API — English Documentation
+# OpenVideoAPI — English Documentation
 
-<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/Artplayer-Web-Api@master/public/favicon.svg" width="96" height="96" alt="ArtPlayer Web API"></p>
+<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/OpenVideoAPI@master/public/favicon.svg" width="96" height="96" alt="OpenVideoAPI"></p>
 
 <p align="center">
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/Artplayer-Web-Api.svg?color=62d5ff&label=version" alt="Version"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/OpenVideoAPI.svg?color=62d5ff&label=version" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-green.svg" alt="Node.js"></a>
   <a href="Dockerfile"><img src="https://img.shields.io/badge/Docker-Ready-blue.svg" alt="Docker"></a>
   <a href="#database-support"><img src="https://img.shields.io/badge/Databases-JSON%20%7C%20SQLite%20%7C%20MySQL%20%7C%20PostgreSQL%20%7C%20MongoDB-ff85a2.svg" alt="Databases"></a>
-  <a href="https://www.npmjs.com/package/artplayer-web-api"><img src="https://img.shields.io/npm/v/artplayer-web-api?label=npm&color=cb3837" alt="npm"></a>
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
+  <a href="https://www.npmjs.com/package/open-video-api"><img src="https://img.shields.io/npm/v/open-video-api?label=npm&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI"><img src="https://img.shields.io/github/stars/yangyang8002/OpenVideoAPI?style=social&label=Stars" alt="Stars"></a>
 </p>
 
 > 📖 [中文文档](README_CN.md) · 🐳 [Docker Deployment](DOCKER.md) · 🎨 [Theme System](theme/README.md) · 🌐 [Online Docs](https://doc.mbps.top/)
@@ -57,27 +57,27 @@ A self-hosted danmaku video player + web admin panel built on [ArtPlayer](https:
 ### Option 1: npm install (recommended)
 
 ```bash
-npm install -g artplayer-web-api
-artplayer-web-api                 # global command
+npm install -g open-video-api
+open-video-api                 # global command
 # Or run without installing
-npx artplayer-web-api
+npx open-video-api
 ```
 
 ### Option 2: Docker image (Docker Hub / GHCR)
 
 ```bash
 # Docker Hub
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # GHCR (GitHub Container Registry)
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/open-video-api:latest
 ```
 
 ### Option 3: Run from source
 
 ```bash
-git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
-cd Artplayer-Web-Api
+git clone https://github.com/yangyang8002/OpenVideoAPI.git
+cd OpenVideoAPI
 
 # Install dependencies
 npm install
@@ -101,19 +101,19 @@ PORT=8080 node server.js
 - **GitHub accelerator** (clone / download / raw): prefix any GitHub URL with `https://fast.fumor.top/`
 
   ```bash
-  git clone https://fast.fumor.top/https://github.com/yangyang8002/Artplayer-Web-Api.git
+  git clone https://fast.fumor.top/https://github.com/yangyang8002/OpenVideoAPI.git
   ```
 
 - **Docker Hub mirror** (Nanjing University): replace the registry prefix with `docker.nju.edu.cn/`
 
   ```bash
-  docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/yangyang8002/open-video-api:latest
   ```
 
 - **GHCR mirror** (Nanjing University): use the `docker.nju.edu.cn/ghcr.io/` prefix
 
   ```bash
-  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/open-video-api:latest
   ```
 
 > Images are published to Docker Hub, GHCR and npm; users in mainland China are advised to use the NJU mirrors above.
@@ -121,7 +121,7 @@ PORT=8080 node server.js
 ## Project Structure
 
 ```
-Artplayer-Web-Api/
+OpenVideoAPI/
 ├── server.js               # Express backend (all APIs)
 ├── lib/                    # Unified storage layer
 │   ├── store.js            # Storage abstraction (JSON/SQLite/MySQL/PostgreSQL) + migration
@@ -178,9 +178,9 @@ Six storage backends are built in: **JSON files (default) / SQLite / MySQL / Mar
   "db": {
     "type": "mysql",
     "sqlite": { "file": "data/app.db" },
-    "mysql": { "host": "126.8.8.1", "port": 3306, "user": "root", "password": "", "database": "artplayer" },
-    "postgres": { "host": "126.8.8.1", "port": 5432, "user": "postgres", "password": "", "database": "artplayer" },
-    "mongodb": { "host": "126.8.8.1", "port": 27017, "user": "", "password": "", "database": "artplayer" }
+    "mysql": { "host": "126.8.8.1", "port": 3306, "user": "root", "password": "", "database": "openvideo" },
+    "postgres": { "host": "126.8.8.1", "port": 5432, "user": "postgres", "password": "", "database": "openvideo" },
+    "mongodb": { "host": "126.8.8.1", "port": 27017, "user": "", "password": "", "database": "openvideo" }
   }
 }
 ```
@@ -359,14 +359,14 @@ See [theme/README.md](theme/README.md) for custom themes.
 
 ```bash
 # Option 1: pull from Docker Hub
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # Option 2: build from source and start
 docker compose up -d --build
 
 # Or build directly
-docker build -t artplayer-web-api .
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" artplayer-web-api
+docker build -t open-video-api .
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" open-video-api
 ```
 
 Data is persisted via the `./data:/app/data` volume. See [DOCKER.md](DOCKER.md) for details (incl. Nginx reverse proxy).
@@ -419,14 +419,16 @@ Via the admin panel, or edit `data/accounts.json` directly (salt + sha256); if a
 
 See the [Plugin Guide](https://doc.mbps.top/plugins/guide.html).
 
-- **Writing (Koishi-style)**: plugin = function / class / object with `apply(ctx, config)`; ctx injects `router` (Express) / `store` / `http` / `log` / `on` / `emit` / `plugin` (nested) / `version`
-- **Built-in events**: `danmaku:send` (fired when a danmaku is sent)
-- **Metadata**: export `name / version / description / author / homepage` for the admin panel; npm plugins read package.json automatically
-- **Config schema**: export a `schema` array (`key/label/type/default/hint/options`) to auto-render admin config forms; saving hot-reloads
-- **Install**: upload .js / GitHub or any URL / npm package
-- **Marketplace**: official registry (`plugin-registry.json`) with one-click install; PRs welcome
-- **Update**: npm/URL plugins update from their original source (config & enabled state preserved)
-- Example plugin: `plugins/hello-world.js`
+- **Package structure (Koishi-style)**: plugins are npm packages whose `main` exports `apply(ctx, config)` (function / class / object with apply); the `openvideoPlugin` field in package.json declares metadata, service dependencies, config schema and client extensions
+- **Service layer**: built-in services `store` / `model` (dynamic tables) / `app` (version, restart, config) / `logger` (leveled logs) / `http` / `router`; plugins provide services via `ctx.provide(name, svc)` and declare dependencies with `inject` (auto topo-sorted loading)
+- **Dynamic tables**: `ctx.model.define(name, schema)` — plugin-defined tables, migrated automatically on storage switch
+- **Client extensions**: plugins can register **admin tabs** (`OpenVideoAdmin.registerTab`), **player replacement** (`OpenVideoPlayer.replace`) and player hooks (`onReady` / `video:load`); assets are injected via `/api/plugins/manifest` + `/api/plugins/client/*`
+- **Lifecycle events**: `ready` / `dispose` / `before:restart` / `danmaku:send` / custom events (`ctx.on` / `ctx.emit`)
+- **Service control**: `ctx.app.restart()` graceful restart (new process waits for the port), `ctx.app.getConfig/saveConfig`
+- **Config schema**: `openvideoPlugin.schema` auto-renders admin config forms; saving hot-reloads
+- **Install**: by npm package name (optional version); via the admin "Plugins" tab or the marketplace (registry with versions & dependencies, configurable URL)
+- **Update**: npm packages update to `@latest` (config & enabled state preserved)
+- Example plugin: `plugins/openvideo-plugin-demo` (services / model / events / debug tab / player overlay)
 
 ## License
 

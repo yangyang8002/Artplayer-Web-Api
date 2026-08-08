@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>弹幕管理 - ArtPlayer</title>
+    <title>OpenVideoAPI 管理后台</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2362d5ff'/%3E%3Cstop offset='100%25' stop-color='%237c5cfc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='28,26 28,54 47,40' fill='url(%23g)'/%3E%3Cline x1='47' y1='40' x2='54' y2='26' stroke='url(%23g)' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='54' y1='26' x2='54' y2='54' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Medium.min.css">
@@ -617,7 +617,7 @@
     <div id="loginPage">
         <div class="login-card">
             <div class="logo"><svg width="52" height="52" viewBox="0 0 80 80"><defs><linearGradient id="login-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><rect x="4" y="4" width="72" height="72" rx="18" fill="url(#login-grad)" opacity=".15"/><polygon points="28,26 28,54 47,40" fill="url(#login-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#login-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#login-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/><rect x="28" y="60" width="28" height="2.5" rx="1.25" fill="rgba(255,255,255,.3)"/></svg></div>
-            <h1>ArtPlayer 管理后台</h1>
+            <h1>OpenVideoAPI 管理后台</h1>
             <p class="sub">弹幕管理 · 服务器配置</p>
             <input type="text" id="usernameInput" placeholder="账号" autofocus>
             <input type="password" id="passwordInput" placeholder="密码">
@@ -702,7 +702,7 @@
     </div>
 
     <aside id="sidebar">
-        <div class="side-brand"><div class="mark"><svg width="34" height="34" viewBox="0 0 80 80"><defs><linearGradient id="side-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><polygon points="28,26 28,54 47,40" fill="url(#side-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#side-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#side-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/></svg></div><h1>ArtPlayer</h1></div>
+        <div class="side-brand"><div class="mark"><svg width="34" height="34" viewBox="0 0 80 80"><defs><linearGradient id="side-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--primary)"/></linearGradient></defs><polygon points="28,26 28,54 47,40" fill="url(#side-grad)"/><line x1="47" y1="40" x2="54" y2="26" stroke="url(#side-grad)" stroke-width="4" stroke-linecap="round"/><line x1="54" y1="26" x2="54" y2="54" stroke="url(#side-grad)" stroke-width="3" stroke-linecap="round" opacity=".6"/></svg></div><h1>OpenVideoAPI</h1></div>
         <nav class="side-nav">
             <button class="nav-item active" data-tab="console" onclick="switchTab('console')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 9l3 3-3 3"/><path d="M13 15h3"/></svg></span><span>控制台</span></button>
             <button class="nav-item" data-tab="words" onclick="switchTab('words')"><span class="icon">&#9881;</span><span>屏蔽词管理</span></button>
@@ -942,18 +942,9 @@
         <div class="panel" id="pluginsPanel">
             <div class="card">
                 <h3><span class="dot" style="background:var(--primary);box-shadow:0 0 6px var(--primary)"></span>安装插件</h3>
-                <div class="cfg-row"><span>方式</span>
-                    <select id="plInstallType" onchange="plInstallTypeChange()" style="flex:1">
-                        <option value="file">上传 .js 文件</option>
-                        <option value="url">GitHub / URL 下载</option>
-                        <option value="npm">npm 包</option>
-                    </select>
-                </div>
-                <div id="plFileRow"><label class="btn btn-sm" style="cursor:pointer;margin-top:8px">选择插件文件（.js）<input type="file" id="plFile" accept=".js" style="display:none"></label></div>
-                <div id="plUrlRow" style="display:none"><input type="text" id="plUrl" placeholder="https://github.com/xxx/plugin.js 或 https://example.com/a.js" style="flex:1;margin-top:8px"></div>
-                <div id="plNpmRow" style="display:none"><input type="text" id="plNpm" placeholder="npm 包名，如 my-artplayer-plugin" style="flex:1;margin-top:8px"></div>
+                <div class="cfg-row"><span>npm 包名</span><input type="text" id="plNpm" placeholder="openvideo-plugin-xxx（支持 @scope/name，可加 @版本）" style="flex:1"></div>
                 <div style="margin-top:12px"><button class="btn btn-sm btn-primary" onclick="installPlugin()">安装</button><button class="btn btn-sm" onclick="loadPlugins()">刷新</button></div>
-                <div class="cfg-hint">插件采用 Koishi 风格：模块导出 apply(ctx, config)；ctx 提供 router（Express）/ store / log / on('dispose') / emit；安装后需启用。⚠ 插件可执行任意代码，仅安装可信来源</div>
+                <div class="cfg-hint">插件为 Koishi 风格的 npm 包：包内 package.json 的 <b>openvideoPlugin</b> 字段声明元数据 / 依赖服务（inject）/ 提供服务（provide）/ 配置 Schema / 前端扩展（后台 tabs、播放器替换）。安装到 plugins/node_modules/，安装后需启用。</div>
             </div>
             <div class="card">
                 <h3><span class="dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent)"></span>插件列表 <span id="plCount" style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px"></span></h3>
@@ -1448,14 +1439,14 @@
                     <!-- danmaku trail -->
                     <rect x="30" y="60" width="30" height="2.5" rx="1.25" fill="rgba(255,255,255,.3)"/>
                 </svg>
-                <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">ArtPlayer Web Api</h2>
+                <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">OpenVideoAPI</h2>
                 <p style="font-size:13px;color:var(--text2);max-width:520px;margin:0 auto 14px;line-height:1.7">
-                    ArtPlayer 弹幕视频播放器 + Web 管理后台 — 自托管、零构建的弹幕系统<br>
+                    OpenVideoAPI 弹幕视频播放器 + Web 管理后台 — 自托管、零构建的弹幕系统<br>
                     自研 Canvas 弹幕引擎 · API 限流与实时统计 · PoW 防火墙 · 双主题系统 · 多字幕 · 文件管理
                 </p>
                 <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
                     <span class="ab-badge" id="aboutVersion">v26.8.11</span>
-                    <span class="ab-badge b2" style="cursor:pointer" onclick="window.open('https://github.com/yangyang8002/Artplayer-Web-Api')">GitHub</span>
+                    <span class="ab-badge b2" style="cursor:pointer" onclick="window.open('https://github.com/yangyang8002/OpenVideoAPI')">GitHub</span>
                     <span class="ab-badge b3" style="cursor:pointer" onclick="window.open('https://doc.mbps.top/')">Docs</span>
                     <span class="ab-badge b4">MIT License</span>
                 </div>
@@ -1562,6 +1553,82 @@
             clearTimeout(t2._t); t2._t = setTimeout(() => t2.classList.remove('show'), 2800);
         }
 
+        /* ===== 前端扩展 API（插件脚本通过它注册能力） ===== */
+        window.OpenVideoAdmin = {
+            tabs: [],
+            _ready: false,
+            registerTab(tab) {
+                this.tabs.push(tab);
+                if (this._ready) renderExtTabs();
+            },
+            getToken() { return adminToken; },
+            api(url, opts) {
+                opts = opts || {};
+                const headers = Object.assign({ 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' }, opts.headers || {});
+                return fetch(url, Object.assign({}, opts, { headers })).then(r => r.json());
+            }
+        };
+        function renderExtTabs() {
+            const nav = document.querySelector('.side-nav');
+            if (!nav) return;
+            OpenVideoAdmin.tabs.forEach(tab => {
+                if (document.getElementById('extPanel-' + tab.id)) return;
+                const btn = document.createElement('button');
+                btn.className = 'nav-item';
+                btn.dataset.tab = 'ext-' + tab.id;
+                btn.innerHTML = '<span class="icon">&#128295;</span><span>' + esc(tab.title) + '</span>';
+                btn.onclick = () => switchExtTab(tab.id);
+                const about = nav.querySelector('[data-tab="about"]');
+                nav.insertBefore(btn, about);
+                const panel = document.createElement('div');
+                panel.className = 'panel';
+                panel.id = 'extPanel-' + tab.id;
+                document.getElementById('mainPage').appendChild(panel);
+            });
+        }
+        function switchExtTab(id) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === 'ext-' + id));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            const p = document.getElementById('extPanel-' + id);
+            p.classList.add('active');
+            if (!p._mounted) {
+                p._mounted = true;
+                const tab = OpenVideoAdmin.tabs.find(x => x.id === id);
+                if (!tab) return;
+                try {
+                    if (typeof tab.mount === 'function') tab.mount(p);
+                    else if (tab.html) p.innerHTML = tab.html;
+                } catch (e) { console.error('[插件] tab 挂载异常', e); }
+            }
+            I18N.apply && I18N.apply(p);
+        }
+        /* 加载后台插件扩展（样式 + 脚本） */
+        function loadAdminPlugins() {
+            return fetch('/api/plugins/manifest?scope=admin', { headers: authHeaders() })
+                .then(r => r.json()).then(d => {
+                    if (d.code !== 0) return;
+                    const list = d.data.plugins || [];
+                    const chain = [];
+                    list.forEach(p => {
+                        (p.styles || []).forEach(s => chain.push(() => {
+                            const el = document.createElement('link');
+                            el.rel = 'stylesheet'; el.href = s;
+                            document.head.appendChild(el);
+                            return Promise.resolve();
+                        }));
+                        (p.scripts || []).forEach(s => chain.push(() => new Promise(resolve => {
+                            const el = document.createElement('script');
+                            el.src = s;
+                            el.onload = resolve; el.onerror = resolve;
+                            document.body.appendChild(el);
+                        })));
+                    });
+                    let i = 0;
+                    const next = () => { if (i >= chain.length) { window.OpenVideoAdmin._ready = true; renderExtTabs(); return; } chain[i++]().then(next); };
+                    next();
+                }).catch(() => {});
+        }
+
         function login() {
             const u = document.getElementById('usernameInput').value.trim();
             const p = document.getElementById('passwordInput').value;
@@ -1588,6 +1655,7 @@
                         loadDashboard(true);
                         checkUpdate(false);
                         loadAboutVersion();
+                        loadAdminPlugins();
                     } else toast(d.code === 429 ? '登录过频' : (d.msg || '失败'), false);
                 }).catch(() => toast('连接失败', false));
         }
@@ -1595,6 +1663,11 @@
         function logout() {
             adminToken = ''; adminUser = '';
             stopDashPanel();
+            /* 清理插件扩展 tab */
+            window.OpenVideoAdmin.tabs = [];
+            window.OpenVideoAdmin._ready = false;
+            document.querySelectorAll('.nav-item[data-tab^="ext-"]').forEach(n => n.remove());
+            document.querySelectorAll('.panel[id^="extPanel-"]').forEach(p => p.remove());
             document.getElementById('mainPage').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('usernameInput').value = '';
@@ -2574,40 +2647,20 @@
             if (dashReqTimer) { clearInterval(dashReqTimer); dashReqTimer = null; }
         }
 
-        /* ===== 插件管理 ===== */
-        function plInstallTypeChange() {
-            const v = document.getElementById('plInstallType').value;
-            document.getElementById('plFileRow').style.display = v === 'file' ? '' : 'none';
-            document.getElementById('plUrlRow').style.display = v === 'url' ? '' : 'none';
-            document.getElementById('plNpmRow').style.display = v === 'npm' ? '' : 'none';
-        }
+        /* ===== 插件管理（Koishi 风格：npm 包 + 服务 + 前端扩展） ===== */
         function installPlugin() {
-            const v = document.getElementById('plInstallType').value;
-            if (v === 'file') {
-                const f = document.getElementById('plFile').files[0];
-                if (!f) return toast('请选择插件文件', false);
-                if (!/\.js$/i.test(f.name)) return toast('仅支持 .js 文件', false);
-                if (f.size > 1024 * 1024) return toast('插件文件超过 1MB 上限', false);
-                const fd = new FormData();
-                fd.append('source', 'file');
-                fd.append('files', f);
-                fetch('/api/admin/plugins/install', { method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken }, body: fd })
-                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plFile').value = ''; loadPlugins(); } })
-                    .catch(() => toast('请求失败', false));
-            } else if (v === 'url') {
-                const url = document.getElementById('plUrl').value.trim();
-                if (!/^https?:\/\//i.test(url)) return toast('请输入有效的下载链接', false);
-                fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'url', url }) })
-                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plUrl').value = ''; loadPlugins(); } })
-                    .catch(() => toast('请求失败', false));
-            } else {
-                const pkg = document.getElementById('plNpm').value.trim();
-                if (!pkg) return toast('请输入 npm 包名', false);
-                toast('npm 安装中（可能需要几分钟）...', true);
-                fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'npm', pkg }) })
-                    .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plNpm').value = ''; loadPlugins(); } })
-                    .catch(() => toast('请求失败', false));
-            }
+            const input = document.getElementById('plNpm').value.trim();
+            if (!input) return toast('请输入 npm 包名', false);
+            const m = input.match(/^(@[a-zA-Z0-9-]+\/)?[a-zA-Z0-9_-]+(@.+)?$/);
+            if (!m) return toast('无效的 npm 包名', false);
+            const pkg = m[1] ? m[1] + m[2].split('@')[0].replace(/\/$/, '') : input.split('@')[0];
+            let version = '';
+            const at = input.lastIndexOf('@');
+            if (at > 0 && input.indexOf('@') === at) version = input.slice(at + 1);
+            toast('npm 安装中（可能需要几分钟）...', true);
+            fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ pkg, version }) })
+                .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { document.getElementById('plNpm').value = ''; loadPlugins(); } })
+                .catch(() => toast('请求失败', false));
         }
         function loadPlugins() {
             fetch('/api/admin/plugins', { headers: authHeaders() })
@@ -2620,30 +2673,40 @@
         function renderPlugins(list) {
             document.getElementById('plCount').textContent = '共 ' + list.length + ' 个';
             const c = document.getElementById('plList');
-            if (!list.length) { c.innerHTML = '<div class="empty-state">暂无插件，请先安装</div>'; return; }
+            if (!list.length) { c.innerHTML = '<div class="empty-state">暂无插件，可通过 npm 包名安装</div>'; return; }
             c.innerHTML = list.map(p => {
                 const info = p.info || {};
+                const pkg = (info.package || {});
+                const mf = info.manifest || {};
                 const st = p.status === 'running' ? '<span style="color:var(--success)">运行中</span>'
                     : p.status === 'error' ? `<span style="color:var(--danger)" title="${esc(p.error || '')}">加载失败</span>`
                     : '<span style="color:var(--text3)">已停止</span>';
-                const metaHtml = (info.version ? `<span class="pl-chip">v${esc(info.version)}</span>` : '')
-                    + (info.author ? `<span class="pl-chip">${esc(info.author)}</span>` : '')
-                    + `<span class="pl-chip">${esc(p.source.type)}</span>`;
+                const chips = (pkg.version ? `<span class="pl-chip">v${esc(pkg.version)}</span>` : '')
+                    + (pkg.author ? `<span class="pl-chip">${esc(pkg.author)}</span>` : '')
+                    + `<span class="pl-chip">npm</span>`;
+                const caps = [];
+                const tabs = ((mf.client && mf.client.admin && mf.client.admin.tabs) || []).length;
+                if (tabs) caps.push(`<span class="pl-chip" style="color:var(--accent)">${tabs} 个后台 tab</span>`);
+                if (mf.client && mf.client.player && mf.client.player.replaces) caps.push('<span class="pl-chip" style="color:var(--danger)">替换播放器</span>');
+                else if (mf.client && mf.client.player && (mf.client.player.scripts || []).length) caps.push('<span class="pl-chip">播放器扩展</span>');
+                if (Array.isArray(mf.provide) && mf.provide.length) caps.push(`<span class="pl-chip" style="color:var(--success)">提供: ${esc(mf.provide.join(', '))}</span>`);
+                if (Array.isArray(mf.inject) && mf.inject.length) caps.push(`<span class="pl-chip">依赖: ${esc(mf.inject.join(', '))}</span>`);
                 return `<div class="pl-card ${p.enabled ? 'on' : ''}" style="border:1px solid ${p.enabled ? 'rgba(52,211,153,.4)' : 'var(--border)'};background:${p.enabled ? 'linear-gradient(135deg,rgba(52,211,153,.06),rgba(255,255,255,.01))' : 'rgba(255,255,255,.02)'};border-radius:10px;padding:12px 14px;margin-bottom:10px">
                     <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
                         <div style="flex:1;min-width:200px">
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                 <span style="font-weight:700;font-size:14px">${esc(p.name)}</span>
-                                ${metaHtml}
+                                ${chips}
                                 ${st}
                             </div>
-                            <div style="font-size:12px;color:var(--text2);margin-top:4px">${esc(info.description || '（无描述）')}</div>
-                            ${info.homepage ? `<div style="font-size:11px;margin-top:3px"><a href="${esc(info.homepage)}" target="_blank" style="color:var(--accent)">${esc(info.homepage)}</a></div>` : ''}
-                            <div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(info.schema && info.schema.length ? '含配置表单（' + info.schema.length + ' 项）' : '无配置项')}</div>
+                            <div style="font-size:12px;color:var(--text2);margin-top:4px">${esc(pkg.description || mf.description || '（无描述）')}</div>
+                            ${pkg.homepage ? `<div style="font-size:11px;margin-top:3px"><a href="${esc(pkg.homepage)}" target="_blank" style="color:var(--accent)">${esc(pkg.homepage)}</a></div>` : ''}
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${caps.join('') || '<span class="pl-chip">无前端扩展</span>'}</div>
+                            <div style="font-size:11px;color:var(--text3);margin-top:4px">${esc((mf.schema && mf.schema.length) ? '含配置表单（' + mf.schema.length + ' 项）' : '无配置项')} · 入口 ${esc(info.main || 'index.js')}</div>
                         </div>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                             <button class="btn btn-sm ${p.enabled ? '' : 'btn-primary'}" onclick="togglePlugin('${esc(p.name)}', ${!p.enabled})">${p.enabled ? '停用' : '启用'}</button>
-                            ${info.schema && info.schema.length ? `<button class="btn btn-sm" onclick="openPlConfig('${esc(p.name)}')">配置</button>` : ''}
+                            ${mf.schema && mf.schema.length ? `<button class="btn btn-sm" onclick="openPlConfig('${esc(p.name)}')">配置</button>` : ''}
                             <button class="btn btn-sm" onclick="updatePlugin('${esc(p.name)}')">更新</button>
                             <button class="btn btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="uninstallPlugin('${esc(p.name)}')">卸载</button>
                         </div>
@@ -2662,7 +2725,7 @@
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
         }
         function uninstallPlugin(name) {
-            if (!confirm('确认卸载插件 ' + name + '？（将删除插件文件）')) return;
+            if (!confirm('确认卸载插件 ' + name + '？（将删除 npm 包）')) return;
             fetch('/api/admin/plugins/uninstall', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name }) })
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
         }
@@ -2674,7 +2737,7 @@
                 const p = (d.data.list || []).find(x => x.name === name);
                 if (!p) return;
                 plConfigName = name;
-                plConfigSchema = (p.info && p.info.schema) || [];
+                plConfigSchema = ((p.info && p.info.manifest && p.info.manifest.schema) || []);
                 plConfigValues = Object.assign({}, p.config || {});
                 document.getElementById('plConfigTitle').textContent = name;
                 const c = document.getElementById('plConfigFields');
@@ -2709,7 +2772,7 @@
             fetch('/api/admin/plugins/config', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ name: plConfigName, config: cfg }) })
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); if (d.code === 0) { closePlConfig(); loadPlugins(); } });
         }
-        /* 插件市场 */
+        /* 插件市场 v2（版本 + 依赖，安装走 npm） */
         function loadMarket(force) {
             fetch('/api/admin/plugins/market' + (force ? '?force=1' : ''), { headers: authHeaders() })
                 .then(r => r.json()).then(d => {
@@ -2723,19 +2786,24 @@
                         (d2.data.list || []).forEach(p => { installed[p.name] = p; });
                         c.innerHTML = list.map(m => {
                             const isInstalled = !!installed[m.name];
+                            const verSel = (m.versions && m.versions.length)
+                                ? `<select id="mkt_${esc(m.name.replace(/[^\w-]/g, '_'))}" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;outline:none">${m.versions.map(v => `<option>${esc(v)}</option>`).join('')}</select>`
+                                : '';
                             return `<div class="pl-card" style="border:1px solid var(--border);background:rgba(255,255,255,.02);border-radius:10px;padding:12px 14px;margin-bottom:10px">
                                 <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
                                     <div style="flex:1;min-width:200px">
                                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                             <span style="font-weight:700;font-size:14px">${esc(m.name)}</span>
-                                            ${m.version ? `<span class="pl-chip">v${esc(m.version)}</span>` : ''}
+                                            ${m.latest ? `<span class="pl-chip">v${esc(m.latest)}</span>` : ''}
                                             ${(m.tags || []).map(x => `<span class="pl-chip">${esc(x)}</span>`).join('')}
                                         </div>
                                         <div style="font-size:12px;color:var(--text2);margin-top:4px">${esc(m.description || '')}</div>
-                                        <div style="font-size:11px;color:var(--text3);margin-top:4px">作者：${esc(m.author || '—')}</div>
+                                        <div style="font-size:11px;color:var(--text3);margin-top:4px">作者：${esc(m.author || '—')}${(m.dependencies && m.dependencies.length) ? ' · 依赖: ' + esc(m.dependencies.join(', ')) : ''}</div>
                                     </div>
                                     <div style="display:flex;gap:6px;align-items:center">
-                                        ${isInstalled ? '<span style="font-size:11px;color:var(--success)">已安装</span>' : `<button class="btn btn-sm btn-primary" onclick="installMarketPlugin('${esc(m.url)}', '${esc(m.name)}')">安装</button>`}
+                                        ${isInstalled
+                                            ? '<span style="font-size:11px;color:var(--success)">已安装</span>'
+                                            : `<span>${verSel}</span><button class="btn btn-sm btn-primary" onclick="installMarketPlugin('${esc(m.name)}')">安装</button>`}
                                         ${m.homepage ? `<button class="btn btn-sm" onclick="window.open('${esc(m.homepage)}','_blank')">主页</button>` : ''}
                                     </div>
                                 </div>
@@ -2744,8 +2812,11 @@
                     }).catch(() => { c.innerHTML = '<div class="empty-state">列表加载失败</div>'; });
                 }).catch(() => { document.getElementById('marketList').innerHTML = '<div class="empty-state">插件市场获取失败（网络不可达）</div>'; });
         }
-        function installMarketPlugin(url, name) {
-            fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ source: 'url', url }) })
+        function installMarketPlugin(name) {
+            const sel = document.querySelector(`#mkt_${CSS.escape ? CSS.escape(name.replace(/[^\w-]/g, '_')) : name.replace(/[^\w-]/g, '_')}`);
+            const version = sel && sel.value ? sel.value : '';
+            toast('npm 安装中（可能需要几分钟）...', true);
+            fetch('/api/admin/plugins/install', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ pkg: name, version }) })
                 .then(r => r.json()).then(d => { toast(d.msg, d.code === 0); loadPlugins(); });
         }
 
@@ -2796,7 +2867,7 @@
                             <td>${esc(p.version || '—')}</td>
                             <td style="font-size:12px;color:var(--text3)">${esc(p.source)}</td>
                             <td>${p.status === 'running' ? '<span style="color:var(--success)">运行中</span>' : '<span style="color:var(--text3)">已停止</span>'}</td>
-                            <td>${p.updatable ? `<button class="btn btn-sm btn-primary" onclick="updatePlugin('${esc(p.name)}')">更新</button>` : '<span style="font-size:11px;color:var(--text3)">文件型</span>'}</td>
+                            <td>${p.updatable ? `<button class="btn btn-sm btn-primary" onclick="updatePlugin('${esc(p.name)}')">更新</button>` : '<span style="font-size:11px;color:var(--text3)">本地包</span>'}</td>
                         </tr>`).join('');
                     }
                 }).catch(() => {});

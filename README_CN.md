@@ -1,15 +1,15 @@
-# ArtPlayer Web API 中文文档
+# OpenVideoAPI 中文文档
 
-<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/Artplayer-Web-Api@master/public/favicon.svg" width="96" height="96" alt="ArtPlayer Web API"></p>
+<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/OpenVideoAPI@master/public/favicon.svg" width="96" height="96" alt="OpenVideoAPI"></p>
 
 <p align="center">
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/Artplayer-Web-Api.svg?color=62d5ff&label=version" alt="Version"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/OpenVideoAPI.svg?color=62d5ff&label=version" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-green.svg" alt="Node.js"></a>
   <a href="Dockerfile"><img src="https://img.shields.io/badge/Docker-Ready-blue.svg" alt="Docker"></a>
   <a href="#数据库支持"><img src="https://img.shields.io/badge/Databases-JSON%20%7C%20SQLite%20%7C%20MySQL%20%7C%20PostgreSQL%20%7C%20MongoDB-ff85a2.svg" alt="Databases"></a>
-  <a href="https://www.npmjs.com/package/artplayer-web-api"><img src="https://img.shields.io/npm/v/artplayer-web-api?label=npm&color=cb3837" alt="npm"></a>
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
+  <a href="https://www.npmjs.com/package/open-video-api"><img src="https://img.shields.io/npm/v/open-video-api?label=npm&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI"><img src="https://img.shields.io/github/stars/yangyang8002/OpenVideoAPI?style=social&label=Stars" alt="Stars"></a>
 </p>
 
 > 📖 [English](README_EN.md) · 🐳 [Docker 部署](DOCKER.md) · 🎨 [主题系统](theme/README.md) · 🌐 [在线文档](https://doc.mbps.top/)
@@ -56,27 +56,27 @@
 ### 方式一：npm 安装（推荐）
 
 ```bash
-npm install -g artplayer-web-api
-artplayer-web-api                 # 全局命令
+npm install -g open-video-api
+open-video-api                 # 全局命令
 # 或无需安装直接运行
-npx artplayer-web-api
+npx open-video-api
 ```
 
 ### 方式二：Docker 镜像（Docker Hub / GHCR）
 
 ```bash
 # Docker Hub
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # GHCR（GitHub Container Registry）
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/open-video-api:latest
 ```
 
 ### 方式三：源码运行
 
 ```bash
-git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
-cd Artplayer-Web-Api
+git clone https://github.com/yangyang8002/OpenVideoAPI.git
+cd OpenVideoAPI
 
 # 安装依赖
 npm install
@@ -100,19 +100,19 @@ PORT=8080 node server.js
 - **GitHub 加速**（clone / 下载 / raw 通用）：在原始 GitHub 链接前加 `https://fast.fumor.top/`
 
   ```bash
-  git clone https://fast.fumor.top/https://github.com/yangyang8002/Artplayer-Web-Api.git
+  git clone https://fast.fumor.top/https://github.com/yangyang8002/OpenVideoAPI.git
   ```
 
 - **Docker Hub 镜像加速**（南大源）：将镜像前缀替换为 `docker.nju.edu.cn/`
 
   ```bash
-  docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/yangyang8002/open-video-api:latest
   ```
 
 - **GHCR 镜像加速**（南大源）：`docker.nju.edu.cn/ghcr.io/` 前缀
 
   ```bash
-  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/open-video-api:latest
   ```
 
 > 镜像已同时发布到 Docker Hub、GHCR 与 npm；国内拉取镜像建议使用上述南大源加速。
@@ -120,7 +120,7 @@ PORT=8080 node server.js
 ## 目录结构
 
 ```
-Artplayer-Web-Api/
+OpenVideoAPI/
 ├── server.js               # Express 服务端（全部 API）
 ├── lib/                    # 统一存储层
 │   ├── store.js            # 存储抽象（JSON/SQLite/MySQL/PostgreSQL）+ 迁移工具
@@ -179,9 +179,9 @@ Artplayer-Web-Api/
   "db": {
     "type": "mysql",
     "sqlite": { "file": "data/app.db" },
-    "mysql": { "host": "126.8.8.1", "port": 3306, "user": "root", "password": "", "database": "artplayer" },
-    "postgres": { "host": "126.8.8.1", "port": 5432, "user": "postgres", "password": "", "database": "artplayer" },
-    "mongodb": { "host": "126.8.8.1", "port": 27017, "user": "", "password": "", "database": "artplayer" }
+    "mysql": { "host": "126.8.8.1", "port": 3306, "user": "root", "password": "", "database": "openvideo" },
+    "postgres": { "host": "126.8.8.1", "port": 5432, "user": "postgres", "password": "", "database": "openvideo" },
+    "mongodb": { "host": "126.8.8.1", "port": 27017, "user": "", "password": "", "database": "openvideo" }
   }
 }
 ```
@@ -379,14 +379,14 @@ GET /api/video/resolve?url=/test_video1.mp4
 
 ```bash
 # 方式一：Docker Hub 拉取镜像
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # 方式二：源码构建并启动
 docker compose up -d --build
 
 # 或直接构建
-docker build -t artplayer-web-api .
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" artplayer-web-api
+docker build -t open-video-api .
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" open-video-api
 ```
 
 数据通过 `./data:/app/data` 卷持久化。详细说明（含 Nginx 反代）见 [DOCKER.md](DOCKER.md)。
@@ -435,20 +435,22 @@ JSON 存储无主键约束，历史上可能产生重复 id 的记录。迁入 S
 - 「依赖与更新」页支持 npm 依赖**逐个更新**（后台 `npm install <pkg>@latest`）与插件按来源更新
 - `update.xml` 为版本清单（版本号 + 每个文件的 SHA-256 哈希），发布前用 `node tools/gen-update-xml.js "更新说明"` 重新生成
 - 失败时安全回退：数据备份保留、旧服务继续运行、日志写入 `data/update.log`、可 `git checkout -- .` 还原代码
-- Docker 部署不执行自更新，请手动 `docker pull yangyang8002/artplayer-web-api:latest`
+- Docker 部署不执行自更新，请手动 `docker pull yangyang8002/open-video-api:latest`
 
 ## 插件系统
 
 详见 [插件指南](https://doc.mbps.top/plugins/guide.html)。
 
-- **写法（Koishi 风格）**：插件 = 函数 / 类 / 带 `apply(ctx, config)` 的对象；`ctx` 注入 `router`（Express）/ `store`（数据存储）/ `http` / `log` / `on` / `emit` / `plugin`（嵌套）/ `version`
-- **内置事件**：`danmu:send`（弹幕发送成功时触发）
-- **元数据**：导出 `name / version / description / author / homepage` 即可在后台展示；npm 插件自动读取包信息
-- **配置 Schema**：导出 `schema` 数组（`key/label/type/default/hint/options`）自动生成后台配置表单，保存即热重载
-- **安装**：上传 .js / GitHub 或任意 URL 下载 / npm 包（三种方式）
-- **插件市场**：官方 registry（`plugin-registry.json`）一键安装；欢迎提交插件到市场
-- **更新**：npm/URL 来源插件一键按原来源更新（保留配置与启用状态）
-- 示例插件：`plugins/hello-world.js`
+- **包结构（Koishi 风格）**：插件为 npm 包，包内 `main` 导出 `apply(ctx, config)`（函数 / 类 / 带 apply 的对象）；`package.json` 的 `openvideoPlugin` 字段声明元数据 / 依赖服务 / 配置 Schema / 前端扩展
+- **服务层**：内置服务 `store` / `model`（动态表）/ `app`（版本、重启、配置）/ `logger`（分级日志）/ `http` / `router`；插件间通过 `ctx.provide(name, svc)` 提供服务、`inject` 声明依赖（自动拓扑排序加载）
+- **动态表**：`ctx.model.define(name, schema)` 插件自定义数据表，随存储切换自动迁移
+- **前端扩展**：插件可注册**后台 tab**（`OpenVideoAdmin.registerTab`）、**播放器替换**（`OpenVideoPlayer.replace`）与播放器钩子（`onReady`/`video:load`），资源由 `/api/plugins/manifest` + `/api/plugins/client/*` 注入
+- **生命周期事件**：`ready` / `dispose` / `before:restart` / `danmu:send` / 自定义事件（`ctx.on` / `ctx.emit`）
+- **服务控制**：`ctx.app.restart()` 优雅重启（新进程等待端口释放），`ctx.app.getConfig/saveConfig`
+- **配置 Schema**：`openvideoPlugin.schema` 数组自动生成后台配置表单，保存即热重载
+- **安装**：npm 包名（可指定版本）；后台「插件管理」或「插件市场」（registry 含版本与依赖，URL 可配置）一键安装
+- **更新**：npm 包一键 `@latest` 更新（保留配置与启用状态）
+- 示例插件：`plugins/openvideo-plugin-demo`（服务 / 动态表 / 事件 / 调试 tab / 播放器浮层）
 
 ## License
 

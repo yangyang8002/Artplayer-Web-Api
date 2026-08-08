@@ -1,17 +1,17 @@
-# ArtPlayer Web API
+# OpenVideoAPI
 
-<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/Artplayer-Web-Api@master/public/favicon.svg" width="96" height="96" alt="ArtPlayer Web API"></p>
+<p align="center"><img src="https://cdn.jsdelivr.net/gh/yangyang8002/OpenVideoAPI@master/public/favicon.svg" width="96" height="96" alt="OpenVideoAPI"></p>
 
-**ArtPlayer 弹幕视频播放器 + Web 管理后台**
+**OpenVideoAPI 弹幕视频播放器 + Web 管理后台**
 
 <p align="center">
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/Artplayer-Web-Api.svg?color=62d5ff&label=version" alt="Version"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI/releases"><img src="https://img.shields.io/github/v/release/yangyang8002/OpenVideoAPI.svg?color=62d5ff&label=version" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D18-green.svg" alt="Node.js"></a>
   <a href="Dockerfile"><img src="https://img.shields.io/badge/Docker-Ready-blue.svg" alt="Docker"></a>
   <a href="README_CN.md#数据库支持"><img src="https://img.shields.io/badge/Databases-JSON%20%7C%20SQLite%20%7C%20MySQL%20%7C%20PostgreSQL%20%7C%20MongoDB-ff85a2.svg" alt="Databases"></a>
-  <a href="https://www.npmjs.com/package/artplayer-web-api"><img src="https://img.shields.io/npm/v/artplayer-web-api?label=npm&color=cb3837" alt="npm"></a>
-  <a href="https://github.com/yangyang8002/Artplayer-Web-Api"><img src="https://img.shields.io/github/stars/yangyang8002/Artplayer-Web-Api?style=social&label=Stars" alt="Stars"></a>
+  <a href="https://www.npmjs.com/package/open-video-api"><img src="https://img.shields.io/npm/v/open-video-api?label=npm&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/yangyang8002/OpenVideoAPI"><img src="https://img.shields.io/github/stars/yangyang8002/OpenVideoAPI?style=social&label=Stars" alt="Stars"></a>
 </p>
 
 Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播放系统，支持自研 Canvas 弹幕引擎、HLS/FLV 流媒体、API 限流与实时统计、PoW 防火墙、双主题系统、多字幕、文件管理、多数据库存储。
@@ -25,27 +25,27 @@ Node.js + Express + [ArtPlayer](https://artplayer.org) 自托管弹幕视频播�
 ### 方式一：npm 安装（推荐）
 
 ```bash
-npm install -g artplayer-web-api
-artplayer-web-api                 # 全局命令
+npm install -g open-video-api
+open-video-api                 # 全局命令
 # 或无需安装直接运行
-npx artplayer-web-api
+npx open-video-api
 ```
 
 ### 方式二：Docker 镜像（Docker Hub / GHCR）
 
 ```bash
 # Docker Hub
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # GHCR（GitHub Container Registry）
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/artplayer-web-api:latest
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" ghcr.io/yangyang8002/open-video-api:latest
 ```
 
 ### 方式三：源码运行
 
 ```bash
-git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
-cd Artplayer-Web-Api
+git clone https://github.com/yangyang8002/OpenVideoAPI.git
+cd OpenVideoAPI
 npm install
 npm start
 ```
@@ -62,19 +62,19 @@ npm start
 - **GitHub 加速**（clone / 下载 / raw 通用）：在原始 GitHub 链接前加 `https://fast.fumor.top/`
 
   ```bash
-  git clone https://fast.fumor.top/https://github.com/yangyang8002/Artplayer-Web-Api.git
+  git clone https://fast.fumor.top/https://github.com/yangyang8002/OpenVideoAPI.git
   ```
 
 - **Docker Hub 镜像加速**（南大源）：将镜像前缀替换为 `docker.nju.edu.cn/`
 
   ```bash
-  docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/yangyang8002/open-video-api:latest
   ```
 
 - **GHCR 镜像加速**（南大源）：`docker.nju.edu.cn/ghcr.io/` 前缀
 
   ```bash
-  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+  docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/open-video-api:latest
   ```
 
 > 镜像已同时发布到 Docker Hub、GHCR 与 npm；国内拉取镜像建议使用上述南大源加速。
@@ -89,7 +89,7 @@ npm start
 - PoW 工作量证明防火墙、全局速率限制、登录限流
 - 播放器 + 后台双主题系统（各 10 套，支持自定义导入）
 - 管理后台：控制台监控 / 弹幕 / 视频 / 屏蔽词 / 文件 / 日志 / API 统计 / 数据库 / 备份 / 安全中心
-- **插件系统（Koishi 风格）**：ctx 注入路由 / 存储 / 事件总线，支持上传、GitHub-URL、npm 安装，配置 Schema 自动生成表单，官方插件市场
+- **插件系统（Koishi 风格）**：npm 包插件 + 服务层（provide/inject）+ ctx.model 动态表 + 前端扩展（后台 tab / 播放器替换），配置 Schema 自动生成表单，市场带版本与依赖
 - **依赖与更新**：程序版本一键更新（自动备份 + 重启）、npm 依赖逐个更新、插件更新
 - **多数据库存储**：JSON 文件（默认）/ SQLite / MySQL / MariaDB / PostgreSQL，任意互转、热切换自动迁移（弹幕、视频映射、屏蔽词、账号、IP 封禁白名单、登录记录、统计）
 

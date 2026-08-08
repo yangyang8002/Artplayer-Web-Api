@@ -1,0 +1,28 @@
+{
+  "name": "openvideo-plugin-demo",
+  "version": "1.0.0",
+  "description": "OpenVideoAPI 示例插件：服务层 / 动态表 / 事件总线 / 前端扩展（调试 tab + 播放器浮层）",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "keywords": ["openvideo", "plugin", "demo"],
+  "openvideoPlugin": {
+    "name": "demo",
+    "description": "演示服务注入、ctx.model 动态表、事件总线、ctx.app 与前端扩展（后台调试 tab + 播放器浮层）",
+    "inject": ["store", "model", "app", "logger", "http"],
+    "provide": ["stats"],
+    "schema": [
+      { "key": "logDanmu", "label": "记录弹幕", "type": "boolean", "default": true, "hint": "监听 danmu:send 事件并写入插件日志" },
+      { "key": "showOverlay", "label": "播放器浮层", "type": "boolean", "default": true, "hint": "在播放器左上角显示插件浮层" },
+      { "key": "interval", "label": "心跳间隔（秒）", "type": "number", "default": 60, "hint": "定时写入日志的间隔" }
+    ],
+    "client": {
+      "admin": {
+        "scripts": ["lib/client/admin/debug.js"],
+        "tabs": [{ "id": "demo-debug", "title": "调试工具" }]
+      },
+      "player": {
+        "scripts": ["lib/client/player/overlay.js"]
+      }
+    }
+  }
+}

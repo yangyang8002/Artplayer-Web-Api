@@ -46,7 +46,7 @@ jobs:
           context: .
           push: true
           tags: |
-            yangyang8002/artplayer-web-api:latest
-            yangyang8002/artplayer-web-api:${{steps.meta.outputs.version}}
-            ghcr.io/yangyang8002/artplayer-web-api:latest
-            ghcr.io/yangyang8002/artplayer-web-api:${{steps.meta.outputs.version}}
+            yangyang8002/open-video-api:latest
+            yangyang8002/open-video-api:${{steps.meta.outputs.version}}
+            ghcr.io/yangyang8002/open-video-api:latest
+            ghcr.io/yangyang8002/open-video-api:${{steps.meta.outputs.version}}

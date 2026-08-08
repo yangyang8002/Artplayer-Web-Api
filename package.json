@@ -1,10 +1,10 @@
 {
-  "name": "artplayer-web-api",
+  "name": "open-video-api",
   "version": "26.8.11",
-  "description": "ArtPlayer danmaku video player with web admin panel - PoW firewall, rate limiting, multi-theme, subtitle support, multi-database storage",
+  "description": "OpenVideoAPI - self-hosted danmaku video player with web admin: PoW firewall, rate limiting, multi-theme, plugin system (Koishi-style), subtitle support, multi-database storage",
   "main": "server.js",
   "bin": {
-    "artplayer-web-api": "server.js"
+    "open-video-api": "server.js"
   },
   "scripts": {
     "start": "node server.js",
@@ -16,6 +16,7 @@
     "lib/",
     "public/",
     "theme/",
+    "plugins/",
     "gen_perf_danmu.js",
     "nginx.conf.example",
     "README.md",
@@ -27,15 +28,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yangyang8002/Artplayer-Web-Api.git"
+    "url": "git+https://github.com/yangyang8002/OpenVideoAPI.git"
   },
   "keywords": [
-    "artplayer",
+    "openvideo",
     "danmaku",
     "video",
     "player",
     "express",
     "admin",
+    "plugin",
     "sqlite",
     "mysql",
     "postgresql",

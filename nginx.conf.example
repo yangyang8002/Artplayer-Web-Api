@@ -1,4 +1,4 @@
-# Nginx Reverse Proxy Configuration for ArtPlayer Web Api
+# Nginx Reverse Proxy Configuration for OpenVideoAPI
 # Place this file in /etc/nginx/sites-available/ and symlink to sites-enabled/
 # Or include it in your nginx.conf
 

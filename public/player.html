@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArtPlayer - 弹幕视频播放器</title>
+    <title>OpenVideoAPI - 弹幕视频播放器</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2362d5ff'/%3E%3Cstop offset='100%25' stop-color='%237c5cfc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='28,26 28,54 47,40' fill='url(%23g)'/%3E%3Cline x1='47' y1='40' x2='54' y2='26' stroke='url(%23g)' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='54' y1='26' x2='54' y2='54' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Medium.min.css">
@@ -157,7 +157,7 @@
             <div id="overlay" class="active">
                 <div class="overlay-card" id="welcomeCard">
                     <div class="icon loading">&#9654;</div>
-                    <h2>ArtPlayer 弹幕播放器</h2>
+                    <h2>OpenVideoAPI 弹幕播放器</h2>
                     <p>在地址栏添加 <span class="code">?url=视频链接</span> 开始播放</p>
                     <input type="text" id="urlInput" placeholder="粘贴视频地址 (支持 mp4 / m3u8 / flv)" data-i18n-ph="粘贴视频地址 (支持 mp4 / m3u8 / flv)">
                     <button onclick="loadFromInput()">开始播放</button>
@@ -179,6 +179,23 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
 
+    <script>
+    /* ===== 前端扩展 API（插件脚本通过它注册能力） ===== */
+    window.OpenVideoPlayer = {
+        replacement: null,       /* 插件播放器替换：{ name, init(ctx) } */
+        _readyHooks: [],
+        _listeners: {},
+        ctx: null,
+        replace: function (impl) { this.replacement = impl; },
+        onReady: function (fn) { this._readyHooks.push(fn); },
+        on: function (ev, fn) { (this._listeners[ev] = this._listeners[ev] || []).push(fn); },
+        _fire: function (ev, data) { (this._listeners[ev] || []).forEach(function (fn) { try { fn(data); } catch (e) {} }); },
+        _fireReady: function () {
+            var self = this;
+            this._readyHooks.forEach(function (fn) { try { fn(self.ctx); } catch (e) { console.error('[插件] ready 钩子异常', e); } });
+        }
+    };
+    </script>
     <script>
 (function(){
     I18N.init();
@@ -220,7 +237,7 @@
     function hideOverlay(){document.getElementById('overlay').classList.add('hidden')}
     function loadFromInput(retry){
         var input=retry?document.getElementById('urlInputRetry'):document.getElementById('urlInput');
-        var url=input.value.trim();if(!url){showToast(t('请输入视频地址'),true);return}initPlayer(url);
+        var url=input.value.trim();if(!url){showToast(t('请输入视频地址'),true);return}bootPlayer(url);
     }
     function getVideoId(url){
         var v=url;try{var u=new URL(url);v=u.pathname+u.search}catch(e){}
@@ -703,6 +720,8 @@
         }
         if(!vid)vid=getVideoId(decoded);
 
+        /* 通知插件：新视频加载（vid 已确定） */
+        window.OpenVideoPlayer._fire('video:load',{url:decoded,vid:vid});
         try{fetch('/api/video/map',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid:vid,url:decoded})}).catch(function(){})}catch(e){}
 
         var subOption={};
@@ -990,10 +1009,83 @@
     /* Danmaku box follows the control bar visibility:
        hidden in mini-progress-bar / lock mode (controls are slid away),
        otherwise the parent .art-bottom opacity handles it. */
+    /* ===== 插件前端扩展：加载清单 → 注入资源 → 构建 ctx → 播放器替换/默认启动 ===== */
+    var _pluginsLoaded=false, _readyFired=false;
+    function loadTag(kind,url){
+        return new Promise(function(resolve){
+            var el=document.createElement(kind==='link'?'link':'script');
+            if(kind==='link'){el.rel='stylesheet';el.href=url}else{el.src=url}
+            el.onload=resolve;el.onerror=resolve;
+            (kind==='link'?document.head:document.body).appendChild(el);
+        });
+    }
+    function buildPluginCtx(url){
+        var ctx={
+            container:document.getElementById('artplayer'),
+            url:url||'',
+            vid:'',
+            config:{},
+            pluginConfig:{},
+            danmaku:{
+                get:function(vid2){return fetch('/api/danmu/v3/?id='+encodeURIComponent(vid2)).then(function(r){return r.json()}).then(function(d){return d.code===0?d.data:[]})},
+                send:function(payload){return fetch('/api/danmu/v3/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json()})}
+            },
+            resolve:function(url2){return fetch('/api/video/resolve?url='+encodeURIComponent(url2)).then(function(r){return r.json()}).then(function(d){return d.code===0?(d.data.vid||''):''})},
+            on:function(ev,fn){window.OpenVideoPlayer.on(ev,fn)},
+            emit:function(ev,data){window.OpenVideoPlayer._fire(ev,data)},
+            setUrl:function(u){bootPlayer(u)}
+        };
+        try{
+            fetch('/api/config/public').then(function(r){return r.json()}).then(function(d){
+                if(d.code===0)ctx.config=d.data;
+                window.OpenVideoPlayer._fire('config:ready',ctx.config);
+            }).catch(function(){});
+        }catch(e){}
+        return ctx;
+    }
+    function loadPlayerPlugins(cb){
+        fetch('/api/plugins/manifest?scope=player').then(function(r){return r.json()}).then(function(d){
+            var list=(d.code===0&&d.data&&d.data.plugins)||[];
+            var chain=[];
+            list.forEach(function(p){
+                (p.styles||[]).forEach(function(s){chain.push(function(){return loadTag('link',s)})});
+                (p.scripts||[]).forEach(function(s){chain.push(function(){return loadTag('script',s)})});
+            });
+            var i=0;
+            (function next(){
+                if(i>=chain.length){cb();return}
+                chain[i++]().then(next);
+            })();
+        }).catch(function(){cb()});
+    }
+    function bootPlayer(url){
+        function runBoot(){
+            var rep=window.OpenVideoPlayer.replacement;
+            var ctx=buildPluginCtx(url);
+            window.OpenVideoPlayer.ctx=ctx;
+            if(rep&&typeof rep.init==='function'){
+                /* 插件播放器替换：完全接管播放区渲染 */
+                if(typeof rep.load==='function')ctx.load=function(u){rep.load(ctx,u)};
+                try{rep.init(ctx)}catch(e){showError('插件播放器初始化失败: '+(e&&e.message||e))}
+            }else{
+                initPlayer(url);
+            }
+            if(!_readyFired){
+                _readyFired=true;
+                window.OpenVideoPlayer._fireReady();
+            }
+        }
+        if(_pluginsLoaded)runBoot();
+        else{
+            _pluginsLoaded=true;
+            loadPlayerPlugins(runBoot);
+        }
+    }
+
     /* ===== Init ===== */
     document.getElementById('urlInput').addEventListener('keypress',function(e){if(e.key==='Enter')loadFromInput()});
     document.getElementById('urlInputRetry').addEventListener('keypress',function(e){if(e.key==='Enter')loadFromInput(true)});
-    window.addEventListener('load',function(){setTheme(currentTheme);var url=qs('url');if(url){document.getElementById('urlInput').value=decodeURIComponent(url);initPlayer(url)}});
+    window.addEventListener('load',function(){setTheme(currentTheme);var url=qs('url');if(url){document.getElementById('urlInput').value=decodeURIComponent(url);bootPlayer(url)}});
 })();
     </script>
 </body>

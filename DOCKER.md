@@ -9,22 +9,22 @@
 ```bash
 # Docker Hub
 docker run -d \
-  --name artplayer-web-api \
+  --name open-video-api \
   -p 1919:1919 \
   -v "$(pwd)/data:/app/data" \
   --restart unless-stopped \
-  yangyang8002/artplayer-web-api:latest
+  yangyang8002/open-video-api:latest
 
 # GHCR
 docker run -d \
-  --name artplayer-web-api \
+  --name open-video-api \
   -p 1919:1919 \
   -v "$(pwd)/data:/app/data" \
   --restart unless-stopped \
-  ghcr.io/yangyang8002/artplayer-web-api:latest
+  ghcr.io/yangyang8002/open-video-api:latest
 ```
 
-- 指定版本：`yangyang8002/artplayer-web-api:26.8.11`（tag 与 npm 包版本一致）
+- 指定版本：`yangyang8002/open-video-api:26.8.11`（tag 与 npm 包版本一致）
 - 启动后访问播放器 `http://localhost:1919/player/`、后台 `http://localhost:1919/admin/`
 - 镜像基于 `node:22-alpine`，仅生产依赖，自带健康检查
 
@@ -32,34 +32,34 @@ docker run -d \
 
 ```bash
 # Docker Hub 南大源
-docker pull docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest
+docker pull docker.nju.edu.cn/yangyang8002/open-video-api:latest
 # GHCR 南大源
-docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/artplayer-web-api:latest
+docker pull docker.nju.edu.cn/ghcr.io/yangyang8002/open-video-api:latest
 # 拉取后可重新打标使用
-docker tag docker.nju.edu.cn/yangyang8002/artplayer-web-api:latest yangyang8002/artplayer-web-api:latest
+docker tag docker.nju.edu.cn/yangyang8002/open-video-api:latest yangyang8002/open-video-api:latest
 ```
 
 ## 方式二：docker-compose（源码构建）
 
 ```bash
-git clone https://github.com/yangyang8002/Artplayer-Web-Api.git
-cd Artplayer-Web-Api
+git clone https://github.com/yangyang8002/OpenVideoAPI.git
+cd OpenVideoAPI
 docker compose up -d --build
 ```
 
-- 服务名：`artplayer-api`，容器名：`artplayer-web-api`
+- 服务名：`openvideo-api`，容器名：`open-video-api`
 - 映射端口 `1919:1919`，数据卷 `./data:/app/data`
 - 自带健康检查（`/api/config/public`），失败自动重启（`restart: unless-stopped`）
 
 ## 方式三：Dockerfile 直接构建
 
 ```bash
-docker build -t artplayer-web-api .
+docker build -t open-video-api .
 docker run -d \
-  --name artplayer-web-api \
+  --name open-video-api \
   -p 1919:1919 \
   -v "$(pwd)/data:/app/data" \
-  artplayer-web-api
+  open-video-api
 ```
 
 镜像基于 `node:22-alpine`，仅安装生产依赖，暴露 `1919` 端口，内置健康检查。
@@ -77,8 +77,8 @@ docker run -d \
 | `data/api-stats.json` | API 统计 |
 
 ```bash
-docker compose exec artplayer-api ls -la /app/data
-docker compose cp artplayer-api:/app/data ./backup-data   # 备份
+docker compose exec openvideo-api ls -la /app/data
+docker compose cp openvideo-api:/app/data ./backup-data   # 备份
 ```
 
 ## 环境变量
@@ -108,9 +108,9 @@ location / {
 
 ```bash
 # 拉取镜像方式：直接更新镜像重启
-docker pull yangyang8002/artplayer-web-api:latest
-docker stop artplayer-web-api && docker rm artplayer-web-api
-docker run -d --name artplayer-web-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/artplayer-web-api:latest
+docker pull yangyang8002/open-video-api:latest
+docker stop open-video-api && docker rm open-video-api
+docker run -d --name open-video-api -p 1919:1919 -v "$(pwd)/data:/app/data" yangyang8002/open-video-api:latest
 
 # 源码构建方式
 git pull

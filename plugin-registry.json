@@ -2,13 +2,13 @@
   "updated": "2026-08-08",
   "plugins": [
     {
-      "name": "hello-world",
-      "version": "1.0.0",
-      "description": "示例插件：启动时打印欢迎信息，监听弹幕发送事件并记录到日志",
+      "name": "openvideo-plugin-demo",
+      "description": "官方示例插件：服务注入 / ctx.model 动态表 / 事件总线 / 前端扩展（调试 tab + 播放器浮层）",
       "author": "yangyang8002",
-      "homepage": "https://github.com/yangyang8002/Artplayer-Web-Api",
-      "tags": ["demo", "示例"],
-      "url": "https://raw.githubusercontent.com/yangyang8002/Artplayer-Web-Api/master/plugins/hello-world.js"
+      "homepage": "https://github.com/yangyang8002/OpenVideoAPI",
+      "tags": ["官方", "示例", "demo"],
+      "versions": ["1.0.0"],
+      "dependencies": []
     }
   ]
 }

@@ -131,16 +131,17 @@ function startServer() {
     log('新服务已启动 PID=' + child.pid);
 }
 
-/* 从 npm 更新：下载 artplayer-web-api 包并覆盖项目文件（排除 data/ node_modules/ .git/ 与更新自身） */
+/* 从 npm 更新：下载当前 npm 包并覆盖项目文件（排除 data/ node_modules/ .git/ 与更新自身） */
+const NPM_PKG_NAME = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name || 'open-video-api';
 function npmUpdate() {
     const tmp = path.join(ROOT, '.update_npm_' + Date.now());
     fs.mkdirSync(tmp, { recursive: true });
     try {
-        let r = sh('npm pack artplayer-web-api@latest --pack-destination ' + tmp);
+    let r = sh('npm pack ' + NPM_PKG_NAME + '@latest --pack-destination ' + tmp);
         if (!r.ok) throw new Error('npm pack 失败: ' + r.out.slice(-300));
         const tgz = fs.readdirSync(tmp).find(f => f.endsWith('.tgz'));
         if (!tgz) throw new Error('未找到下载的 npm 包');
-        const version = tgz.replace(/^artplayer-web-api-/, '').replace(/\.tgz$/, '');
+        const version = tgz.replace(new RegExp('^' + NPM_PKG_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '-'), '').replace(/\.tgz$/, '');
         log('已下载 npm 包 ' + tgz + '（版本 ' + version + '）');
         /* 解压：优先系统 tar（Windows 10+ 自带），回退 7za 两步解压 */
         let exe = '';
@@ -232,7 +233,7 @@ function npmUpdate() {
             if (!res.ok) { log('npm 更新失败: ' + res.reason); process.exit(1); }
         } else if (useSource === 'npm-global') {
             /* npm 全局安装更新 */
-            const r = sh('npm install -g artplayer-web-api@latest --no-audit --no-fund');
+            const r = sh('npm install -g ' + NPM_PKG_NAME + '@latest --no-audit --no-fund');
             if (!r.ok) { log('npm 全局更新失败: ' + r.out.slice(-300)); process.exit(1); }
         } else {
             log('未知更新来源: ' + useSource);

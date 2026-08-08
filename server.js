@@ -18,6 +18,7 @@ const { PluginManager } = require('./lib/plugin');
 let store = null;
 let dbMigrating = false; // 迁移锁：迁移期间暂停数据写入
 let pluginManager = null; // 插件管理器（启动后初始化）
+let pluginModel = null;   // 插件动态表模型
 
 /* 未处理的 Promise 拒绝仅记录，不崩溃进程（防个别请求异常导致整体 DoS） */
 process.on('unhandledRejection', (err) => {
@@ -441,14 +442,19 @@ function verifyToken(token) {
 }
 
 function checkAdmin(req, res, next) {
-    const auth = req.headers.authorization || '';
-    const token = auth.startsWith('Bearer ') ? auth.slice(7) : ((req.body && req.body.token) || req.headers['x-admin-token']);
-    const username = verifyToken(token);
+    const username = checkAdminAuth(req);
     if (!username) {
         return res.status(401).json({ code: 1, msg: '未登录或令牌已过期' });
     }
     req.adminUser = username;
     next();
+}
+
+/* 仅校验（不写 req），供需要按 scope 鉴权的接口复用 */
+function checkAdminAuth(req) {
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : ((req.body && req.body.token) || req.headers['x-admin-token']);
+    return verifyToken(token);
 }
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -1416,6 +1422,7 @@ app.post('/api/admin/init', checkAdmin, async (req, res) => {
                 const old = store;
                 store = next; next = null;
                 try { await old.close(); } catch (e) {}
+                if (pluginManager) pluginManager.rebindStore(store, pluginModel);
                 dbApplied = true;
             } catch (e) {
                 if (next) { try { await next.close(); } catch (x) {} }
@@ -2105,6 +2112,7 @@ app.post('/api/admin/db/switch', checkAdmin, async (req, res) => {
         config.db = { type, ...cfg };
         writeConfig(config);
         try { await old.close(); } catch (e) { console.error('[数据库] 关闭旧存储失败:', e.message); }
+        if (pluginManager) pluginManager.rebindStore(store, pluginModel);
         console.log('[数据库] 已切换 ' + old.label + ' → ' + store.label + '，迁移数据: ' + JSON.stringify(summary));
         res.json({ code: 0, msg: '已切换 ' + old.label + ' → ' + store.label + '，数据迁移完成', data: summary });
     } catch (e) {
@@ -2136,7 +2144,7 @@ app.get('/api/admin/db/export', checkAdmin, async (req, res) => {
         const data = await collectAll(store);
         data.exportedAt = Date.now();
         data.storage = { type: store.type, label: store.label };
-        res.setHeader('Content-Disposition', 'attachment; filename="artplayer-backup-' + new Date().toISOString().slice(0, 10) + '.json"');
+        res.setHeader('Content-Disposition', 'attachment; filename="openvideo-backup-' + new Date().toISOString().slice(0, 10) + '.json"');
         res.json(data);
     } catch (e) {
         res.status(500).json({ code: 1, msg: safeErrMsg(e) });
@@ -2639,7 +2647,7 @@ function buildDbCfg(type, sqlite, mysql, postgres, mongodb, old) {
             port: parseInt(mongodb.port) || (old.mongodb && old.mongodb.port) || 27017,
             user: mongodb.user || (old.mongodb && old.mongodb.user) || '',
             password: (mongodb.password !== undefined && mongodb.password !== '') ? mongodb.password : ((old.mongodb && old.mongodb.password) || ''),
-            database: mongodb.database || (old.mongodb && old.mongodb.database) || 'artplayer'
+            database: mongodb.database || (old.mongodb && old.mongodb.database) || 'openvideo'
         };
     }
     return cfg;
@@ -3176,15 +3184,15 @@ async function getDeps(force) {
             changedFiles: info.changedFiles || []
         };
     } catch (e) {}
-    /* 插件更新信息：npm / url 来源支持按来源更新 */
+    /* 插件更新信息：npm 来源支持在线更新 */
     const plugins = pluginManager ? pluginManager.list().map(p => ({
         name: p.name,
         enabled: p.enabled,
         status: p.status,
         source: p.source.type,
-        version: (p.info && p.info.version) || '',
-        description: (p.info && p.info.description) || '',
-        updatable: p.source.type === 'npm' || p.source.type === 'url'
+        version: (p.info && p.info.package && p.info.package.version) || (p.source && p.source.version) || '',
+        description: (p.info && (p.info.package || {}).description) || '',
+        updatable: p.source.type === 'npm'
     })) : [];
     const result = { list, checkedAt: now, version, plugins };
     depsCache = { at: now, data: result };
@@ -3216,29 +3224,44 @@ app.post('/api/admin/deps/update', checkAdmin, (req, res) => {
     res.json({ code: 0, msg: '依赖更新已在后台执行（' + deps.length + ' 个），完成后需重启服务生效' });
 });
 
-// ==================== 插件管理 ====================
+// ==================== 插件管理（Koishi 风格：npm 包 + 服务层 + 前端扩展） ====================
 
-app.get('/api/admin/plugins', checkAdmin, (req, res) => {
-    res.json({ code: 0, data: { list: pluginManager.list(), dir: pluginManager.meta.size ? 'plugins/' : 'plugins/' } });
+/* 插件日志（调试工具数据源）：环形缓冲 */
+const pluginLogs = [];
+function pluginLogPush(level, scope, msg) {
+    pluginLogs.push({ t: Date.now(), level, scope, msg: String(msg).slice(0, 500) });
+    if (pluginLogs.length > 1000) pluginLogs.splice(0, pluginLogs.length - 1000);
+}
+
+/* 重启服务（插件/调试工具触发，优雅重启） */
+app.post('/api/admin/restart', checkAdmin, async (req, res) => {
+    try {
+        const { delay } = req.body || {};
+        res.json({ code: 0, msg: '服务即将重启...' });
+        setTimeout(() => { restartServer({ delay: delay ? Math.max(0, Math.min(60000, parseInt(delay) || 0)) : 1500 }).catch(() => {}); }, 300);
+    } catch (e) {
+        res.status(500).json({ code: 1, msg: safeErrMsg(e) });
+    }
 });
 
-/* 安装插件：source = file（上传 js）/ url（GitHub 等下载）/ npm（npm 包） */
-app.post('/api/admin/plugins/install', checkAdmin, upload.array('files'), async (req, res) => {
+function getPluginConfig() {
+    const c = readConfig().plugin || {};
+    return {
+        registry: process.env.OPENVIDEO_PLUGIN_REGISTRY || c.registry || 'https://raw.githubusercontent.com/yangyang8002/OpenVideoAPI/master/plugin-registry.json',
+        npmRegistry: process.env.OPENVIDEO_NPM_REGISTRY || c.npmRegistry || 'https://registry.npmjs.org'
+    };
+}
+
+app.get('/api/admin/plugins', checkAdmin, (req, res) => {
+    res.json({ code: 0, data: { list: pluginManager.list(), services: Array.from(pluginManager.services.keys()), dir: 'plugins/' } });
+});
+
+/* 安装插件：仅支持 npm 包（pkg + 可选 version） */
+app.post('/api/admin/plugins/install', checkAdmin, async (req, res) => {
     try {
-        const { source, url, pkg } = req.body || {};
-        let name;
-        if (source === 'file') {
-            if (!req.files || !req.files.length) return res.status(400).json({ code: 1, msg: '未选择插件文件' });
-            const f = req.files[0];
-            if (f.size > 1024 * 1024) return res.status(413).json({ code: 1, msg: '插件文件超过 1MB 上限' });
-            name = await pluginManager.install({ source: 'file', fileContent: f.buffer, filename: f.originalname });
-        } else if (source === 'url') {
-            name = await pluginManager.install({ source: 'url', url });
-        } else if (source === 'npm') {
-            name = await pluginManager.install({ source: 'npm', pkg });
-        } else {
-            return res.status(400).json({ code: 1, msg: '安装方式无效' });
-        }
+        const { pkg, version } = req.body || {};
+        if (!pkg) return res.status(400).json({ code: 1, msg: '请输入 npm 包名' });
+        const name = await pluginManager.install({ pkg, version });
         res.json({ code: 0, msg: '已安装插件 ' + name + '，可在列表中启用', data: { name } });
     } catch (e) {
         res.status(400).json({ code: 1, msg: '安装失败: ' + safeErrMsg(e) });
@@ -3276,7 +3299,7 @@ app.post('/api/admin/plugins/uninstall', checkAdmin, async (req, res) => {
     }
 });
 
-/* 更新插件（按原来源重新安装：npm → @latest，url → 重新下载；保留配置与启用状态） */
+/* 更新插件（npm @latest，保留配置与启用状态） */
 app.post('/api/admin/plugins/update', checkAdmin, async (req, res) => {
     try {
         const { name } = req.body || {};
@@ -3287,7 +3310,7 @@ app.post('/api/admin/plugins/update', checkAdmin, async (req, res) => {
     }
 });
 
-/* 插件市场：读取官方 registry（插件注册表，仓库根目录 plugin-registry.json） */
+/* 插件市场 v2：registry 含版本列表与依赖（URL 可配置） */
 let marketCache = null;
 app.get('/api/admin/plugins/market', checkAdmin, async (req, res) => {
     try {
@@ -3295,14 +3318,64 @@ app.get('/api/admin/plugins/market', checkAdmin, async (req, res) => {
         if (marketCache && now - marketCache.at < 10 * 60 * 1000) {
             return res.json({ code: 0, data: marketCache.data });
         }
-        const r = await fetch('https://raw.githubusercontent.com/yangyang8002/Artplayer-Web-Api/master/plugin-registry.json', { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'ArtPlayer-Web-Api' } });
+        const cfg = getPluginConfig();
+        const r = await fetch(cfg.registry, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'OpenVideoAPI' } });
         if (!r.ok) return res.status(502).json({ code: 1, msg: '插件市场获取失败: HTTP ' + r.status });
         const j = await r.json();
-        const data = { updated: j.updated || '', list: Array.isArray(j.plugins) ? j.plugins : [] };
+        const plugins = (Array.isArray(j.plugins) ? j.plugins : []).map(p => ({
+            name: p.name || '',
+            description: p.description || '',
+            author: p.author || '',
+            homepage: p.homepage || '',
+            tags: Array.isArray(p.tags) ? p.tags : [],
+            versions: Array.isArray(p.versions) ? p.versions.map(v => String(v)) : [],
+            latest: Array.isArray(p.versions) && p.versions.length ? String(p.versions[0]) : '',
+            dependencies: Array.isArray(p.dependencies) ? p.dependencies : []
+        })).filter(p => p.name);
+        const data = { updated: j.updated || '', registry: cfg.registry, list: plugins };
         marketCache = { at: now, data };
         res.json({ code: 0, data });
     } catch (e) {
         res.status(502).json({ code: 1, msg: '插件市场获取失败: ' + safeErrMsg(e) });
+    }
+});
+
+/* 插件日志（调试工具） */
+app.get('/api/admin/plugins/logs', checkAdmin, (req, res) => {
+    const limit = Math.min(parseInt(req.query.limit) || 200, 1000);
+    res.json({ code: 0, data: pluginLogs.slice(-limit).reverse() });
+});
+
+/* 客户端扩展清单：player 公开，admin 需鉴权 */
+app.get('/api/plugins/manifest', async (req, res) => {
+    const scope = req.query.scope === 'admin' ? 'admin' : 'player';
+    if (scope === 'admin') {
+        const auth = checkAdminAuth(req);
+        if (!auth) return res.status(401).json({ code: 401, msg: '未授权' });
+    }
+    try {
+        const list = pluginManager.clientManifest(scope);
+        res.json({ code: 0, data: { scope, plugins: list } });
+    } catch (e) {
+        res.status(500).json({ code: 1, msg: safeErrMsg(e) });
+    }
+});
+
+/* 客户端资源：/api/plugins/client/:scope/:pkg/* （admin 需鉴权，player 公开） */
+app.get('/api/plugins/client/:scope/:pkg/*splat', (req, res) => {
+    const scope = req.params.scope === 'admin' ? 'admin' : 'player';
+    if (scope === 'admin' && !checkAdminAuth(req)) return res.status(401).json({ code: 401, msg: '未授权' });
+    try {
+        const splat = req.params.splat;
+        const rel = decodeURIComponent(Array.isArray(splat) ? splat.join('/') : String(splat || ''));
+        const file = pluginManager.resolveClientAsset(req.params.pkg, rel);
+        const ext = path.extname(file).toLowerCase();
+        const type = ext === '.css' ? 'text/css; charset=utf-8' : ext === '.js' ? 'text/javascript; charset=utf-8' : 'application/octet-stream';
+        res.setHeader('Content-Type', type);
+        res.setHeader('Cache-Control', 'no-cache');
+        res.sendFile(file);
+    } catch (e) {
+        res.status(404).json({ code: 1, msg: safeErrMsg(e) });
     }
 });
 
@@ -3330,9 +3403,18 @@ function detectDeploy() {
     return 'source';
 }
 
+/* 更新源配置（可配置化，改名/自建镜像站无需改代码） */
+function getUpdateConfig() {
+    const c = readConfig().update || {};
+    const repo = process.env.OPENVIDEO_UPDATE_REPO || c.repo || 'yangyang8002/OpenVideoAPI';
+    const npmPkg = process.env.OPENVIDEO_NPM_PKG || c.npmPkg || 'open-video-api';
+    return { repo, npmPkg };
+}
+
 async function checkVersionUpdate(force) {
     const now = Date.now();
     if (!force && updateCheckCache && now - updateCheckCache.at < 3600000) return updateCheckCache.data;
+    const { repo, npmPkg } = getUpdateConfig();
     const result = {
         checkedAt: now,
         current: APP_VERSION,
@@ -3344,7 +3426,7 @@ async function checkVersionUpdate(force) {
     };
     /* GitHub 最新 Release */
     try {
-        const r = await fetch('https://api.github.com/repos/yangyang8002/Artplayer-Web-Api/releases/latest', { signal: AbortSignal.timeout(12000), headers: { 'User-Agent': 'ArtPlayer-Web-Api' } });
+        const r = await fetch('https://api.github.com/repos/' + repo + '/releases/latest', { signal: AbortSignal.timeout(12000), headers: { 'User-Agent': 'OpenVideoAPI' } });
         if (r.ok) {
             const d = await r.json();
             result.sources.github = { tag: d.tag_name || '', published: d.published_at || '', url: d.html_url || '', body: (d.body || '').slice(0, 2000) };
@@ -3352,7 +3434,7 @@ async function checkVersionUpdate(force) {
     } catch (e) {}
     /* npm 最新版本 */
     try {
-        const r2 = await fetch('https://registry.npmjs.org/artplayer-web-api/latest', { signal: AbortSignal.timeout(12000) });
+        const r2 = await fetch('https://registry.npmjs.org/' + encodeURIComponent(npmPkg) + '/latest', { signal: AbortSignal.timeout(12000) });
         if (r2.ok) {
             const d2 = await r2.json();
             result.sources.npm = { version: d2.version || '' };
@@ -3360,7 +3442,7 @@ async function checkVersionUpdate(force) {
     } catch (e) {}
     /* 远程 update.xml：版本清单 + 变更文件列表 */
     try {
-        const r3 = await fetch('https://raw.githubusercontent.com/yangyang8002/Artplayer-Web-Api/master/update.xml', { signal: AbortSignal.timeout(12000) });
+        const r3 = await fetch('https://raw.githubusercontent.com/' + repo + '/master/update.xml', { signal: AbortSignal.timeout(12000) });
         if (r3.ok) {
             const txt = await r3.text();
             const ver = (txt.match(/<version>([^<]+)<\/version>/) || [])[1] || '';
@@ -3385,7 +3467,7 @@ async function checkVersionUpdate(force) {
         result.latest = latest;
         result.latestSource = srcName;
         result.releaseNotes = (result.sources.manifest && result.sources.manifest.message) || (result.sources.github ? result.sources.github.body || '' : '');
-        result.releaseUrl = result.sources.github ? result.sources.github.url : 'https://github.com/yangyang8002/Artplayer-Web-Api/releases';
+        result.releaseUrl = result.sources.github ? result.sources.github.url : 'https://github.com/' + repo + '/releases';
         result.changedFiles = (result.sources.manifest && result.sources.manifest.files) || [];
     }
     updateCheckCache = { at: now, data: result };
@@ -3410,7 +3492,7 @@ app.post('/api/admin/update/run', checkAdmin, async (req, res) => {
     const info = await checkVersionUpdate(true).catch(() => null);
     if (info && !info.hasUpdate) return res.json({ code: 1, msg: '当前已是最新版本', data: { current: APP_VERSION, latest: info.latest } });
     if (deploy === 'docker') {
-        return res.json({ code: 1, msg: 'Docker 部署请在宿主机执行: docker pull yangyang8002/artplayer-web-api:latest && docker compose up -d' });
+        return res.json({ code: 1, msg: 'Docker 部署请在宿主机执行: docker pull yangyang8002/open-video-api:latest && docker compose up -d' });
     }
     if (!fs.existsSync(path.join(__dirname, 'update.js'))) {
         return res.json({ code: 1, msg: '未找到 update.js（独立更新进程），请检查安装完整性' });
@@ -3606,7 +3688,40 @@ async function initStore() {
 
     /* 插件系统初始化（加载已启用插件） */
     try {
-        pluginManager = new PluginManager({ app, store, readConfig, version: APP_VERSION, log: (m) => console.log('[插件] ' + m) });
+        pluginModel = new (require('./lib/model').PluginModel)(store);
+        const appService = {
+            version: APP_VERSION,
+            platform: process.platform + ' ' + process.arch,
+            pid: process.pid,
+            uptime: () => Math.floor((Date.now() - API_START_TIME) / 1000),
+            getConfig: () => readConfig(),
+            async saveConfig(patch) {
+                const cfg = readConfig();
+                const merged = { ...DEFAULT_CONFIG, ...cfg, ...(patch || {}) };
+                merged.security = { ...DEFAULT_CONFIG.security, ...(cfg.security || {}), ...((patch && patch.security) || {}) };
+                writeConfig(merged);
+                applyTrustProxy(merged);
+                return merged;
+            },
+            restart: async (opts) => restartServer(opts)
+        };
+        const loggerService = {
+            debug: (scope, msg) => pluginLogPush('debug', scope, msg),
+            info: (scope, msg) => pluginLogPush('info', scope, msg),
+            warn: (scope, msg) => pluginLogPush('warn', scope, msg),
+            error: (scope, msg) => pluginLogPush('error', scope, msg),
+            log: (level, scope, msg) => pluginLogPush(level, scope, msg),
+            tail: (n) => pluginLogs.slice(-(n || 200))
+        };
+        pluginManager = new PluginManager({
+            app, store, model: pluginModel,
+            readConfig,
+            saveConfig: async (patch) => { await appService.saveConfig(patch); },
+            restartServer: async (opts) => { await restartServer(opts); },
+            version: APP_VERSION,
+            log: (m) => { console.log('[插件] ' + m); pluginLogPush('info', 'plugin', m); }
+        });
+        pluginManager._injectServices({ app: appService, logger: loggerService });
         pluginManager.loadState();
         await pluginManager.loadEnabled();
     } catch (e) {
@@ -3614,19 +3729,59 @@ async function initStore() {
     }
 }
 
-initStore().then(() => {
-    app.listen(PORT, () => {
-        const config = readConfig();
-        console.log(`ArtPlayer服务已启动: http://localhost:${PORT}`);
-        console.log(`播放器地址: http://localhost:${PORT}/player/?url=视频地址`);
-        console.log(`管理后台: http://localhost:${PORT}/admin/`);
-        console.log(`默认登录账号: admin / admin123`);
-        if (config.pow && config.pow.enabled) console.log(`[防火墙] PoW 工作量证明已启用 (难度: ${config.pow.difficulty})`);
-        if (config.rateLimit && config.rateLimit.enabled) console.log(`[防火墙] 速率限制已启用 (${config.rateLimit.max}次/${config.rateLimit.windowMs / 1000}s)`);
-        console.log('[安全] Helmet 安全头已启用');
-        scheduleUpdate();
+/* 优雅重启：广播 before:restart → 延迟 → 启动新进程（等待端口释放）→ 退出当前进程 */
+let restarting = false;
+async function restartServer({ delay = 1500 } = {}) {
+    if (restarting) throw new Error('已在重启中');
+    restarting = true;
+    if (pluginManager) pluginManager.emit('before:restart');
+    console.log('[重启] ' + (delay / 1000) + 's 后重启服务...');
+    await new Promise(r => setTimeout(r, delay));
+    const child = require('child_process').spawn(process.execPath, ['server.js'], {
+        cwd: __dirname,
+        env: { ...process.env, OPENVIDEO_WAIT_PORT: String(PORT) },
+        detached: true,
+        stdio: 'ignore'
     });
+    child.unref();
+    console.log('[重启] 新进程已启动 PID=' + child.pid + '，当前进程退出');
+    process.exit(0);
+}
+
+initStore().then(() => {
+    /* 等待端口释放模式（插件/更新触发的重启）：等旧进程让出端口后再监听 */
+    const waitPort = process.env.OPENVIDEO_WAIT_PORT;
+    if (waitPort) {
+        const tryListen = () => {
+            const srv = app.listen(PORT, () => {
+                console.log(`OpenVideoAPI服务已启动: http://localhost:${PORT} (wait-port 重启)`);
+                onServerReady();
+                scheduleUpdate();
+            });
+            srv.on('error', (e) => {
+                if (e.code === 'EADDRINUSE') { setTimeout(tryListen, 1000); }
+                else { console.error('[启动] 监听失败:', e.message); process.exit(1); }
+            });
+        };
+        tryListen();
+    } else {
+        app.listen(PORT, () => {
+            onServerReady();
+            scheduleUpdate();
+        });
+    }
 }).catch(e => {
     console.error('[数据库] 存储初始化失败，服务启动中止:', e.message);
     process.exit(1);
 });
+
+function onServerReady() {
+    const config = readConfig();
+    console.log(`OpenVideoAPI服务已启动: http://localhost:${PORT}`);
+    console.log(`播放器地址: http://localhost:${PORT}/player/?url=视频地址`);
+    console.log(`管理后台: http://localhost:${PORT}/admin/`);
+    console.log(`默认登录账号: admin / admin123`);
+    if (config.pow && config.pow.enabled) console.log(`[防火墙] PoW 工作量证明已启用 (难度: ${config.pow.difficulty})`);
+    if (config.rateLimit && config.rateLimit.enabled) console.log(`[防火墙] 速率限制已启用 (${config.rateLimit.max}次/${config.rateLimit.windowMs / 1000}s)`);
+    console.log('[安全] Helmet 安全头已启用');
+}

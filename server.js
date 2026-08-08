@@ -12,7 +12,7 @@ const IP2Region = require('ip2region').default;
 const ip2rJs = require('ip2region.js');
 const { createStore, collectAll, restoreAll, summarizeData } = require('./lib/store');
 const { createCloud, TYPES: CLOUD_TYPES } = require('./lib/cloud');
-const { PluginManager } = require('./lib/plugin');
+const { PluginManager, PLUGIN_DIR } = require('./lib/plugin');
 
 /* 当前数据存储（启动时初始化，可在管理后台热切换，切换时自动迁移数据） */
 let store = null;
@@ -353,7 +353,7 @@ function getApiLimiter() {
     });
 }
 
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.OPENVIDEO_DATA_DIR ? path.resolve(process.env.OPENVIDEO_DATA_DIR) : path.join(__dirname, 'data');
 const DANMU_FILE = path.join(DATA_DIR, 'danmu.json');
 const BANNED_WORDS_FILE = path.join(DATA_DIR, 'banned_words.json');
 const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
@@ -3413,9 +3413,21 @@ app.get('/api/admin/plugins/market', checkAdmin, async (req, res) => {
             return res.json({ code: 0, data: marketCache.data });
         }
         const cfg = getPluginConfig();
-        const r = await fetch(cfg.registry, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'OpenVideoAPI' } });
-        if (!r.ok) return res.status(502).json({ code: 1, msg: '插件市场获取失败: HTTP ' + r.status });
-        const j = await r.json();
+        /* 支持本地文件 registry（file:// 路径，插件开发环境用） */
+        let text = null;
+        if (/^file:\/\//i.test(cfg.registry)) {
+            try {
+                const fp = cfg.registry.replace(/^file:\/\//i, '');
+                text = fs.readFileSync(path.resolve(__dirname, fp), 'utf8');
+            } catch (e) {
+                return res.status(502).json({ code: 1, msg: '本地 registry 读取失败: ' + safeErrMsg(e) });
+            }
+        } else {
+            const r = await fetch(cfg.registry, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'OpenVideoAPI' } });
+            if (!r.ok) return res.status(502).json({ code: 1, msg: '插件市场获取失败: HTTP ' + r.status });
+            text = await r.text();
+        }
+        const j = JSON.parse(text);
         const plugins = (Array.isArray(j.plugins) ? j.plugins : []).map(p => ({
             name: p.name || '',
             description: p.description || '',
@@ -3826,7 +3838,73 @@ async function initStore() {
     }
 }
 
-/* 优雅重启：广播 before:restart → 延迟 → 启动新进程（等待端口释放）→ 退出当前进程 */
+/* 开发模式：监听本地插件目录，文件变更自动重载（OPENVIDEO_DEV=1 或 --dev） */
+const DEV_MODE = process.env.OPENVIDEO_DEV === '1' || process.argv.includes('--dev');
+let devWatcher = null;
+function setupDevWatcher() {
+    if (!DEV_MODE || !pluginManager) return;
+    const pending = {};
+    const reload = (pkg) => {
+        if (!pluginManager.meta.has(pkg)) return;
+        const meta = pluginManager.meta.get(pkg);
+        if (meta.source.type !== 'local') return; /* 只热重载本地开发插件 */
+        if (!meta.enabled) return;
+        pluginLogPush('info', 'dev', '检测到文件变更，重载插件 ' + pkg);
+        console.log('[dev] 重载插件: ' + pkg);
+        pluginManager.setEnabled(pkg, false).then(() => pluginManager.setEnabled(pkg, true)).catch(() => {});
+    };
+    const schedule = (pkg) => {
+        clearTimeout(pending[pkg]);
+        pending[pkg] = setTimeout(() => { delete pending[pkg]; reload(pkg); }, 400);
+    };
+    const onChange = (ev, name) => {
+        if (!name) return;
+        const seg = String(name).split(/[\\/]/);
+        const pkg = seg[0];
+        if (!pkg || pkg === 'node_modules' || pkg.startsWith('.')) return;
+        if (!/\.(js|json)$/i.test(String(name))) return;
+        schedule(pkg);
+    };
+    /* 新目录出现时自动发现注册 */
+    const scanNew = () => {
+        try {
+            pluginManager.discoverLocal();
+        } catch (e) {}
+    };
+    try {
+        if (!fs.existsSync(PLUGIN_DIR)) fs.mkdirSync(PLUGIN_DIR, { recursive: true });
+        devWatcher = fs.watch(PLUGIN_DIR, { recursive: true }, (ev, name) => { scanNew(); onChange(ev, name); });
+        console.log('[dev] 已启用插件热重载: ' + PLUGIN_DIR);
+    } catch (e) {
+        /* 递归监听不可用（部分 Linux）→ 降级为轮询 */
+        console.log('[dev] 递归监听不可用，降级为 1s 轮询: ' + e.message);
+        const scan = () => {
+            try {
+                scanNew();
+                for (const d of fs.readdirSync(PLUGIN_DIR, { withFileTypes: true })) {
+                    if (!d.isDirectory() || d.name === 'node_modules' || d.name.startsWith('.')) continue;
+                    const dir = path.join(PLUGIN_DIR, d.name);
+                    let newest = 0;
+                    const walk = (p) => {
+                        for (const e2 of fs.readdirSync(p, { withFileTypes: true })) {
+                            const fp = path.join(p, e2.name);
+                            if (e2.isDirectory()) walk(fp);
+                            else if (/\.(js|json)$/i.test(e2.name)) { try { const st = fs.statSync(fp); if (st.mtimeMs > newest) newest = st.mtimeMs; } catch (x) {} }
+                        }
+                    };
+                    walk(dir);
+                    const key = d.name;
+                    const prev = devWatchTimes[key] || 0;
+                    if (prev && newest > prev + 500) schedule(key);
+                    devWatchTimes[key] = newest;
+                }
+            } catch (e2) {}
+        };
+        devWatchTimes = {};
+        devWatcher = setInterval(scan, 1000);
+    }
+}
+let devWatchTimes = {};
 let restarting = false;
 async function restartServer({ delay = 1500 } = {}) {
     if (restarting) throw new Error('已在重启中');
@@ -3880,5 +3958,5 @@ function onServerReady() {
     console.log(`默认登录账号: admin / admin123`);
     if (config.pow && config.pow.enabled) console.log(`[防火墙] PoW 工作量证明已启用 (难度: ${config.pow.difficulty})`);
     if (config.rateLimit && config.rateLimit.enabled) console.log(`[防火墙] 速率限制已启用 (${config.rateLimit.max}次/${config.rateLimit.windowMs / 1000}s)`);
-    console.log('[安全] Helmet 安全头已启用');
+    setupDevWatcher();
 }

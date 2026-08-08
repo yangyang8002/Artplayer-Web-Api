@@ -3072,7 +3072,9 @@
                     dbTypeChange();
                     /* 表概览 */
                     const tb = document.getElementById('dbTables');
-                    tb.innerHTML = Object.entries(info.tables || {}).map(([k, v]) => `<span class="tag" style="margin:2px">${esc(k)}: ${v}</span>`).join('') || '<div class="empty-state">无数据</div>';
+                    const tRaw = info.tables || {};
+                    const tRows = Array.isArray(tRaw) ? tRaw : Object.entries(tRaw).map(([name, count]) => ({ name, count }));
+                    tb.innerHTML = tRows.map(t => `<span class="tag" style="margin:2px">${esc(t.name)}: ${t.count}</span>`).join('') || '<div class="empty-state">无数据</div>';
                 }).catch(() => {});
         }
         function dbTypeChange() {

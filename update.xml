@@ -3,7 +3,7 @@
 <update>
   <version>26.8.11</version>
   <date>2026-08-08</date>
-  <message>v26.8.11: fix db info tables rendering ([object Object] -> name: count tags)</message>
+  <message>v26.8.11: dev environment support - OPENVIDEO_PLUGIN_DIR/DATA_DIR env, --dev hot reload watcher, local plugin auto-discovery, file:// plugin registry, dev-mode crash restart</message>
   <files>
   <file path=".dockerignore" sha256="92b725988b57a03160cb825d470f929fbecbf4ee25b4dbc28a7fdb3a8c41a781" size="78"/>
   <file path=".github/social-preview.png" sha256="0949997a033350b2096a95f68c4a3eaabe2e3952913e91a0bec59807bbfdb246" size="21642"/>
@@ -25,8 +25,8 @@
   <file path="lib/backends/sqlite.js" sha256="625b1d8600c2a0f25a243e4f42d3d929e57a44e11e11e03f9f2f9d003b667735" size="2453"/>
   <file path="lib/cloud.js" sha256="5b48ed67112b97f27dae7b853d16c96675a48591024c7a74bc5f5642d67d7653" size="10133"/>
   <file path="lib/model.js" sha256="bec025ba75882a022ca57de8ff4e8d7ec69dde319a6a885aebbd2b9eff54efcb" size="5401"/>
-  <file path="lib/plugin.js" sha256="36b996be030917929f5811aba664e5048a986128594c8dad9063fe3d34693386" size="24138"/>
-  <file path="lib/store.js" sha256="b22858dd1341049fea7edd547d32cfd15ae8ab97f5d866fb9cfdea3a2d612440" size="29637"/>
+  <file path="lib/plugin.js" sha256="3315f6c0261a8631316d4e0e4f12c906859ae7ba20d54f720420ac2149f07ac9" size="25952"/>
+  <file path="lib/store.js" sha256="7b3d44de4d2e432acfa8913e49f2ced618d433dd221ae28a97356e1748e680b7" size="29717"/>
   <file path="nginx.conf.example" sha256="bfbc0c107882def10bcecfd008c10bfdd54115c0fe50538c9be3615167469e78" size="2119"/>
   <file path="package-lock.json" sha256="07753dd82aec66a96b4c7c50a880bb2a0b5415cb4839d9d05f03a6e2834d8301" size="41173"/>
   <file path="package.json" sha256="a6156fb5053f694efcb3729faa90c2f0db77c35228d9266bea3791954f75eba8" size="1551"/>
@@ -48,7 +48,7 @@
   <file path="public/test_video1.vtt" sha256="65bf5090bbb808e9825b4205eff66e8f3799b9ef482070ae54a460b6ac18eb0d" size="115"/>
   <file path="public/test_video2.mp4" sha256="f192304389dbc213c8dde5dc6f6b77cdd09f1785dbef6255a9857b108757eb8e" size="330061"/>
   <file path="public/test_video3.mp4" sha256="5520e9715ab6371aaf5532877a3dff6010ce57793cd6cc89752aa4116d4b9d50" size="108190"/>
-  <file path="server.js" sha256="0a4b3258adedd7efb5000a73bc7af6fd1fd1f432dded4865123c6b7393ac83b2" size="182528"/>
+  <file path="server.js" sha256="334c649b464f70e7bc9ed43bd3a16b4a29b8e14b70a626e6d9f9a3b67b5865da" size="186236"/>
   <file path="theme/README.md" sha256="d3f4cc2fbc639f7eb6cbd98b210dd6642a840ecbbbda1b86944d574ec348746e" size="4676"/>
   <file path="theme/admin.css" sha256="2748ab4434965280b2993b3e9c565c2684bd389414fa873459c630060bd825f7" size="10177"/>
   <file path="theme/admin/bilibili/style.css" sha256="1bf60cf612a5a20cecf5f0bf8676c9831af78b54d30314bf5d27e3cc3bdec703" size="132"/>
